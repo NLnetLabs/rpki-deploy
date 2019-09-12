@@ -9,6 +9,7 @@ if [ ! -f ~/routinator.initialized ]; then
     echo "${BANNER}: Fetching Krill TA TAL.."
     while true; do
         wget https://${KRILL_FQDN}/ta/ta.tal -O ~/.rpki-cache/tals/ta.tal && break
+	sleep 5s
     done
 
     echo "${BANNER}: Finished"
