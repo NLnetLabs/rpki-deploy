@@ -43,7 +43,7 @@ variable "region" {
 }
 
 variable "tags" {
-  type        = list(string)
+  type        = set(string)
   default     = []
   description = "One or more strings to tag the new Digital Ocean Droplet with. Default: None."
 }
@@ -80,6 +80,6 @@ variable "krill_version" {
 
 variable "docker_compose_dir" {
   type        = string
-  default     = "docker/"
+  default     = "../lib/docker/"
   description = "The relative or absolute path to the directory containing the docker-compose.yml template to deploy."
 }

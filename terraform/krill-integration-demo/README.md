@@ -1,10 +1,10 @@
-# Krill + nginx + rsyncd + routinator in the Digital Ocean cloud
+# Krill + nginx + rsyncd + routinator in the cloud
 
 ## Introduction
 
 [Krill](https://www.nlnetlabs.nl/projects/rpki/krill/) is a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/).
 
-This project uses off-the-shelf containers from Docker Hub to demonstrate:
+This project uses off-the-shelf containers from Docker Hub deployed in the cloud to demonstrate:
 
 * Deployment of Krill behind an industry standard HTTP proxy (nginx) as advised by the [official Krill documentation](https://rpki.readthedocs.io/en/latest/krill/running.html#proxy-and-https).
 * Integration with an rsync server for clients that do not support the RRDP protocol.
@@ -12,9 +12,19 @@ This project uses off-the-shelf containers from Docker Hub to demonstrate:
 
 ----
 
-_**WARNING!** Executing this demo will create resources in the [Digital Ocean cloud](https://www.digitalocean.com/). These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your Digital Ocean account owner to incur costs on the account!_
+_**WARNING!** Executing this demo will create resources in the [Digital Ocean](https://www.digitalocean.com/) or [Amazon Web Services](https://aws.amazon.com/) public cloud. These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your cloud account owner to incur costs on the account!_
 
 ----
+
+## Cloud? Docker? Why?
+
+This demo uses Terraform, Docker-Machine, Docker-Compose and Docker to deploy to either the Digital Ocean or Amazon Web Services public clouds.
+
+The templates have been deliberately structured such that the cloud and Docker parts are separated. Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
+
+ The beauty of Terraform is the huge number of deployment targets that it supports. 
+ 
+ The beauty of Docker is the ability to use the same core to run on those many different deployment targets and the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle.
 
 ## Requirements
 
@@ -32,6 +42,8 @@ For this demo you will need:
 
 The diagram below describes the Digital Ocean topology and how Terraform creates it:
 
+In the case of Amazon Web Services the Droplet is an EC2 Compute Instance and the DO DNS is AWS Route53.
+
 ```
 +- Digital Ocean Public Cloud ----------------------------------+
 |                                                               |
@@ -43,21 +55,21 @@ The diagram below describes the Digital Ocean topology and how Terraform creates
 |                             |         |        |      |   |   |
 +-----------------------+     +---------|--------|------+   |   |
 |   Digital Ocean API   |               |        |          |   |
-+---^------^------------+---------------|--------|----------|---+
-    |      |                            |        |          |
-create   create                       docker   docker    install
-droplet  dns & fw                     compose  volume    docker
-    |      |                          up       create    via ssh
-    |      |                            |        |          |  
-   (1)    (2)                          (5)      (4)        (3)
-    |      |   +- Host Computer --------|---+    |          |
-    |      |   |      Docker (Compose)      |    |          |
-    |      |   |----------------------------+    |          |
-    |      |   |   Local-Exec Provisioner   |----+          |
-    |      |   +----------------------------+               |
-    |      +---|   Digital Ocean Provider   |               |
-    |          +----------------------------+               |
-    +----------|   Docker Machine Provider  |---------------+
++---------^-------------+---------------|--------|----------|---+
+          |                             |        |          |
+        create                        docker   docker    install
+        droplet,                      compose  volume    docker
+        dns & fw                      up       create    via ssh
+          |                             |        |          |  
+         (1)                           (4)      (3)        (2)
+          |    +- Host Computer --------|---+    |          |
+          |    |      Docker (Compose)      |    |          |
+          |    |----------------------------+    |          |
+          |    |   Local-Exec Provisioner   |----+          |
+          |    +----------------------------+               |
+          |    |   Docker Machine Provider  |---------------+
+          |    +----------------------------+
+          +----|   Digital Ocean Provider   |
                +----------------------------+
                |     HashiCorp Terraform    |
                +----------------------------+
@@ -116,29 +128,35 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 ### Prepare
 
 To run the demo you will need a copy of the demo templates and an SSH key pair.
-**Note:** `some.domain` should already be managed by Digital Ocean.
 
-```
-$ ssh-keygen -t rsa -f /tmp/demo-ssh-key -N ""
-$ git clone https://github.com/nlnetlabs/rpki-deploy.git
-$ cd rpki-deploy/terraform/krill-integration-demo
-$ export TF_VAR_do_token=xxxxxx
-$ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
-$ export TF_VAR_hostname=somehostname
-$ export TF_VAR_domain=some.domain
-```
+**Note:** `some.domain` should already be managed by Digital Ocean or AWS.
+
+    $ ssh-keygen -t rsa -f /tmp/demo-ssh-key -N ""
+    $ git clone https://github.com/nlnetlabs/rpki-deploy.git
+    $ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
+    $ export TF_VAR_hostname=somehostname
+    $ export TF_VAR_domain=some.domain
 
 If you want to change any of the default values in `variables.tf`, e.g. deployment region, droplet size, tags, [read this page](https://learn.hashicorp.com/terraform/getting-started/variables.html) to learn how to override them.
+
+### Prepare for Digital Ocean
+
+    $ cd rpki-deploy/terraform/krill-integration-demo/demo_on_do
+    $ export TF_VAR_do_token=xxxxxx
+
+### Prepare for Amazon Web Services
+
+    $ cd rpki-deploy/terraform/krill-integration-demo/demo_on_aws
+    $ export AWS_ACCESS_KEY=xxx
+    $ export AWS_SECRET_ACCESS_KEY=xxx
 
 ### Deploy
 
 `init` installs any Terraform plugins required by the templates.
 `apply` explains what will be created then, if you approve, executes the template.
 
-```
-$ terraform init
-$ terraform apply
-```
+    $ terraform init
+    $ terraform apply
 
 Terraform will:
 1. Create a Digital Ocean droplet via the Docker Machine provider.
