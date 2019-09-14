@@ -29,9 +29,9 @@ The templates have been deliberately structured such that the cloud and Docker p
 ## Requirements
 
 For this demo you will need:
-- A Digital Ocean account.
-- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens).
-- A DNS domain managed by Digital Ocean.
+- A Digital Ocean or Amazon Web Services account.
+- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
+- A DNS domain managed by Digital Ocean or Amazon Web Services.
 - The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.7)
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.0) command line tool.
@@ -159,8 +159,8 @@ If you want to change any of the default values in `variables.tf`, e.g. deployme
     $ terraform apply
 
 Terraform will:
-1. Create a Digital Ocean droplet via the Docker Machine provider.
-2. Create A and AAAA DNS records pointing to the droplet.
+1. Create a Digital Ocean droplet or AWS EC2 instance.
+2. Create A and AAAA DNS records pointing to the droplet/instance.
 3. Install Docker on the droplet and secure the Docker daemon with TLS authentication.
 4. Create an "external" persistent volume for Lets Encrypt certificates on the droplet.
 5. Invoke Docker Compose to deploy the private network and containers on the droplet.
@@ -240,9 +240,7 @@ CA that is a child of the embedded TA and then create ROAs in the child.
 
 _**Note:** Before you can use docker and docker-compose commands you must first
 tell docker and docker-compose to connect to the Docker daemon running on the
-Digital Ocean droplet. This is done by setting environment variables. The
-terraform template has been designed to so that you can run the following
-`eval` commands at the shell prompt to manage these environment variables:_
+Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:_
 
     Set the env vars:    eval $(terraform output docker_env_vars)
     Unset the env vars:  eval $(terraform output unset_docker_env_vars)
