@@ -131,7 +131,7 @@ To run the demo you will need a copy of the demo templates and an SSH key pair.
 
 **Note:** `some.domain` should already be managed by Digital Ocean or AWS.
 
-    $ ssh-keygen -t rsa -f /tmp/demo-ssh-key -N ""
+    $ ssh-keygen -m PEM -t rsa -f /tmp/demo-ssh-key -N ""
     $ git clone https://github.com/nlnetlabs/rpki-deploy.git
     $ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
     $ export TF_VAR_hostname=somehostname
@@ -143,6 +143,8 @@ If you want to change any of the default values in `variables.tf`, e.g. deployme
 
     $ cd rpki-deploy/terraform/krill-integration-demo/demo_on_do
     $ export TF_VAR_do_token=xxxxxx
+
+NOTE: You must copy the contents of `/tmp/demo-ssh-key.pub` into the Digital Ocean portal (see Account -> Security -> SSH Keys -> Add SSH Key) before you can deploy using this SSH key.
 
 ### Prepare for Amazon Web Services
 
@@ -251,7 +253,7 @@ subdirectory so that the Docker Compose template can be found._
 ----
 
     $ eval $(terraform output docker_env_vars)
-    $ cd docker/
+    $ cd ../lib/docker/
     $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+$' | cut -d ' ' -f 2)
     $ alias ka="docker-compose exec krill krill_admin -s https://localhost:3000/ -t ${KRILL_AUTH_TOKEN}"
     $ ka cas add -h child -c secret2
@@ -267,7 +269,7 @@ to copy the file to the droplet before we can import it into Krill:
     A: 10.0.0.0/24 => 64496
     A: 10.0.1.0/24 => 64496
     EOF
-    $ scp /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
+    $ scp -i /tmp/demo-ssh-key /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
     $ ka cas roas -h child update -d /tmp/ka/delta.1
 
 ### Inspect
