@@ -58,7 +58,7 @@ services:
       - "9556:9556"
     restart: unless-stopped
     depends_on:
-      - krill
+      - nginx
 
   rsyncd:
     build:
@@ -70,6 +70,31 @@ services:
     volumes:
       - rsync_data:/share:ro
     restart: unless-stopped
+
+  octorpki:
+    build:
+      context: octorpki
+      network: host
+    container_name: octorpki
+    command: ["-mode", "oneoff", "-tal.name", "KRILL", "-tal.root", "/tmp/ta.tal"]
+    dns: 8.8.8.8
+    environment:
+      - KRILL_FQDN
+    restart: on-failure
+    depends_on:
+      - nginx
+
+  fortvalidator:
+    build:
+      context: fortvalidator
+      network: host
+    container_name: fortvalidator
+    dns: 8.8.8.8
+    environment:
+      - KRILL_FQDN
+    restart: on-failure
+    depends_on:
+      - nginx
 
 volumes:
   krill_data:

@@ -198,7 +198,7 @@ Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
    .                                  .        .          .
    .                                  .        .          .
    .                                  .        .          .
-   |--Create ROAs using krill_admin-->|        |          |
+   |--Create ROAs using krillc------->|        |          |
                                       | Proxy->|          |
                                                | Publish  |
                                                |          |
@@ -235,7 +235,7 @@ Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
 
 ### Generate some fake ROAs
 
-Use the `krill_admin` binary installed in the `krill` container to create a
+Use the `krillc` binary installed in the `krill` container to create a
 CA that is a child of the embedded TA and then create ROAs in the child.
 
 ----
@@ -255,12 +255,12 @@ subdirectory so that the Docker Compose template can be found._
     $ eval $(terraform output docker_env_vars)
     $ cd ../lib/docker/
     $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+$' | cut -d ' ' -f 2)
-    $ alias ka="docker-compose exec krill krill_admin -s https://localhost:3000/ -t ${KRILL_AUTH_TOKEN}"
-    $ ka cas add -h child -c secret2
-    $ ka cas children -h ta add -4 10.0.0.0/16 embedded -h child 
-    $ ka cas update -h child add-parent -p ta embedded
+    $ alias krillc='docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} krill krillc'"
+    $ krillc add --ca child
+    $ krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16"
+    $ krillc parents add --embedded --ca child --parent ta
 
-For the next step the `krill_admin` command takes a file as input and the demo
+For the next step the `krillc` command takes a file as input and the demo
 mounts `/tmp/ka` in the container from the same location in the host, but the
 filesystem is that of the remote droplet, nor our host filesystem. So we have
 to copy the file to the droplet before we can import it into Krill:
@@ -269,8 +269,8 @@ to copy the file to the droplet before we can import it into Krill:
     A: 10.0.0.0/24 => 64496
     A: 10.0.1.0/24 => 64496
     EOF
-    $ scp -i /tmp/demo-ssh-key /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
-    $ ka cas roas -h child update -d /tmp/ka/delta.1
+    $ scp -i ${TF_VAR_ssh_key_path} /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
+    $ krillc roas update --ca child --delta /tmp/ka/delta.1
 
 ### Inspect
 
