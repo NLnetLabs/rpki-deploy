@@ -29,3 +29,37 @@ module "docker_deploy" {
   ssh_key_path       = var.ssh_key_path
   ssh_user           = module.create_infra.ssh_user
 }
+
+resource "null_resource" "configure_krill" {
+    triggers = {
+        docker_url = "${module.docker_deploy.docker_url}"
+        docker_cert_path = "${module.docker_deploy.cert_path}"
+    }
+
+    provisioner "file" {
+        content     = <<-EOT
+        A: 10.0.0.0/24 => 64496
+        A: 10.0.1.0/24 => 64496
+        EOT
+        destination = "/tmp/ka/delta.1"
+
+        connection {
+            type        = "ssh"
+            user        = module.create_infra.ssh_user
+            private_key = "${file(var.ssh_key_path)}"
+            host        = module.create_infra.ipv4_address
+        }
+    }
+
+    provisioner "local-exec" {
+        environment = {
+            DOCKER_TLS_VERIFY="1"
+            DOCKER_MACHINE_NAME="${var.hostname}"
+            DOCKER_HOST="${module.docker_deploy.docker_url}"
+            DOCKER_CERT_PATH="${module.docker_deploy.cert_path}"            
+        }
+
+        interpreter = ["/bin/bash"]
+        command = "../configure_krill.sh"
+    }
+}
