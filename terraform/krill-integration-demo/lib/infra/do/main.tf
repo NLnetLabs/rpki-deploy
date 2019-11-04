@@ -11,7 +11,7 @@ variable "region" {}
 
 provider "digitalocean" {
   token   = "${var.do_token}"
-  version = "~> 1.1"
+  version = "~> 1.10"
 }
 
 
