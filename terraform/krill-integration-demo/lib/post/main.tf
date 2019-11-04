@@ -40,4 +40,17 @@ resource "null_resource" "run_tests" {
         command = "../scripts/configure_krill.sh"
     }
 
+    provisioner "local-exec" {
+        environment = {
+            DOCKER_TLS_VERIFY="1"
+            DOCKER_MACHINE_NAME="${var.hostname}"
+            DOCKER_HOST="${var.docker_url}"
+            DOCKER_CERT_PATH="${var.docker_cert_path}"
+            KRILL_FQDN="${join(".", [var.hostname, var.domain])}"
+        }
+
+        interpreter = ["/bin/bash"]
+        working_dir = "../lib/docker"
+        command = "../../scripts/test_krill.sh"
+    }
 }

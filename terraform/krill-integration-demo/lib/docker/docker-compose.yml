@@ -57,36 +57,34 @@ services:
   
   routinator:
     build:
-      context: routinator
+      context: relayingparties/routinator
       network: host
     container_name: routinator
-    command: ["-vvv", "server", "--rtr", "0.0.0.0:3323", "--http", "0.0.0.0:9556", "--refresh=60"]
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
     ports:
       - "3323:3323"
       - "9556:9556"
-    restart: unless-stopped
+    restart: on-failure
     depends_on:
-      - nginx
+      - relayingpartybase
 
   octorpki:
     build:
-      context: octorpki
+      context: relayingparties/octorpki
       network: host
     container_name: octorpki
-    command: ["-mode", "oneoff", "-tal.name", "KRILL", "-tal.root", "/tmp/ta.tal"]
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
     restart: on-failure
     depends_on:
-      - nginx
+      - relayingpartybase
 
   fortvalidator:
     build:
-      context: fortvalidator
+      context: relayingparties/fortvalidator
       network: host
     container_name: fortvalidator
     dns: 8.8.8.8
@@ -94,7 +92,43 @@ services:
       - KRILL_FQDN
     restart: on-failure
     depends_on:
+      - relayingpartybase
+
+  rpkivalidator3:
+    build:
+      context: relayingparties/rpkivalidator3
+      network: host
+    privileged: true
+    container_name: rpkivalidator3
+    dns: 8.8.8.8
+    environment:
+      - KRILL_FQDN
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - relayingpartybase
       - nginx
+
+  rcynic:
+    build:
+      context: relayingparties/rcynic
+      network: host
+    privileged: true
+    container_name: rcynic
+    dns: 8.8.8.8
+    environment:
+      - KRILL_FQDN
+    restart: on-failure
+    depends_on:
+      - relayingpartybase
+
+  relayingpartybase:
+    image: relayingpartybase
+    build:
+      context: relayingparties/base
+      network: host
+    container_name: relayingpartybase
 
 volumes:
   krill_data:

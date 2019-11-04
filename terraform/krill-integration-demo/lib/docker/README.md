@@ -156,7 +156,7 @@ Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
 ### Generate some fake ROAs
 
 ```
-$ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+$' | cut -d ' ' -f 2)
+$ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 $ alias ka="docker-compose exec krill krill_admin -s https://localhost:3000/ -t ${KRILL_AUTH_TOKEN}"
 $ cat <<EOF >/tmp/delta.1
 A: 10.0.0.0/24 => 64496
