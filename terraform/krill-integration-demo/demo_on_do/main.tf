@@ -13,6 +13,7 @@ module "create_infra" {
   hostname        = var.hostname
   region          = var.region
   key_fingerprint = data.tls_public_key.krilldemo.public_key_fingerprint_md5
+  ssh_key_path    = var.ssh_key_path
 }
 
 module "docker_deploy" {
