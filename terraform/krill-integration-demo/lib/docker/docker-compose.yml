@@ -43,6 +43,17 @@ services:
       # Remember to replace /local/path/to/your/ with the correct path.
       # - /local/path/to/your/krill.conf:/var/krill/data/krill.conf
     restart: unless-stopped
+
+  rsyncd:
+    build:
+      context: rsyncd
+      network: host
+    container_name: rsyncd
+    ports:
+      - "873:873"
+    volumes:
+      - rsync_data:/share:ro
+    restart: unless-stopped
   
   routinator:
     build:
@@ -59,17 +70,6 @@ services:
     restart: unless-stopped
     depends_on:
       - nginx
-
-  rsyncd:
-    build:
-      context: rsyncd
-      network: host
-    container_name: rsyncd
-    ports:
-      - "873:873"
-    volumes:
-      - rsync_data:/share:ro
-    restart: unless-stopped
 
   octorpki:
     build:
