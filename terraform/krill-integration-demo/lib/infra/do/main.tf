@@ -96,6 +96,13 @@ resource "digitalocean_firewall" "krilldemo" {
     source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
   }
 
+  # -> RIPE NCC RPKI validator 3 HTTP listen port
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = 8080
+    source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
+  }
+
   # allow all outbound TCP
   outbound_rule {
     protocol              = "tcp"
