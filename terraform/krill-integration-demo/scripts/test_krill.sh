@@ -64,10 +64,10 @@ test_krill_has_roas || test_fail "Krill doesn't appear to have the expected chil
 
 krillc roas list --ca child --format json | jq -r '.[]' | sort >$KRILL_ROAS
 
-for relayingparty in routinator octorpki fortvalidator rcynic; do
+for relyingparty in routinator octorpki fortvalidator rcynic; do
     (( TEST_COUNT=TEST_COUNT + 1 ))
-    if ! my_retry 1 0 test_compare_krill_roas_to_logs ${relayingparty}; then
-        test_fail "${relayingparty} ROAs do not match those of Krill"
+    if ! my_retry 1 0 test_compare_krill_roas_to_logs ${relyingparty}; then
+        test_fail "${relyingparty} ROAs do not match those of Krill"
     else
         (( PASS_COUNT=PASS_COUNT + 1 ))
     fi

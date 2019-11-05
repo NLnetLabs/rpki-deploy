@@ -57,7 +57,7 @@ services:
   
   routinator:
     build:
-      context: relayingparties/routinator
+      context: relyingparties/routinator
       network: host
     container_name: routinator
     dns: 8.8.8.8
@@ -68,11 +68,11 @@ services:
       - "9556:9556"
     restart: on-failure
     depends_on:
-      - relayingpartybase
+      - relyingpartybase
 
   octorpki:
     build:
-      context: relayingparties/octorpki
+      context: relyingparties/octorpki
       network: host
     container_name: octorpki
     dns: 8.8.8.8
@@ -80,11 +80,11 @@ services:
       - KRILL_FQDN
     restart: on-failure
     depends_on:
-      - relayingpartybase
+      - relyingpartybase
 
   fortvalidator:
     build:
-      context: relayingparties/fortvalidator
+      context: relyingparties/fortvalidator
       network: host
     container_name: fortvalidator
     dns: 8.8.8.8
@@ -92,11 +92,11 @@ services:
       - KRILL_FQDN
     restart: on-failure
     depends_on:
-      - relayingpartybase
+      - relyingpartybase
 
   rpkivalidator3:
     build:
-      context: relayingparties/rpkivalidator3
+      context: relyingparties/rpkivalidator3
       network: host
     privileged: true
     container_name: rpkivalidator3
@@ -107,12 +107,12 @@ services:
       - "8080:8080"
     restart: on-failure
     depends_on:
-      - relayingpartybase
+      - relyingpartybase
       - nginx
 
   rcynic:
     build:
-      context: relayingparties/rcynic
+      context: relyingparties/rcynic
       network: host
     privileged: true
     container_name: rcynic
@@ -121,14 +121,14 @@ services:
       - KRILL_FQDN
     restart: on-failure
     depends_on:
-      - relayingpartybase
+      - relyingpartybase
 
-  relayingpartybase:
-    image: relayingpartybase
+  relyingpartybase:
+    image: relyingpartybase
     build:
-      context: relayingparties/base
+      context: relyingparties/base
       network: host
-    container_name: relayingpartybase
+    container_name: relyingpartybase
 
 volumes:
   krill_data:

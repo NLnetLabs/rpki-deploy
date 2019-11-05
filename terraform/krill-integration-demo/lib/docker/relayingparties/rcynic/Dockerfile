@@ -30,7 +30,7 @@ RUN mkdir -p /tmp/rcynic/unauthenticated
 RUN mkdir -p /tmp/rcynic/tals
 
 # Prepare Docker environment
-COPY --from=relayingpartybase /opt/my_funcs.sh /opt/my_funcs.sh
+COPY --from=relyingpartybase /opt/my_funcs.sh /opt/my_funcs.sh
 COPY entrypoint.sh /opt/
 WORKDIR /
 ENTRYPOINT ["/opt/entrypoint.sh"]
