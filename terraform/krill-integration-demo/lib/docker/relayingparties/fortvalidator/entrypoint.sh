@@ -16,11 +16,10 @@ my_retry 12 5 rsync -4 rsync://${KRILL_FQDN}/repo/ta/ta.cer >/dev/null
 
 my_log "Launching Fort Validator"
 cd ${DATA_DIR}
-fort \
+/opt/entrypoint.sh \
     --mode standalone \
     --output.roa output.roa \
-    --tal ${TAL_DIR}/ta.tal \
-    --local-repository cache "$@"
+    --tal ${TAL_DIR}/ta.tal
 
 my_log "Dumping received ROAs"
 cat output.roa
