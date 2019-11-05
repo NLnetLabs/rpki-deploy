@@ -76,7 +76,7 @@ echo "Checking if rewritten TA CER already exists in the RSYNC repo.."
 if ! rsync -4 rsync://${EXT_DOM}/repo/${CER_REL_PATH} >/dev/null; then
     echo "Cloning and rewriting Krill TA CER to the RSYNC repo.."
 
-    DST_PATH="repo/rsync/${EXT_DOM}/repo/${CER_REL_PATH}"
+    DST_PATH="repo/rsync/current/${CER_REL_PATH}"
     # We use docker exec instead of docker cp because docker cp doesn't support
     # piping from stdin unless stdin is a tar archive.
     ${WGET_UNSAFE_TO_STDOUT} ${CER_URI} | docker exec -i ${KRILL_CONTAINER} sh -c "cat - > ${DST_PATH}"

@@ -37,7 +37,7 @@ services:
       - KRILL_FQDN
     volumes:
       - krill_data:/var/kill/data
-      - rsync_data:/var/krill/data/repo/rsync/$KRILL_FQDN/repo/
+      - rsync_data:/var/krill/data/repo/rsync/
       - /tmp/ka:/tmp/ka
       # Uncomment the next line to use your own krill.conf file.
       # Remember to replace /local/path/to/your/ with the correct path.
