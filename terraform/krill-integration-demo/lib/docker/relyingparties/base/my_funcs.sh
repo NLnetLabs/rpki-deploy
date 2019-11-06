@@ -60,6 +60,7 @@ install_tal() {
         [[ $# -eq 3 && "$3" == "--no-rewrite" ]] && NO_REWRITE="$3"
         install_tal_from_remote $NO_REWRITE $1 $2
     else
+        my_log "Installing local TAL /opt/$1 in $2"
         cp /opt/$1 $2
     fi
 
