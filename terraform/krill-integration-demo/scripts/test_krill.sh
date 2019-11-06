@@ -130,7 +130,7 @@ incr_test_counters() {
     return $?
 }
 
-WAR# Delete temporary files on exit.
+# Delete temporary files on exit.
 trap cleanup EXIT
 
 # -----------------------------------------------------------------------------
