@@ -18,6 +18,8 @@ output "docker_env_vars" {
     export KRILL_AUTH_TOKEN="${var.krill_auth_token}"
     export KRILL_LOG_LEVEL="${var.krill_log_level}"
     export KRILL_FQDN="${join(".", [var.hostname, var.domain])}"
+    export KRILL_USE_TA="${var.krill_use_ta}"
+    export SRC_TAL="${var.src_tal}"
     EOF
 }
 

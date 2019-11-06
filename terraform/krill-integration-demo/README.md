@@ -254,7 +254,7 @@ subdirectory so that the Docker Compose template can be found._
 
     $ eval $(terraform output docker_env_vars)
     $ cd ../lib/docker/
-    $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+$' | cut -d ' ' -f 2)
+    $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
     $ alias krillc="docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} krill krillc"
     $ krillc add --ca child
     $ krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16"

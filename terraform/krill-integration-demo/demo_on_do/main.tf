@@ -25,10 +25,12 @@ module "docker_deploy" {
   krill_build_path   = var.krill_build_path
   krill_log_level    = var.krill_log_level
   krill_version      = var.krill_version
+  krill_use_ta       = var.krill_use_ta
   use_staging_cert   = var.use_staging_cert
   ipv4_address       = module.create_infra.ipv4_address
   ssh_key_path       = var.ssh_key_path
   ssh_user           = module.create_infra.ssh_user
+  src_tal            = var.src_tal
 }
 
 module "post" {

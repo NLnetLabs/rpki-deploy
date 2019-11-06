@@ -1,7 +1,7 @@
 FROM cloudflare/octorpki
 USER root
 RUN apk add jq bash
-COPY --from=relyingpartybase /opt/my_funcs.sh /opt/my_funcs.sh
+COPY --from=relyingpartybase /opt/* /opt/
 COPY entrypoint.sh /opt/
 WORKDIR /
 USER rpki

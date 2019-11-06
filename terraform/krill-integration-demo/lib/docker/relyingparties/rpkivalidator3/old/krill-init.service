@@ -1,0 +1,11 @@
+[Unit]
+Description=Krill init service
+Before=rpki-validator-3.service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/krill-init.sh
+
+[Install]
+WantedBy=multi-user.target

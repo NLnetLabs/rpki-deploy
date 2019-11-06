@@ -1,5 +1,5 @@
 FROM nlnetlabs/routinator:latest
 COPY entrypoint.sh /opt/
-COPY --from=relyingpartybase /opt/my_funcs.sh /opt/my_funcs.sh
+COPY --from=relyingpartybase /opt/* /opt/
 WORKDIR /
 ENTRYPOINT ["/opt/entrypoint.sh"]

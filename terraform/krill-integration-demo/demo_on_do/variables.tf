@@ -83,3 +83,15 @@ variable "docker_compose_dir" {
   default     = "../lib/docker/"
   description = "The relative or absolute path to the directory containing the docker-compose.yml template to deploy."
 }
+
+variable "src_tal" {
+  type        = string
+  default     = "https://<KRILL_FQDN>/ta/ta.tal"
+  description = "A URI or filename (in the baserelyingparties image /opt/ dir) of the TAL to use. <KRILL_FQDN> will be replaced in the given URL. Examples: https://<KRILL_FQDN>/ta/ta.tal, or ripe-pilot.tal"
+}
+
+variable "krill_use_ta" {
+  type        = bool
+  default     = true
+  description = "Whether or not Krill should act as a TA for testing purposes. Default: true. Set to false when using an alternate src_tal."
+}

@@ -32,7 +32,7 @@ services:
       # Comment out the next line if using your own krill.conf file.
       # Also see the comment in the 'volumes' section below.
       - KRILL_LOG_LEVEL=debug
-      - KRILL_USE_TA=true
+      - KRILL_USE_TA
       - KRILL_AUTH_TOKEN
       - KRILL_FQDN
     volumes:
@@ -63,6 +63,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - SRC_TAL
     ports:
       - "3323:3323"
       - "9556:9556"
@@ -78,6 +79,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - SRC_TAL
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -90,6 +92,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - SRC_TAL
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -103,6 +106,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - SRC_TAL
     ports:
       - "8080:8080"
     restart: on-failure
@@ -119,6 +123,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - SRC_TAL
     restart: on-failure
     depends_on:
       - relyingpartybase

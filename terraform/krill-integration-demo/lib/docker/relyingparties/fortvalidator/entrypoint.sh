@@ -9,10 +9,7 @@ mkdir -p ${TAL_DIR}
 export BANNER="Fort Validator setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal_from_remote https://${KRILL_FQDN}/ta/ta.tal ${TAL_DIR}/ta.tal
-
-my_log "Waiting for Krill TA certificate to become available via RSYNC"
-my_retry 12 5 rsync -4 rsync://${KRILL_FQDN}/repo/ta/ta.cer >/dev/null
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
 
 my_log "Launching Fort Validator"
 cd ${DATA_DIR}
@@ -21,5 +18,6 @@ cd ${DATA_DIR}
     --output.roa output.roa \
     --tal ${TAL_DIR}/ta.tal
 
-my_log "Dumping received ROAs"
-cat output.roa
+my_log "Dumping received ROAs in the format expected by test_krill.sh"
+echo -n 'TEST OUT: { "roas": ['
+tail -n +2 output.roa | sed -e 's|^\(AS[0-9]\+\),\([^/]\+/[0-9]\+\),\([0-9]\+\)|{ "asn": "\1", "prefix": "\2", "maxLength": \3, "ta": "ta" }|' | paste -sd ',' - | sed -e 's|$|] }|'

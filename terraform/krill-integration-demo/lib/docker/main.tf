@@ -4,11 +4,13 @@ variable "krill_version" {}
 variable "krill_auth_token" {}
 variable "krill_build_path" {}
 variable "krill_log_level" {}
+variable "krill_use_ta" {}
 variable "use_staging_cert" {}
 variable "docker_compose_dir" {}
 variable "ipv4_address" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
+variable "src_tal" {}
 
 
 # This provider is used to resolve conditional or incomplete values which are
@@ -83,8 +85,10 @@ resource "dockermachine_generic" "docker_deploy" {
       KRILL_STAGING_CERT  = var.use_staging_cert
       KRILL_AUTH_TOKEN    = var.krill_auth_token
       KRILL_LOG_LEVEL     = var.krill_log_level
+      KRILL_USE_TA        = var.krill_use_ta
       KRILL_FQDN          = data.null_data_source.values.outputs["krill_fqdn"]
       KRILL_VERSION       = data.null_data_source.values.outputs["krill_version"]
+      SRC_TAL             = replace(var.src_tal, "<KRILL_FQDN>", data.null_data_source.values.outputs["krill_fqdn"])
     }
     working_dir = var.docker_compose_dir
     command     = "docker-compose up --build -d"

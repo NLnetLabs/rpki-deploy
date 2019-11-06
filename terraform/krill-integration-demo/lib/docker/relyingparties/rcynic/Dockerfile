@@ -24,13 +24,17 @@ WORKDIR /tmp/build/rpki
 RUN git clone --branch buildbot-1.0.1544679302 --depth 1 https://github.com/dragonresearch/rpki.net.git .
 RUN ./configure --disable-ca-tools && make && make install
 
+# Install the sqlite3 CLI for extracting ROA data from the rcynic database
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    sqlite3
+
 # Prepare rcynic environment
 COPY rcynic.conf /opt/rcynic.conf
 RUN mkdir -p /tmp/rcynic/unauthenticated
 RUN mkdir -p /tmp/rcynic/tals
 
 # Prepare Docker environment
-COPY --from=relyingpartybase /opt/my_funcs.sh /opt/my_funcs.sh
+COPY --from=relyingpartybase /opt/* /opt/
 COPY entrypoint.sh /opt/
 WORKDIR /
 ENTRYPOINT ["/opt/entrypoint.sh"]
