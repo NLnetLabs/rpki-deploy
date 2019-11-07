@@ -6,11 +6,9 @@ variable "domain" {}
 variable "hostname" {}
 variable "region" {}
 
-
 provider "aws" {
   region = var.region
 }
-
 
 resource "aws_key_pair" "krill" {
   key_name   = var.key_name
@@ -18,6 +16,9 @@ resource "aws_key_pair" "krill" {
 }
 
 resource "aws_instance" "ec2vm" {
+  # TODO: use a map to use the right region specific AMI ID
+  # This AMI ID is for Ubuntu 16.04 LTS Xenial Xerus eu-west-1 HVM SSD
+  # version 20190628.
   ami           = "ami-03746875d916becc0"
   instance_type = var.instance_type
   key_name      = var.key_name

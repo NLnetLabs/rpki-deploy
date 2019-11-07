@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e -u -o pipefail
 
 DATA_DIR=/tmp/routinator

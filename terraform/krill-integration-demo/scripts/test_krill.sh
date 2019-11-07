@@ -1,19 +1,18 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+export BANNER="$(basename $0):"
+
 TMP_DIR=$(mktemp -d)
 EXPECTED_ROAS_FILE="${TMP_DIR}/expected.roas"
 KRILL_CONTAINER="krill"
 KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 
-BAD_LOG_FILTER='(ERR|Bad)'
+BAD_LOG_FILTER='(ERR|Bad|Fail|WARN)'
 TEST_COUNT=0
 PASS_COUNT=0
 
-COLOUR_DEFAULT="\e[39m"
-COLOUR_RED="\e[91m"
-COLOUR_GREEN="\e[92m"
-COLOUR_DARK_GRAY="\e[90m"
+source ../../lib/docker/relyingparties/base/my_funcs.sh
 
 cleanup() {
     rm -R ${TMP_DIR}
@@ -29,40 +28,6 @@ krillc() {
         -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} \
         ${KRILL_CONTAINER} \
         krillc $@
-}
-
-# Retry a command up to N times with a sleep of M seconds between retries
-my_retry() {
-    MAX_TRIES=$1
-    SLEEP_BETWEEN=$2
-    shift 2
-    TRIES=0
-    while true; do
-        (( TRIES=TRIES+1 ))
-        echo -n "Attempt ${TRIES}/${MAX_TRIES}: $@: "
-        OUTPUT=$($@ 2>&1)
-        RC=$?
-
-        if [ ${RC} -eq 0 ]; then
-            echo -e "${COLOUR_GREEN}OKAY${COLOUR_DEFAULT}"
-            return 0
-        else
-            MSG="${COLOUR_RED}FAIL${COLOUR_DEFAULT}"
-            MSG="${MSG} (EXIT CODE ${RC})"
-            if [ ${TRIES} -ge ${MAX_TRIES} ]; then
-                echo -e "${MSG}"
-                echo -e -n "${COLOUR_DARK_GRAY}"
-                echo -e "${OUTPUT}" | sed -e "s|^|Failed command output: |"
-                echo -e -n "${COLOUR_DEFAULT}"
-                return ${RC}
-            else
-                MSG="${MSG} Retrying in ${SLEEP_BETWEEN} seconds"
-                echo -e "${MSG}"
-            fi
-        fi
-
-        sleep ${SLEEP_BETWEEN}
-    done
 }
 
 log_test_failure() {
@@ -163,8 +128,8 @@ fi
 # -----------------------------------------------------------------------------
 # Fetch and compare ROAs from the various RPs against the expected ROAs:
 # -----------------------------------------------------------------------------
-for relyingparty in routinator octorpki fortvalidator rcynic; do
-    if ! incr_test_counters my_retry 3 10 test_compare_krill_roas_to_logs ${relyingparty}; then
+for relyingparty in routinator octorpki fortvalidator rcynic rpkiclient; do
+    if ! incr_test_counters my_retry 12 10 test_compare_krill_roas_to_logs ${relyingparty}; then
         log_test_failure "${relyingparty} ROAs do not match those of Krill"
     fi
 done
@@ -182,7 +147,7 @@ echo "TEST REPORT: ${PASS_COUNT}/${TEST_COUNT} tests passed."
 # Output diagnostic logs:
 # -----------------------------------------------------------------------------
 echo "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
-docker-compose logs | grep -E ${BAD_LOG_FILTER}
+docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
 
 # THE END
 [ ${PASS_COUNT} -lt ${TEST_COUNT} ] && exit 1

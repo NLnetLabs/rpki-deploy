@@ -1,43 +1,49 @@
 #!/bin/bash
-set -e -u -o pipefail
+set -euo pipefail
+
+export BANNER="$(basename $0):"
 
 KRILL_CONTAINER="krill"
 KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 WGET_UNSAFE_TO_STDOUT="wget -4 --no-check-certificate -qO-"
 
+source ../lib/docker/relyingparties/base/my_funcs.sh
+
 krillc() {
-    docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} ${KRILL_CONTAINER} krillc $@
+    docker exec \
+        -e KRILL_CLI_SERVER=https://localhost:3000/ \
+        -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} \
+        ${KRILL_CONTAINER} \
+        krillc $@
 }
 
-my_retry() {
-    MAX_TRIES=$1
-    SLEEP_BETWEEN=$2
-    shift 2
-    TRIES=1
-    while true; do
-        echo "Attempt ${TRIES}/${MAX_TRIES}: " $@
-        $@ && return 0
-        (( TRIES=TRIES+1 ))
-        [ ${TRIES} -le ${MAX_TRIES} ] || return 1
-        sleep $SLEEP_BETWEEN
-    done
-}
+my_log "Use embedded trust anchor? ${KRILL_USE_TA}"
+my_log "TAL to be used by clients: ${SRC_TAL}"
 
 if [[ "${KRILL_USE_TA}" == "true" ]]; then
-    if ! krillc show --ca child --format none; then
+    my_log "Using Krill embedded TA"
+
+    my_log "Checking to see if the child CA exists"
+    if ! my_try_cmd krillc show --ca child --format none; then
         my_retry 5 2 krillc add --ca child
     fi
 
-    if [ "$(krillc show --ca ta --format json | jq '.children | length')" -eq 0 ]; then
-        my_retry 5 2 krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16" --ipv6 "2001:3200:3200::66" --asn 1
+    my_log "Checking to see if the parent CA -> child CA relationship exists"
+    NUM_CHILDREN=$(my_log_cmd krillc show --ca ta --format json | jq '.children | length')
+    if [ ${NUM_CHILDREN} -eq 0 ]; then
+        my_retry 5 5 krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16" --ipv6 "2001:3200:3200::66" --asn 1
     fi
 
-    if [ "$(krillc show --ca child --format json | jq '.parents | length')" -eq 0 ]; then
-        my_retry 5 2 krillc parents add --embedded --ca child --parent ta
+    my_log "Checking to see if the child CA -> parent CA relationship exists"
+    NUM_PARENTS=$(my_log_cmd krillc show --ca child --format json | jq '.parents | length')
+    if [ ${NUM_PARENTS} -eq 0 ]; then
+        my_retry 5 5 krillc parents add --embedded --ca child --parent ta
     fi
 
-    if [ "$(krillc roas list --ca child --format json | jq '. | length')" -eq 0 ]; then
-        my_retry 5 2 krillc roas update --ca child --delta /tmp/ka/delta.1
+    my_log "Checking to see if the child CA ROAs exist"
+    NUM_CHILD_ROAS=$(my_log_cmd krillc roas list --ca child --format json | jq '. | length')
+    if [ ${NUM_CHILD_ROAS} -eq 0 ]; then
+        my_retry 5 5 krillc roas update --ca child --delta /tmp/ka/delta.1
     fi
 fi
 
@@ -57,12 +63,9 @@ fi
 # have wget or curl or similar installed in it.
 
 if [[ "${SRC_TAL}" == http* ]]; then
-    # 0. Wait for the TAL file to become available externally
-    my_retry 12 5 ${WGET_UNSAFE_TO_STDOUT} $SRC_TAL} >/dev/null
-
     if [[ "${KRILL_USE_TA}" == "true" ]]; then
         # 1.Extract the CER file URI from the remote TAL file.
-        CER_URI=$(${WGET_UNSAFE_TO_STDOUT} ${EXT_TAL_URI} | grep -F "https")
+        CER_URI=$(my_retry 12 5 ${WGET_UNSAFE_TO_STDOUT} ${SRC_TAL} | grep -F "https")
 
         # Now CER_URI should be something like https://${EXT_DOM}/ta/ta.cer
         # 2. Extract the external domain name (EXT_DOM) from the CER URI.
@@ -75,17 +78,19 @@ if [[ "${SRC_TAL}" == http* ]]; then
         # ta/ta.cer.
         CER_REL_PATH=${CER_URI##*$EXT_DOM/}
 
-        echo "Checking if rewritten TA CER already exists in the RSYNC repo.."
-        if ! rsync -4 rsync://${EXT_DOM}/repo/${CER_REL_PATH} >/dev/null; then
-            echo "Cloning and rewriting Krill TA CER to the RSYNC repo.."
+        my_log "Checking if rewritten TA CER already exists in the RSYNC repo.."
+        if ! my_try_cmd rsync -4 rsync://${EXT_DOM}/repo/${CER_REL_PATH} >/dev/null; then
+            my_log "Cloning and rewriting Krill TA CER to the RSYNC repo.."
 
             DST_PATH="repo/rsync/current/${CER_REL_PATH}"
             # We use docker exec instead of docker cp because docker cp doesn't support
             # piping from stdin unless stdin is a tar archive.
-            ${WGET_UNSAFE_TO_STDOUT} ${CER_URI} | docker exec -i ${KRILL_CONTAINER} sh -c "cat - > ${DST_PATH}"
+            my_log_cmd ${WGET_UNSAFE_TO_STDOUT} ${CER_URI} | docker exec -i ${KRILL_CONTAINER} sh -c "cat - > ${DST_PATH}"
 
-            echo "Installed Krill trust anchor certificate into rsync repo at:"
-            docker exec ${KRILL_CONTAINER} ls -la ${DST_PATH}
+            my_log "Installed Krill trust anchor certificate into rsync repo at:"
+            my_log_cmd docker exec ${KRILL_CONTAINER} ls -la ${DST_PATH}
         fi
     fi
 fi
+
+my_log "Done"

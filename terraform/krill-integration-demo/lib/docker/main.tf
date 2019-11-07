@@ -5,6 +5,7 @@ variable "krill_auth_token" {}
 variable "krill_build_path" {}
 variable "krill_log_level" {}
 variable "krill_use_ta" {}
+variable "krill_fqdn" {}
 variable "use_staging_cert" {}
 variable "docker_compose_dir" {}
 variable "ipv4_address" {}
@@ -18,8 +19,7 @@ variable "src_tal" {}
 data "null_data_source" "values" {
   inputs = {
     krill_version   = var.krill_build_path != "" ? "dirty" : var.krill_version
-    krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty ." : "echo skipping Krill build"
-    krill_fqdn      = join(".", [var.hostname, var.domain])
+    krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty -f Dockerfile.app ." : "echo skipping Krill build"
   }
 }
 
@@ -86,12 +86,12 @@ resource "dockermachine_generic" "docker_deploy" {
       KRILL_AUTH_TOKEN    = var.krill_auth_token
       KRILL_LOG_LEVEL     = var.krill_log_level
       KRILL_USE_TA        = var.krill_use_ta
-      KRILL_FQDN          = data.null_data_source.values.outputs["krill_fqdn"]
+      KRILL_FQDN          = var.krill_fqdn
       KRILL_VERSION       = data.null_data_source.values.outputs["krill_version"]
-      SRC_TAL             = replace(var.src_tal, "<KRILL_FQDN>", data.null_data_source.values.outputs["krill_fqdn"])
+      SRC_TAL             = var.src_tal
     }
     working_dir = var.docker_compose_dir
-    command     = "docker-compose up --build -d"
+    command     = "docker-compose build relyingpartybase && docker-compose build --parallel && docker-compose up -d"
   }
 }
 

@@ -22,17 +22,19 @@ variable "admin_ipv6_cidr" {
 
 variable "hostname" {
   type        = string
-  description = "The DNS/Droplet/DockerMachine/host name of the machine to create."
+  description = "The DNS/Droplet/DockerMachine/host name of the machine to create. Default: generated"
+  default     = ""
 }
 
 variable "domain" {
   type        = string
-  description = "The domain under which DigitalOcean A and AAAA DNS records will be created for hostname."
+  description = "The domain under which DigitalOcean A and AAAA DNS records will be created for hostname. Default: do.nlnetlabs.nl"
+  default     = "do.nlnetlabs.nl"
 }
 
 variable "size" {
   type        = string
-  default     = "s-2vcpu-2gb"
+  default     = "s-4vcpu-8gb"
   description = "The size of the Digital Ocean Droplet to create. Default: s-1vcpu-1gb"
 }
 
@@ -86,8 +88,8 @@ variable "docker_compose_dir" {
 
 variable "src_tal" {
   type        = string
-  default     = "https://<KRILL_FQDN>/ta/ta.tal"
-  description = "A URI or filename (in the baserelyingparties image /opt/ dir) of the TAL to use. <KRILL_FQDN> will be replaced in the given URL. Examples: https://<KRILL_FQDN>/ta/ta.tal, or ripe-pilot.tal"
+  default     = "https://<FQDN>/ta/ta.tal"
+  description = "A URI or filename (in the baserelyingparties image /opt/ dir) of the TAL to use. <FQDN> will be replaced in the given URL. Examples: https://<FQDN>/ta/ta.tal, or ripe-pilot.tal"
 }
 
 variable "krill_use_ta" {

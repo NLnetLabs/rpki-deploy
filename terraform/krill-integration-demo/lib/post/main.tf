@@ -1,10 +1,12 @@
-
 variable "domain" {}
 variable "hostname" {}
 variable "docker_url" {}
 variable "docker_cert_path" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
+variable "krill_fqdn" {}
+variable "krill_use_ta" {}
+variable "src_tal" {}
 
 resource "null_resource" "run_tests" {
     triggers = {
@@ -23,7 +25,7 @@ resource "null_resource" "run_tests" {
             type        = "ssh"
             user        = var.ssh_user
             private_key = "${file(var.ssh_key_path)}"
-            host        = "${join(".", [var.hostname, var.domain])}"
+            host        = "${var.krill_fqdn}"
         }
     }
 
@@ -33,7 +35,9 @@ resource "null_resource" "run_tests" {
             DOCKER_MACHINE_NAME="${var.hostname}"
             DOCKER_HOST="${var.docker_url}"
             DOCKER_CERT_PATH="${var.docker_cert_path}"
-            KRILL_FQDN="${join(".", [var.hostname, var.domain])}"
+            KRILL_FQDN="${var.krill_fqdn}"
+            KRILL_USE_TA="${var.krill_use_ta}"
+            SRC_TAL="${var.src_tal}"
         }
 
         interpreter = ["/bin/bash"]
@@ -46,7 +50,9 @@ resource "null_resource" "run_tests" {
             DOCKER_MACHINE_NAME="${var.hostname}"
             DOCKER_HOST="${var.docker_url}"
             DOCKER_CERT_PATH="${var.docker_cert_path}"
-            KRILL_FQDN="${join(".", [var.hostname, var.domain])}"
+            KRILL_FQDN="${var.krill_fqdn}"
+            KRILL_USE_TA="${var.krill_use_ta}"
+            SRC_TAL="${var.src_tal}"
         }
 
         interpreter = ["/bin/bash"]

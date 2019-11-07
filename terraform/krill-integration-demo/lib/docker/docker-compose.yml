@@ -101,7 +101,6 @@ services:
     build:
       context: relyingparties/rpkivalidator3
       network: host
-    privileged: true
     container_name: rpkivalidator3
     dns: 8.8.8.8
     environment:
@@ -118,8 +117,20 @@ services:
     build:
       context: relyingparties/rcynic
       network: host
-    privileged: true
     container_name: rcynic
+    dns: 8.8.8.8
+    environment:
+      - KRILL_FQDN
+      - SRC_TAL
+    restart: on-failure
+    depends_on:
+      - relyingpartybase
+
+  rpkiclient:
+    build:
+      context: relyingparties/rpki-client
+      network: host
+    container_name: rpkiclient
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN

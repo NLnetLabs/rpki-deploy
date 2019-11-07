@@ -1,40 +1,12 @@
-FROM ubuntu:18.04
+FROM ximoneighteen/rcynic
 
 # Install packages
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y upgrade && apt-get install -y \
-    # rcynic dependencies
-    build-essential \
-    libpython2.7-dev \
-    python2.7 \
-    python-django \
-    python-lxml \
-    python-tornado \
-    rrdtool \
-    rsync \
-    # Dockerfile dependencies
-    curl  \
-    git \
-    # entrypoint.sh dependencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    sqlite3 \
     wget
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
-
-# Build
-WORKDIR /tmp/build/rpki
-RUN git clone --branch buildbot-1.0.1544679302 --depth 1 https://github.com/dragonresearch/rpki.net.git .
-RUN ./configure --disable-ca-tools && make && make install
-
-# Install the sqlite3 CLI for extracting ROA data from the rcynic database
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    sqlite3
-
-# Prepare rcynic environment
-COPY rcynic.conf /opt/rcynic.conf
-RUN mkdir -p /tmp/rcynic/unauthenticated
-RUN mkdir -p /tmp/rcynic/tals
 
 # Prepare Docker environment
 COPY --from=relyingpartybase /opt/* /opt/
 COPY entrypoint.sh /opt/
-WORKDIR /
 ENTRYPOINT ["/opt/entrypoint.sh"]

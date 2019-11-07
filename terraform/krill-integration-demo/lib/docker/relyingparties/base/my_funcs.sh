@@ -1,21 +1,72 @@
 #!/bin/bash
+COLOUR_DEFAULT="\e[39m"
+COLOUR_RED="\e[91m"
+COLOUR_GREEN="\e[92m"
+COLOUR_DARK_GRAY="\e[90m"
+COLOUR_LIGHT_YELLOW="\e[93m"
+
 # Usage: <LOG MESSAGE>...
 my_log() {
-    echo -e "${BANNER:-my_funcs}: $@"
+    OPTS="${BANNER:-}"
+    [[ $# -ge 2 && "$1" == "--no-eol" ]] && OPTS="-n $OPTS" && shift 1
+    [[ $# -ge 2 && "$1" == "--cont" ]] && OPTS="" && shift 1
+    echo -e ${OPTS} "$@" >&2
 }
 
-# Usage: <MAX_TRIES> <SLEEP_TIME_BETWEEN_TRIES> <COMMAND> [<ARG>...]
+my_log_cmd() {
+    my_retry 1 0 $*
+}
+
+my_try_cmd() {
+    my_retry --okay-to-fail 1 0 $*
+}
+
+# Usage: [--okay-to-fail] <MAX_TRIES> <SLEEP_TIME_BETWEEN_TRIES> <COMMAND> [<ARG>...]
+# Retry a command up to N times with a sleep of M seconds between retries
+# If --okay-to-fail the result will not be logged as OKAY or FAIL nor will
+# failure stdout/stderr be logged.
 my_retry() {
+    FAIL_STR="${COLOUR_RED}FAIL"
+    OKAY_TO_FAIL=0
+    if [[ $# -ge 1 && "$1" == "--okay-to-fail" ]]; then
+        shift 1
+        OKAY_TO_FAIL=1
+        FAIL_STR="${COLOUR_LIGHT_YELLOW}OKAY"
+    fi
     MAX_TRIES=$1
     SLEEP_BETWEEN=$2
     shift 2
-    TRIES=1
+
+    TRIES=0
     while true; do
-        my_log "Attempt ${TRIES}/${MAX_TRIES}:  $@"
-        $@ && return 0
         (( TRIES=TRIES+1 ))
-        [ ${TRIES} -le ${MAX_TRIES} ] || return 1
-        sleep $SLEEP_BETWEEN
+        my_log --no-eol "Try ${TRIES}/${MAX_TRIES}: $@: "
+
+        # capture (and thus suppress) and merge STDOUT and STDERR
+        OUTPUT=$($@ 2>&1)
+        RC=$?
+
+        if [ ${RC} -eq 0 ]; then
+            my_log --cont "${COLOUR_GREEN}OKAY${COLOUR_DEFAULT}"
+            echo "$OUTPUT"
+            return 0
+        else
+            MSG="${FAIL_STR}${COLOUR_DEFAULT}"
+            MSG="${MSG} (EXIT CODE ${RC})"
+            if [ ${TRIES} -ge ${MAX_TRIES} ]; then
+                my_log --cont "${MSG}"
+                if [ ${OKAY_TO_FAIL} -eq 0 ]; then
+                    my_log --no-eol "${COLOUR_DARK_GRAY}"
+                    my_log --cont "${OUTPUT}" | sed -e "s|^|Failed command output: |"
+                    my_log "${COLOUR_DEFAULT}"
+                fi
+                return ${RC}
+            else
+                my_log "${MSG} (next try in ${SLEEP_BETWEEN} seconds)"
+            fi
+        fi
+
+        sleep ${SLEEP_BETWEEN}
     done
 }
 
