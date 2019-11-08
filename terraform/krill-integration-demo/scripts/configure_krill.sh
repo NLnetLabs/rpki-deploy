@@ -94,7 +94,7 @@ if [[ "${SRC_TAL}" == http* ]]; then
             docker exec -i ${KRILL_CONTAINER} sh -c "apt-get update && apt-get -y install wget && ${WGET_UNSAFE_QUIET} -O${DST_PATH} ${CER_URI}"
 
             my_log "Installed Krill trust anchor certificate into rsync repo at:"
-            my_log_cmd docker exec ${KRILL_CONTAINER} ls -la ${DST_PATH}
+            my_retry --retry-is-unexpected 3 2 docker exec ${KRILL_CONTAINER} ls -la ${DST_PATH}
         fi
     fi
 fi
