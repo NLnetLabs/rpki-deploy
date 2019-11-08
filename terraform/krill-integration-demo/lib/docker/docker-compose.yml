@@ -16,6 +16,7 @@ services:
       - VALIDATION=http
       - URL=$KRILL_FQDN  # the FQDN of the DNS record of the host (used by Lets Encrypt)
       - STAGING=$KRILL_STAGING_CERT # true if the LetsEncrypt cert should be for testing
+      - DHLEVEL=1024 # speed up deployment, perhaps use an alternate NGINX container to avoid this delay?
     ports:
       - "443:443"
       - "80:80"
