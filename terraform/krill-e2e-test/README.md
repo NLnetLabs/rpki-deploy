@@ -1,3 +1,7 @@
+**Warning**: This README is out of date.
+
+----
+
 # Krill + nginx + rsyncd + routinator in the cloud
 
 ## Introduction
