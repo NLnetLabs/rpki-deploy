@@ -121,6 +121,7 @@ services:
     dns: 8.8.8.8
     environment:
       - KRILL_FQDN
+      - KRILL_USE_TA
       - SRC_TAL
     restart: on-failure
     depends_on:
