@@ -5,7 +5,8 @@ export BANNER="$(basename $0):"
 
 KRILL_CONTAINER="krill"
 KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2)
-WGET_UNSAFE_TO_STDOUT="wget -4 --no-check-certificate -qO-"
+WGET_UNSAFE_QUIET="wget -4 --no-check-certificate -q"
+WGET_UNSAFE_TO_STDOUT="${WGET_UNSAFE_QUIET}O-"
 
 source ../lib/docker/relyingparties/base/my_funcs.sh
 
@@ -19,6 +20,9 @@ krillc() {
 
 my_log "Use embedded trust anchor? ${KRILL_USE_TA}"
 my_log "TAL to be used by clients: ${SRC_TAL}"
+
+my_log "Waiting for Krill to become healthy via NGINX"
+my_retry 12 5 ${WGET_UNSAFE_TO_STDOUT} -S https://${KRILL_FQDN}/health
 
 if [[ "${KRILL_USE_TA}" == "true" ]]; then
     my_log "Using Krill embedded TA"
