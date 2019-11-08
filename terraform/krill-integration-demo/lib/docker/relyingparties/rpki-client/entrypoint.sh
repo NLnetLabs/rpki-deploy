@@ -30,6 +30,23 @@ N=$((LAST_LINE_OF_ROA_SET-1))
 
 # Each line has the form:
 #         109.104.64.0/19 maxlen 24 source-as 20738
+# Or:
+#         109.104.64.0/19 source-as 20738
+RE_WITH_MAXLEN='\s*\([^/]\+\)/\([0-9]\+\) maxlen \([0-9]\+\) source-as \([0-9]\+\)'
+RE_WITHOUT_MAXLEN='\s*\([^/]\+\)/\([0-9]\+\) source-as \([0-9]\+\)'
 echo -n 'TEST OUT: { "roas": ['
-sed -n "$M,$N p" ${TMP_FILE} | sed -e 's|\s*\([^/]+\)/\([0-9]+\) maxlen \([0-9]+\) source-as \([0-9]+\)|{ "asn": "AS\4", "prefix": "\1/\2", "maxLength": \3, "ta": "ta" }|' | paste -sd ',' - | sed -e 's|$|] }|'
+OLD_IFS=$IFS
+IFS=$'\n'
+for LINE in $(sed -n "$M,$N p" ${TMP_FILE}); do
+    if echo ${LINE} | grep -qe ${RE_WITHOUT_MAXLEN}; then
+        echo ${LINE} | sed -e 's|'${RE_WITHOUT_MAXLEN}'|{ "asn": "AS\3", "prefix": "\1/\2", "maxLength": \2, "ta": "ta" }|'
+    elif echo ${LINE} | grep -qe ${RE_WITH_MAXLEN}; then
+        echo ${LINE} | sed -e 's|'${RE_WITH_MAXLEN}'|{ "asn": "AS\4", "prefix": "\1/\2", "maxLength": \3, "ta": "ta" }|'
+    else
+        echo >&2 "ERROR: Cannot parse rpki-client roa: [ ${LINE} ]"
+        rm ${TMP_FILE}
+        exit 1
+    fi
+done | paste -sd ',' - | sed -e 's|$|] }|'
+IFS=$OLD_IFS
 rm ${TMP_FILE}
