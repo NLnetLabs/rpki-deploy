@@ -11,6 +11,9 @@ KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'toke
 BAD_LOG_FILTER='(ERR|Bad|Fail|WARN)'
 TEST_COUNT=0
 PASS_COUNT=0
+XFAIL_COUNT=0
+TEST_FAILURES=()
+TEST_XFAILURES=()
 
 source ../../lib/docker/relyingparties/base/my_funcs.sh
 
@@ -31,7 +34,14 @@ krillc() {
 }
 
 log_test_failure() {
-    echo -e >&2 "TEST FAIL:" $@
+    echo -e >&2 "${COLOUR_RED}TEST FAIL:${COLOUR_DEFAULT} $@"
+    TEST_FAILURES+=("$@")
+}
+
+log_expected_test_failure() {
+    (( XFAIL_COUNT=XFAIL_COUNT + 1 ))
+    echo -e >&2 "${COLOUR_LIGHT_YELLOW}TEST XFAIL:${COLOUR_DEFAULT} $@"
+    TEST_XFAILURES+=("$@")
 }
 
 # Count the number of child CA ROAs reported by the Dockerized Krill instance:
@@ -82,7 +92,8 @@ test_compare_krill_roas_to_logs() {
 # Given a URL at which an RP offers ROAs in JSON format download them and
 # compare them to the set of expected ROAs defined earlier.
 test_compare_krill_roas_to_url() {
-    URL="$1"
+    RP_NAME="$1" # unused, but logged by passing it to us which helps read the error logs
+    URL="$2"
     wget -4 -qO- --header="Accept: text/json" $URL \
         | test_compare_krill_roas_to_json
 }
@@ -134,20 +145,31 @@ for relyingparty in routinator octorpki fortvalidator rcynic rpkiclient; do
     fi
 done
 
-if ! incr_test_counters my_retry 3 10 test_compare_krill_roas_to_url http://${KRILL_FQDN}:8080/api/export.json; then
-    log_test_failure "rpki-validator-3 ROAs do not match those of Krill"
+if ! incr_test_counters my_retry 3 10 test_compare_krill_roas_to_url rpki-validator-3 http://${KRILL_FQDN}:8080/api/export.json; then
+    log_expected_test_failure "rpki-validator-3 ROAs do not match those of Krill"
+else
+    log_test_failure "rpki-validator-3 unexpectedly passed the test???"
 fi
-
-# -----------------------------------------------------------------------------
-# Summarize the test results:
-# -----------------------------------------------------------------------------
-echo "TEST REPORT: ${PASS_COUNT}/${TEST_COUNT} tests passed."
 
 # -----------------------------------------------------------------------------
 # Output diagnostic logs:
 # -----------------------------------------------------------------------------
 echo "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
 docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
+
+# -----------------------------------------------------------------------------
+# Summarize the test results:
+# -----------------------------------------------------------------------------
+echo "TEST REPORT: ${PASS_COUNT}/${TEST_COUNT} tests passed with ${XFAIL_COUNT} expected failures."
+echo "TEST FAILURES:"
+for TEST_FAILURE in "${TEST_FAILURES[@]}"; do
+    echo "  - ${TEST_FAILURE}"
+done
+echo "TEST XFAILURES:"
+for TEST_XFAILURE in "${TEST_XFAILURES[@]}"; do
+    echo "  - ${TEST_XFAILURE}"
+done
+echo "TEST END"
 
 # THE END
 [ ${PASS_COUNT} -lt ${TEST_COUNT} ] && exit 1
