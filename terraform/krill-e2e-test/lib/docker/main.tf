@@ -19,7 +19,7 @@ variable "src_tal" {}
 data "null_data_source" "values" {
   inputs = {
     krill_version   = var.krill_build_path != "" ? "dirty" : var.krill_version
-    krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty -f Dockerfile.app ." : "echo skipping Krill build"
+    krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase' ." : "echo skipping Krill build"
   }
 }
 

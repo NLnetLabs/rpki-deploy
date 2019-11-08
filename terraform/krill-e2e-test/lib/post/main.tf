@@ -7,8 +7,13 @@ variable "ssh_user" {}
 variable "krill_fqdn" {}
 variable "krill_use_ta" {}
 variable "src_tal" {}
+variable "run_tests" {
+    type = bool
+}
 
 resource "null_resource" "run_tests" {
+    count = "${var.run_tests  ? 1 : 0}"
+
     triggers = {
         docker_url = "${var.docker_url}"
         docker_cert_path = "${var.docker_cert_path}"

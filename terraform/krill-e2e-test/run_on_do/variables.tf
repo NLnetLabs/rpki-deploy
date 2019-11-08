@@ -97,3 +97,9 @@ variable "krill_use_ta" {
   default     = true
   description = "Whether or not Krill should act as a TA for testing purposes. Default: true. Set to false when using an alternate src_tal."
 }
+
+variable "run_tests" {
+  type        = bool
+  default     = true
+  description = "Whether or not to run the post deployment tests."
+}

@@ -46,4 +46,5 @@ module "post" {
   ssh_key_path     = var.ssh_key_path
   ssh_user         = module.create_infra.ssh_user
   src_tal          = module.pre.src_tal
+  run_tests        = var.run_tests
 }
