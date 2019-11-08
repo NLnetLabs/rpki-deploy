@@ -88,8 +88,10 @@ if [[ "${SRC_TAL}" == http* ]]; then
 
             DST_PATH="repo/rsync/current/${CER_REL_PATH}"
             # We use docker exec instead of docker cp because docker cp doesn't support
-            # piping from stdin unless stdin is a tar archive.
-            my_log_cmd ${WGET_UNSAFE_TO_STDOUT} ${CER_URI} | docker exec -i ${KRILL_CONTAINER} sh -c "cat - > ${DST_PATH}"
+            # piping from stdin unless stdin is a tar archive. That didn't work so this
+            # goes even further installing Wget on the Krill container because piping
+            # via docker exec caused the written CER file to be corrupted...
+            docker exec -i ${KRILL_CONTAINER} sh -c "apt-get update && apt-get -y install wget && ${WGET_UNSAFE_QUIET} -O${DST_PATH} ${CER_URI}"
 
             my_log "Installed Krill trust anchor certificate into rsync repo at:"
             my_log_cmd docker exec ${KRILL_CONTAINER} ls -la ${DST_PATH}
