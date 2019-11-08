@@ -76,7 +76,7 @@ variable "krill_build_path" {
 
 variable "krill_version" {
   type        = string
-  default     = "v0.2.0"
+  default     = "v0.2.1"
   description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.1.0. Ignored if krill_build_path is set."
 }
 
