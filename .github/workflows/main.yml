@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  issue_comment:
+    types: [created, deleted]
+
+jobs:
+  krill_e2e_test:
+    name: deploy_and_test
+    runs-on: ubuntu-18.04
+    steps:
+    - name: checkout the E2E test framework
+      uses: actions/checkout@v1
+      with:
+        path: e2efw
+    
+    - name: checkout Krill
+      uses: actions/checkout@v1
+      with:
+        path: krill
+        repository: nlnetlabs/krill
+        ref: master
+    
+    - name: Look at what was checked out
+      run: ls -lR
