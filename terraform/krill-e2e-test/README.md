@@ -33,6 +33,7 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 - ROA - [Route Origin Authorisation](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-validation)
 - RP - [Relying Party](https://rpki.readthedocs.io/en/latest/tools.html#relying-party-software)
 - TA - [Trust Anchor](https://rpki.readthedocs.io/en/latest/krill/running.html#embedded-trust-anchor)
+- VM - Virtual Machine, e.g. a [DO Droplet](https://www.digitalocean.com/products/droplets/) or [AWS EC2](https://aws.amazon.com/ec2/) Instance.
 
 ## What is tested?
 
@@ -44,7 +45,7 @@ The combination of [Terraform](https://www.terraform.io/), [ocker Machine](https
 
 The beauty of Terraform is the huge number of deployment targets that it supports. 
  
-The beauty of Docker is the ability to use the same core to run on those many different deployment targets and the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle.
+The beauty of Docker is the ability to use the same core to run on those many different deployment targets, the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle and the collection of applications that are already available as Docker containers (e.g. nginx, rsyncd, Routinator, RPKI Validator 3, etc).
 
 By using a VM with a public IP address and associated DNS A/AAAA records the framework is able to obtain a Lets Encrypt HTTPS certificate for NGINX such that Krill clients can trust the HTTPS certificate presented to them, while using NGINX to shield Krill from the Internet. A VM also offers the potential to scale beyond the capabilities of a CI only platform such as GitHub Actions (where for example the deployment environment is currently limited to [2-core with 7 GiB RAM](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/virtual-environments-for-github-hosted-runners#supported-runners-and-hardware-resources)) which could be useful given that some RP tools require a lot of memory (e.g. [RIPE NCC RPKI Validator 3](https://github.com/RIPE-NCC/rpki-validator-3)) requires a minimum of 1 GiB RAM by default just for itself, and larger numbers of certificate authorities and ROAs will increase the resources required by Krill).
 
