@@ -91,7 +91,7 @@ resource "dockermachine_generic" "docker_deploy" {
       SRC_TAL             = var.src_tal
     }
     working_dir = var.docker_compose_dir
-    command     = "docker-compose build relyingpartybase && docker-compose build --parallel && docker-compose up -d"
+    command     = "docker-compose up --build -d"
   }
 }
 
