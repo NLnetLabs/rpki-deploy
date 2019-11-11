@@ -1,11 +1,6 @@
-variable "do_token" {
-  type        = string
-  description = "Your Digital Ocean API token."
-}
-
 variable "ssh_key_path" {
   type        = string
-  description = "The filesystem path to the SSH private key for access to the created Droplet."
+  description = "The filesystem path to the SSH private key for access to the created EC2 instance."
 }
 
 variable "admin_ipv4_cidr" {
@@ -34,19 +29,19 @@ variable "domain" {
 
 variable "size" {
   type        = string
-  default     = "s-1vcpu-1gb"
-  description = "The size of the Digital Ocean Droplet to create. Default: s-1vcpu-1gb"
+  default     = "t2.large"
+  description = "The size of the Amazon Web Services EC2 instance to create. Default: t2.large"
 }
 
 variable "region" {
   type        = string
-  description = "The Digital Ocean region in which to create the new Droplet. Default: Amsterdam (ams3)"
-  default     = "ams3"
+  description = "The Amazon Web Services region in which to create the new EC2 instance . Default: Paris (eu-west-3)"
+  default     = "eu-west-3"
 }
 
 variable "tags" {
   type        = set(string)
-  description = "One or more strings to tag the new Digital Ocean Droplet with. Default: None."
+  description = "One or more strings to tag the new Amazon Web Services EC2 instance with. Default: None."
   default     = []
 }
 
