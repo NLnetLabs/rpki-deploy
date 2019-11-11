@@ -35,7 +35,7 @@ variable "domain" {
 variable "size" {
   type        = string
   default     = "s-4vcpu-8gb"
-  description = "The size of the Digital Ocean Droplet to create. Default: s-1vcpu-1gb"
+  description = "The size of the Digital Ocean Droplet to create. Default: s-4vcpu-8gb"
 }
 
 variable "region" {
