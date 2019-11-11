@@ -8,18 +8,20 @@ Table of Contents
 =================
 
    * [Krill E2E Test Framework](#krill-e2e-test-framework)
+   * [Table of Contents](#table-of-contents)
       * [Introduction](#introduction)
-      * [Abbreviations used in this document](#abbreviations-used-in-this-document)
-      * [What is tested?](#what-is-tested)
-      * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
-      * [Integration with Krill @ GitHub via GitHub Actions](#integration-with-krill--github-via-github-actions)
-      * [Requirements](#requirements)
-      * [Protecting secrets](#protecting-secrets)
+         * [Abbreviations used in this document](#abbreviations-used-in-this-document)
+         * [What is tested?](#what-is-tested)
+         * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
+      * [Integration with Krill @ GitHub](#integration-with-krill--github)
+         * [Using GitHub Actions](#using-github-actions)
+         * [Protecting secrets](#protecting-secrets)
       * [Architecture](#architecture)
          * [Cloud topology](#cloud-topology)
          * [Docker topology](#docker-topology)
          * [Special configuration](#special-configuration)
       * [Running](#running)
+      * [Requirements](#requirements)
          * [Prepare](#prepare)
          * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
          * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
@@ -56,7 +58,7 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 
 ----
 
-## Abbreviations used in this document
+### Abbreviations used in this document
 
 - AWS - [Amazon Web Services](https://aws.amazon.com/)
 - DO - [Digital Ocean](https://www.digitalocean.com/)
@@ -67,11 +69,11 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 - TA - [Trust Anchor](https://rpki.readthedocs.io/en/latest/krill/running.html#embedded-trust-anchor)
 - VM - Virtual Machine, e.g. a [DO Droplet](https://www.digitalocean.com/products/droplets/) or [AWS EC2](https://aws.amazon.com/ec2/) Instance.
 
-## What is tested?
+### What is tested?
 
 Currently the tests are limited to a proof of concept in which Krill is configured as both a CA and TA and then we test that ROAs output by various RP tools connected to Krill are the same as those reported by Krill itself. The intention is to build out a set of useful end-to-end tests using this framework as a base.
 
-## Why is it based on Docker in the cloud?
+### Why is it based on Docker in the cloud?
 
 The combination of [Terraform](https://www.terraform.io/), [ocker Machine](https://docs.docker.com/machine/overview/), [Docker Compose](https://docs.docker.com/compose/) and Docker supports many different deployment targets while minimizing the maintenance effort per component. The templates have been deliberately structured such that the cloud and Docker parts are separated. Deployment can be done with Docker alone or with Docker in the cloud, potentially also to targets such as the [GitHub Actions with Docker Compose](https://github.blog/2019-08-08-github-actions-now-supports-ci-cd/#fast-ci-cd-for-any-os-any-language-and-any-cloud) or Kubernetes (e.g. on [Digital Ocean](https://www.digitalocean.com/products/kubernetes/) or [AWS](https://aws.amazon.com/kubernetes/)). Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
 
@@ -85,21 +87,13 @@ Currently all clients are deployed as containers on the same host VM as Krill it
 
 Conversely, except for the real HTTPS certificate requiring routing from the Internet to NGINX by registered name, it should in theory be possible to omit the public cloud layer and use the Docker Compose layer directly with GitHub Actions, however this has not been tested.
 
-## Integration with Krill @ GitHub via GitHub Actions
+## Integration with Krill @ GitHub
+
+### Using GitHub Actions
 
 The [Krill GitHub repository](https://github.com/NLnetLabs/krill) contains a [GitHub Actions Workflow](https://github.com/NLnetLabs/krill/blob/master/.github/workflows/main.yml) definition that clones this E2E framework repository and uses it to test Krill with the most recent commit to master or commits to a Pull Request.
 
-## Requirements
-
-This framework requires:
-- A Digital Ocean or Amazon Web Services account.
-- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
-- A DNS domain managed by Digital Ocean or Amazon Web Services.
-- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
-- The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
-- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
-
-## Protecting secrets
+### Protecting secrets
 
 The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) to:
 - Protect the Digital Ocean API token or AWS credentials used to deploy in the public cloud.
@@ -193,6 +187,16 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 - The Krill and rsyncd containers both mount the same Docker volume with Krill writing to it and rsyncd reading from it.
 
 ## Running
+
+## Requirements
+
+This framework requires:
+- A Digital Ocean or Amazon Web Services account.
+- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
+- A DNS domain managed by Digital Ocean or Amazon Web Services.
+- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
+- The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
+- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
 
 ### Prepare
 
