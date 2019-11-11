@@ -17,7 +17,7 @@ module "create_infra" {
   hostname        = module.pre.hostname
   region          = var.region
   key_fingerprint = module.pre.tls_public_key.public_key_fingerprint_md5
-  ssh_key_path    = var.ssh_key_path
+  ssh_key_path    = module.pre.ssh_key_path
 }
 
 module "docker_deploy" {
@@ -33,7 +33,7 @@ module "docker_deploy" {
   krill_fqdn         = module.pre.fqdn
   use_staging_cert   = var.use_staging_cert
   ipv4_address       = module.create_infra.ipv4_address
-  ssh_key_path       = var.ssh_key_path
+  ssh_key_path       = module.pre.ssh_key_path
   ssh_user           = module.create_infra.ssh_user
   src_tal            = module.pre.src_tal
 }
@@ -46,7 +46,7 @@ module "post" {
   docker_cert_path = "${module.docker_deploy.cert_path}"
   krill_fqdn       = module.pre.fqdn
   krill_use_ta     = var.krill_use_ta
-  ssh_key_path     = var.ssh_key_path
+  ssh_key_path     = module.pre.ssh_key_path
   ssh_user         = module.create_infra.ssh_user
   src_tal          = module.pre.src_tal
   run_tests        = var.run_tests

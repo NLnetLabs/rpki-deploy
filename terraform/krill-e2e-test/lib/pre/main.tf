@@ -13,7 +13,7 @@ resource "random_string" "hostname" {
 }
 
 data "tls_public_key" "ssh_key" {
-  private_key_pem = "${file(var.ssh_key_path)}"
+  private_key_pem = "${file(pathexpand(var.ssh_key_path))}"
 }
 
 data "null_data_source" "prevalues1" {
@@ -50,4 +50,8 @@ output "fqdn" {
 
 output "src_tal" {
   value = data.null_data_source.values.outputs["src_tal"]
+}
+
+output "ssh_key_path" {
+  value = pathexpand(var.ssh_key_path)
 }
