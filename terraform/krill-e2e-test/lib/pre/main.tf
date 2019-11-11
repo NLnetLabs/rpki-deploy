@@ -16,6 +16,7 @@ data "tls_public_key" "ssh_key" {
   private_key_pem = "${file(pathexpand(var.ssh_key_path))}"
 }
 
+# TODO: Use "locals" instead of "null_data_source".
 data "null_data_source" "prevalues1" {
   inputs = {
     # ke2et stands for Krill end-to-end test
