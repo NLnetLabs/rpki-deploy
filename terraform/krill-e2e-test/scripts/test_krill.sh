@@ -22,7 +22,7 @@ cleanup() {
 }
 
 krillc() {
-    # Run a Krillc comman against the Dockerized Krill instance
+    # Run a Krillc command against the Dockerized Krill instance
     # Since we are communicating with the Docker daemon whether local or remote
     # the Krill server is running localhost from the perspective of the Docker
     # Daemon.
