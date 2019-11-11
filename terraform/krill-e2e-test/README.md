@@ -1,24 +1,42 @@
-**Warning**: This README is out of date.
+Warning! This document is currently being updated to reflect recent changes from demo to e2e framework. These edits are currently incomplete and thus this document is somewhere between the two states at present.
 
 ----
 
-# Krill + nginx + rsyncd + routinator in the cloud
+# Krill E2E Test Framework
 
 ## Introduction
 
-[Krill](https://www.nlnetlabs.nl/projects/rpki/krill/) is a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/).
+This directory contains a prototype framework for testing [Krill](https://www.nlnetlabs.nl/projects/rpki/krill/), a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/), end-to-end (E2E) in combination with various Relying Party implementations.
 
 This project uses off-the-shelf containers from Docker Hub deployed in the cloud to demonstrate:
 
 * Deployment of Krill behind an industry standard HTTP proxy (nginx) as advised by the [official Krill documentation](https://rpki.readthedocs.io/en/latest/krill/running.html#proxy-and-https).
-* Integration with an rsync server for clients that do not support the RRDP protocol.
-* NLnet Labs [Routinator](https://www.nlnetlabs.nl/projects/rpki/routinator/) as a client of Krill.
+* Integration with a co-deployed rsync server for clients that do not support the RRDP protocol.
+* Various Relying Party implementations as clients of Krill, such as NLnet Labs [Routinator](https://www.nlnetlabs.nl/projects/rpki/routinator/).
+
+The intent is to deploy Krill, supporting components and Relying Parties, then manipulate Krill and verify that the desired changes are observed at the Relying Parties (RPs) connected to it, thereby testing Krill "end-to-end" (E2E).
+
+This prototype began life as a combined deployment demo of the various components thus its architecture is subject to review and is likely to evolve in step with the needs of the Krill project.
 
 ----
 
-_**WARNING!** Executing this demo will create resources in the [Digital Ocean](https://www.digitalocean.com/) or [Amazon Web Services](https://aws.amazon.com/) public cloud. These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your cloud account owner to incur costs on the account!_
+_**WARNING!** This framework creates resources in the [Digital Ocean](https://www.digitalocean.com/) or [Amazon Web Services](https://aws.amazon.com/) public cloud. These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your cloud account owner to incur costs on the account before using this framework!_
 
 ----
+
+## Abbreviations used in this document
+
+- AWS - [Amazon Web Services](https://aws.amazon.com/)
+- DO - [Digital Ocean](https://www.digitalocean.com/)
+- E2E - End-to-end
+- GHA - [GitHub Actions](https://github.com/features/actions)
+- ROA - [Route Origin Authorisation](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-validation)
+- RP - [Relying Party](https://rpki.readthedocs.io/en/latest/tools.html#relying-party-software)
+- TA - [Trust Anchor](https://rpki.readthedocs.io/en/latest/krill/running.html#embedded-trust-anchor)
+
+## What is tested?
+
+Currently the tests are limited to a proof of concept in which Krill is configured as both a CA and TA and then we test that ROAs output by various RP tools connected to Krill are the same as those reported by Krill itself. The intention is to build out a set of useful end-to-end tests using this framework as a base.
 
 ## Cloud? Docker? Why?
 
@@ -26,13 +44,23 @@ This demo uses Terraform, Docker-Machine, Docker-Compose and Docker to deploy to
 
 The templates have been deliberately structured such that the cloud and Docker parts are separated. Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
 
- The beauty of Terraform is the huge number of deployment targets that it supports. 
+The beauty of Terraform is the huge number of deployment targets that it supports. 
  
- The beauty of Docker is the ability to use the same core to run on those many different deployment targets and the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle.
+The beauty of Docker is the ability to use the same core to run on those many different deployment targets and the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle.
+
+A VM with a public IP address and associated DNS A/AAAA records enable the framework to obtain a Lets Encrypt HTTPS certificate for NGINX such that Krill clients can trust the HTTPS certificate presented to them, while using NGINX to shield Krill from the Internet.
+
+Currently all clients are deployed as containers on the same host VM as Krill itself but the architecture supports splitting the containers out across multiple hosts. However some changes would be required to actually deploy using Docker Swarm or Kubernetes (for example) for such a scenario.
+
+Conversely, except for the real HTTPS certificate requiring routing from the Internet to NGINX by registered name, it should in theory be possible to omit the public cloud layer and use the Docker Compose layer directly with GitHub Actions, however this has not been tested.
+
+## Integration with Krill @ GitHub
+
+The [Krill GitHub repository](https://github.com/NLnetLabs/krill) contains a [GitHub Actions Workflow](https://github.com/NLnetLabs/krill/blob/master/.github/workflows/main.yml) definition that clones this E2E framework repository and uses it to test Krill with the most recent commit to master or commits to a Pull Request.
 
 ## Requirements
 
-For this demo you will need:
+This framework requires:
 - A Digital Ocean or Amazon Web Services account.
 - A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
 - A DNS domain managed by Digital Ocean or Amazon Web Services.
@@ -40,9 +68,15 @@ For this demo you will need:
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.0) command line tool.
 
+## Protecting secrets
+
+The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) to:
+- Protect the Digital Ocean API token or AWS credentials used to deploy in the public cloud.
+- Protect the decryption passphrase used to protect the SSH key used to SSH to the cloud VM.
+
 ## Architecture
 
-### Digital Ocean topology
+### Cloud topology
 
 The diagram below describes the Digital Ocean topology and how Terraform creates it:
 
@@ -66,7 +100,7 @@ In the case of Amazon Web Services the Droplet is an EC2 Compute Instance and th
         dns & fw                      up       create    via ssh
           |                             |        |          |  
          (1)                           (4)      (3)        (2)
-          |    +- Host Computer --------|---+    |          |
+          |    +- Host (e.g. GHA) ------|---+    |          |
           |    |      Docker (Compose)      |    |          |
           |    |----------------------------+    |          |
           |    |   Local-Exec Provisioner   |----+          |
@@ -91,23 +125,23 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 |                              |o|              |o|      |o|         |o|            |
 |    +-S:172.18.0.0/16---------|u|--------------|u|------|u|---------|u|-------+    |
 |    |                         |n|              |n|      |n|         |n|       |    |
-|    |    +-C----------+   +-C-|t|---+      +-C-|t|------|t|-+   +-C-|t|--+    |    |
-|    |    | routinator |   |  nginx  |--+   |      krill     |   | rsyncd |    |    |
-|    |    +--|-------|-+   +--|---|--+  |   +--------|-------+   +---|----+    |    |
-|    |       |       O 323    |   |     +----------> O 3000          |         |    |
-|    +-------|----------------|---|----------------------------------|---------+    |
-+---------+  |                |   |                                  |              |
-| dockerd |  |                |   |                                  |              |
-+----|-------|----------------|---|----------------------------------|--------------+
-     |       |                |   |                                  |
-2376 O       O 9556        80 O   O 443                              O 873
+|    |    +-C--+ +----+    +-C-|t|---+      +-C-|t|------|t|-+   +-C-|t|--+    |    |
+|    |    | RP | | RP |    |  nginx  |--+   |      krill     |   | rsyncd |    |    |
+|    |    +----+ +----+    +--|---|--+  |   +--------|-------+   +---|----+    |    |
+|    |                        |   |     +----------> O 3000          |         |    |
+|    +------------------------|---|----------------------------------|---------+    |
++---------+                   |   |                                  |              |
+| dockerd |                   |   |                                  |              |
++----|------------------------|---|----------------------------------|--------------+
+     |                        |   |                                  |
+2376 O                     80 O   O 443                              O 873
      
      ^ Docker/TLS        HTTP ^   ^ HTTPS/RRDP                       ^ RSYNC
      |                        |   |                                  |
      |                        |   +----------------+-----------------+
      |                        |                    |
  Terraform               Lets Encrypt         Krill clients
-    CLI                   Challenge          e.g. Routinator
+    CLI                   Challenge          e.g. the RPs
 ```
 
 **Key:**
@@ -118,20 +152,22 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 - NNN: TCP/IP port numbers, e.g.:
   - 323:  Routinator RTR port, not used in this demo
   - 3000: Krill HTTPS/RRDP port, only exposed to nginx
-  - 9556: Routinator Prometheus port, for monitoring the connection to Krill
-
+  
 ### Special configuration
 
 - The krill container is configured via environment variables to know its public FQDN and with `use_ta = true` which causes it to create an embedded Trust Anchor (TA).
-- The routinator container image is extended via a `Dockerfile` to download and install the Krill Trust Anchor Locator (TAL) file before starting the Routinator.
+- The RP container images are extended via `Dockerfile`s to download and install the Krill Trust Anchor Locator (TAL) file before starting the RP tool.
 - The nginx container image is extended via a `Dockerfile` with a config file directing nginx to proxy HTTPS connections via the internal Docker private network to port 3000 on the krill container.
 - The rsyncd container image is extended via a `Dockerfile` with a config file telling rsyncd how to share the files mounted into the container from the krill rsync data Docker volume.
+- The Krill and rsyncd containers both mount the same Docker volume with Krill writing to it and rsyncd reading from it.
 
 ## Running
 
 ### Prepare
 
-To run the demo you will need a copy of the demo templates and an SSH key pair.
+To run the framework you will the required tools installed, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
+
+In the case of Krill @ GitHub the GHA workflow performs a shallow Git clone of this entire repository to obtain a copy of these files and uses a GitHub Secret to decrypt the `ssh_key.gpg` file stored in this directory. It uses the [Marrocchino Terraform GitHub v2 Action](https://github.com/marocchino/setup-terraform) to obtain Terraform. It does NOT use the [official Terraform GitHub v2 Action](https://github.com/hashicorp/terraform-github-actions) because it does not support `terraform destroy` and because the [official Terraform GitHub Actions documentation](https://www.terraform.io/docs/github-actions/getting-started/index.html) is for GitHub Actions v1, not v2.
 
 **Note:** `some.domain` should already be managed by Digital Ocean or AWS.
 
@@ -161,6 +197,7 @@ NOTE: You must copy the contents of `/tmp/demo-ssh-key.pub` into the Digital Oce
 `init` installs any Terraform plugins required by the templates.
 `apply` explains what will be created then, if you approve, executes the template.
 
+    $ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. do or aws)
     $ terraform init
     $ terraform apply
 
@@ -168,16 +205,17 @@ Terraform will:
 1. Create a Digital Ocean droplet or AWS EC2 instance.
 2. Create A and AAAA DNS records pointing to the droplet/instance.
 3. Install Docker on the droplet and secure the Docker daemon with TLS authentication.
-4. Create an "external" persistent volume for Lets Encrypt certificates on the droplet.
+4. Create "external" persistent volumes for Lets Encrypt certificates and for Krill RSYNC data.
 5. Invoke Docker Compose to deploy the private network and containers on the droplet.
+6. Configure Krill.
+7. Run the Krill E2E tests.
 
 ### What are the containers doing?
 
 The descriptions below are based on publication via RRDP. Alternatively Krill can also [publish via rsync](https://rpki.readthedocs.io/en/latest/rpki/using-rpki-data.html?highlight=rsync#fetching-and-verifying).
 
-
 ```
-Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
+Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encrypt
    |
    |---Up---->|
    |          |---Pull--->|
@@ -196,24 +234,27 @@ Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
    |                                  |        |<-Get TAL-|
    |                                  |        |---TAL--->| Install TAL
    |                                  |        |          |
-   |                                  |        |          | Start Routinator
+   |                                  |        |          | Start RP
    |                                  |        |<-Get CER-|
    |                                  |        |---CER--->| Verify CER
    .                                  .        .          .
    .                                  .        .          .
    .                                  .        .          .
    |--Create ROAs using krillc------->|        |          |
-                                      | Proxy->|          |
-                                               | Publish  |
-                                               |          |
-                                               |<--Fetch--|
-                                               |-via RRDP>| Parse & Verify
-
+   |                                  | Proxy->|          |
+   |                                           | Publish  |
+   |                                           |          |
+   |                                           |<--Fetch--|
+   |                                           |-via RRDP>| Parse & Verify
+   |                                                      |
+   |<---------------------Read ROAs-----------------------| Output ROAs to standard out / Docker console
+   |
+   | Compare ROAs to Krills ROAs
    ```
 
 1. Docker:
    a. Pulls base images for the containers.
-   b. Builds the configuration layers for the routinator, nginx and rsyncd containers.
+   b. Builds the configuration layers for the RPs, Krill, nginx and rsyncd containers.
    c. Creates the containers.
 
 2. On the Nginx container:
@@ -225,11 +266,12 @@ Operator    Docker    Docker Hub    NGINX    Krill    Routinator   Lets Encrypt
 3. On the Krill container:
    a. `use_ta=true` causes Krill to setup a test Trust Anchor.
 
-3. On the Routinator container:
-   a. A custom `entrypoint.sh` script fetches the Trust Anchor Locator file from Krill at https://some.domain/ta/ta.tal and writes it to the `/home/.rpki-cache/tals/` directory inside the Routinator container.
-   b. Routinator starts up.
-   c. Routinator validates the Krill TA by fetching the HTTPS `.cer` URL that the TAL points to and verifying it against the signature in the TAL file.
-   d. Routinator periodically queries the Krill RRDP server at https://some.domain/rrdp/notification.xml and follows links contained in the response.
+3. On the RP containers:
+   a. A custom `entrypoint.sh` script fetches the Trust Anchor Locator file from Krill at https://some.domain/ta/ta.tal and writes it to a directory that the RP can read it from.
+   b. Start the RP tool.
+   c. The RP tool validates the Krill TA by fetching the HTTPS `.cer` URL that the TAL points to and verifying it against the signature in the TAL file.
+   d. The RP tool (periodically) queries the Krill RRDP server at https://some.domain/rrdp/notification.xml and follows links contained in the response.
+   e. The RP tool outputs, or a helper script queries, the ROAs from the RP and outputs them to standard out / the Docker logs.
 
 5. An operator creates [ROAs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-authorisations) in Krill.
 
