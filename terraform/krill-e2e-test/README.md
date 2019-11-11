@@ -4,36 +4,37 @@ Warning! This document is currently being updated to reflect recent changes from
 
 # Krill E2E Test Framework
 
-Table of Contents
-=================
+Contents
 
-   * [Krill E2E Test Framework](#krill-e2e-test-framework)
-      * [Introduction](#introduction)
-      * [Abbreviations used in this document](#abbreviations-used-in-this-document)
-      * [What is tested?](#what-is-tested)
-      * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
-      * [Integration with Krill @ GitHub via GitHub Actions](#integration-with-krill--github-via-github-actions)
-      * [Requirements](#requirements)
-      * [Protecting secrets](#protecting-secrets)
-      * [Architecture](#architecture)
-         * [Cloud topology](#cloud-topology)
-         * [Docker topology](#docker-topology)
-         * [Special configuration](#special-configuration)
-      * [Running](#running)
-         * [Prepare](#prepare)
-         * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
-         * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
-         * [Deploy](#deploy)
-         * [What are the containers doing?](#what-are-the-containers-doing)
-         * [Generate some fake ROAs](#generate-some-fake-roas)
-         * [Inspect](#inspect)
-            * [Query the state of the Routinator](#query-the-state-of-the-routinator)
-            * [Display container logs](#display-container-logs)
-            * [Explore the containers from within](#explore-the-containers-from-within)
-         * [Undeploy](#undeploy)
+* [Introduction](#introduction)
+    * [Abbreviations used in this document](#abbreviations-used-in-this-document)
+    * [What is tested?](#what-is-tested)
+    * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
+* [Integration with Krill @ GitHub](#integration-with-krill--github)
+    * [Using GitHub Actions](#using-github-actions)
+    * [Protecting secrets](#protecting-secrets)
+* [Architecture](#architecture)
+    * [Cloud topology](#cloud-topology)
+    * [Docker topology](#docker-topology)
+    * [Special configuration](#special-configuration)
+* [Running](#running)
+    * [Requirements](#requirements)
+    * [Prepare](#prepare)
+    * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
+    * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
+    * [Deploy](#deploy)
+    * [Container startup sequence](#container-startup-sequence)
+    * [Post deployment](#post-deployment)
+    * [Prepare to use Krillc](#prepare-to-use-krillc)
+    * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
+    * [Create some fake ROAs](#create-some-fake-roas)
+    * [Inspect](#inspect)
+    * [Query the state of the Routinator](#query-the-state-of-the-routinator)
+    * [Display container logs](#display-container-logs)
+    * [Explore the containers from within](#explore-the-containers-from-within)
+    * [Undeploy](#undeploy)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
-
 ----
 
 ## Introduction
@@ -56,9 +57,10 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 
 ----
 
-## Abbreviations used in this document
+### Abbreviations used in this document
 
 - AWS - [Amazon Web Services](https://aws.amazon.com/)
+- CA - Certificate Authority
 - DO - [Digital Ocean](https://www.digitalocean.com/)
 - E2E - End-to-end
 - GHA - [GitHub Actions](https://github.com/features/actions)
@@ -67,11 +69,11 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 - TA - [Trust Anchor](https://rpki.readthedocs.io/en/latest/krill/running.html#embedded-trust-anchor)
 - VM - Virtual Machine, e.g. a [DO Droplet](https://www.digitalocean.com/products/droplets/) or [AWS EC2](https://aws.amazon.com/ec2/) Instance.
 
-## What is tested?
+### What is tested?
 
 Currently the tests are limited to a proof of concept in which Krill is configured as both a CA and TA and then we test that ROAs output by various RP tools connected to Krill are the same as those reported by Krill itself. The intention is to build out a set of useful end-to-end tests using this framework as a base.
 
-## Why is it based on Docker in the cloud?
+### Why is it based on Docker in the cloud?
 
 The combination of [Terraform](https://www.terraform.io/), [ocker Machine](https://docs.docker.com/machine/overview/), [Docker Compose](https://docs.docker.com/compose/) and Docker supports many different deployment targets while minimizing the maintenance effort per component. The templates have been deliberately structured such that the cloud and Docker parts are separated. Deployment can be done with Docker alone or with Docker in the cloud, potentially also to targets such as the [GitHub Actions with Docker Compose](https://github.blog/2019-08-08-github-actions-now-supports-ci-cd/#fast-ci-cd-for-any-os-any-language-and-any-cloud) or Kubernetes (e.g. on [Digital Ocean](https://www.digitalocean.com/products/kubernetes/) or [AWS](https://aws.amazon.com/kubernetes/)). Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
 
@@ -85,21 +87,13 @@ Currently all clients are deployed as containers on the same host VM as Krill it
 
 Conversely, except for the real HTTPS certificate requiring routing from the Internet to NGINX by registered name, it should in theory be possible to omit the public cloud layer and use the Docker Compose layer directly with GitHub Actions, however this has not been tested.
 
-## Integration with Krill @ GitHub via GitHub Actions
+## Integration with Krill @ GitHub
+
+### Using GitHub Actions
 
 The [Krill GitHub repository](https://github.com/NLnetLabs/krill) contains a [GitHub Actions Workflow](https://github.com/NLnetLabs/krill/blob/master/.github/workflows/main.yml) definition that clones this E2E framework repository and uses it to test Krill with the most recent commit to master or commits to a Pull Request.
 
-## Requirements
-
-This framework requires:
-- A Digital Ocean or Amazon Web Services account.
-- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
-- A DNS domain managed by Digital Ocean or Amazon Web Services.
-- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
-- The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
-- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
-
-## Protecting secrets
+### Protecting secrets
 
 The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) to:
 - Protect the Digital Ocean API token or AWS credentials used to deploy in the public cloud.
@@ -194,43 +188,61 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 
 ## Running
 
+### Requirements
+
+This framework requires:
+- A Digital Ocean or Amazon Web Services account.
+- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
+- A DNS domain managed by Digital Ocean or Amazon Web Services.
+- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
+- The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
+- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
+
 ### Prepare
 
 To run the framework you will the required tools installed, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
 
 In the case of Krill @ GitHub the GHA workflow performs a shallow Git clone of this entire repository to obtain a copy of these files and uses a GitHub Secret to decrypt the `ssh_key.gpg` file stored in this directory. It uses the [Marrocchino Terraform GitHub v2 Action](https://github.com/marocchino/setup-terraform) to obtain Terraform. It does NOT use the [official Terraform GitHub v2 Action](https://github.com/hashicorp/terraform-github-actions) because it does not support `terraform destroy` and because the [official Terraform GitHub Actions documentation](https://www.terraform.io/docs/github-actions/getting-started/index.html) is for GitHub Actions v1, not v2.
 
-**Note:** `some.domain` should already be managed by Digital Ocean or AWS.
+> _**Note:** `some.domain` should already be managed by Digital Ocean or AWS._
 
-    $ ssh-keygen -m PEM -t rsa -f /tmp/demo-ssh-key -N ""
-    $ git clone https://github.com/nlnetlabs/rpki-deploy.git
-    $ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
-    $ export TF_VAR_hostname=somehostname
-    $ export TF_VAR_domain=some.domain
+```bash
+$ ssh-keygen -m PEM -t rsa -f /tmp/demo-ssh-key -N ""
+$ git clone https://github.com/nlnetlabs/rpki-deploy.git
+$ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
+$ export TF_VAR_hostname=somehostname
+$ export TF_VAR_domain=some.domain
+```
 
 If you want to change any of the default values in `variables.tf`, e.g. deployment region, droplet size, tags, [read this page](https://learn.hashicorp.com/terraform/getting-started/variables.html) to learn how to override them.
 
-### Prepare for Digital Ocean
+#### Prepare for Digital Ocean
 
-    $ cd rpki-deploy/terraform/krill-integration-demo/demo_on_do
-    $ export TF_VAR_do_token=xxxxxx
+```bash
+$ cd rpki-deploy/terraform/krill-integration-demo/demo_on_do
+$ export TF_VAR_do_token=xxxxxx
+```
 
-NOTE: You must copy the contents of `/tmp/demo-ssh-key.pub` into the Digital Ocean portal (see Account -> Security -> SSH Keys -> Add SSH Key) before you can deploy using this SSH key.
+> _**Note:** You must copy the contents of `/tmp/demo-ssh-key.pub` into the Digital Ocean portal (see Account -> Security -> SSH Keys -> Add SSH Key) before you can deploy using this SSH key._
 
-### Prepare for Amazon Web Services
+#### Prepare for Amazon Web Services
 
-    $ cd rpki-deploy/terraform/krill-integration-demo/demo_on_aws
-    $ export AWS_ACCESS_KEY=xxx
-    $ export AWS_SECRET_ACCESS_KEY=xxx
+```bash
+$ cd rpki-deploy/terraform/krill-integration-demo/demo_on_aws
+$ export AWS_ACCESS_KEY=xxx
+$ export AWS_SECRET_ACCESS_KEY=xxx
+```
 
 ### Deploy
 
 `init` installs any Terraform plugins required by the templates.
 `apply` explains what will be created then, if you approve, executes the template.
 
-    $ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. do or aws)
-    $ terraform init
-    $ terraform apply
+```bash
+$ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. do or aws)
+$ terraform init
+$ terraform apply
+```
 
 Terraform will:
 1. Create a Digital Ocean droplet or AWS EC2 instance.
@@ -241,9 +253,9 @@ Terraform will:
 6. Configure Krill.
 7. Run the Krill E2E tests.
 
-### What are the containers doing?
+#### Container startup sequence
 
-The descriptions below are based on publication via RRDP. Alternatively Krill can also [publish via rsync](https://rpki.readthedocs.io/en/latest/rpki/using-rpki-data.html?highlight=rsync#fetching-and-verifying).
+What are the containers doing? The descriptions below are based on publication via RRDP. Alternatively Krill can also [publish via rsync](https://rpki.readthedocs.io/en/latest/rpki/using-rpki-data.html?highlight=rsync#fetching-and-verifying).
 
 ```
 Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encrypt
@@ -310,44 +322,53 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
 
 7. Routinator detects them via RRDP, validates them and serves them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity) to any connected Routers.
 
-### Generate some fake ROAs
+### Post deployment
 
-Use the `krillc` binary installed in the `krill` container to create a
-CA that is a child of the embedded TA and then create ROAs in the child.
+We can use the `krillc` binary installed in the `krill` container to create a CA that is a child of the embedded TA and then create ROAs in the child.
 
-----
+#### Prepare to use Krillc
 
-_**Note:** Before you can use docker and docker-compose commands you must first
-tell docker and docker-compose to connect to the Docker daemon running on the
-Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:_
+Before you can use docker and docker-compose commands you must first tell docker and   docker-compose to connect to the Docker daemon running on the Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:_
 
-    Set the env vars:    eval $(terraform output docker_env_vars)
-    Unset the env vars:  eval $(terraform output unset_docker_env_vars)
+| Action             | Shell command                                    |
+| ------------------ | ------------------------------------------------ |
+| Set the env vars   | `eval $(terraform output docker_env_vars)`       |
+| Unset the env vars | `eval $(terraform output unset_docker_env_vars)` |
 
-_**NOTE**: To execute `docker-compose` commands you must be in the `docker/`
-subdirectory so that the Docker Compose template can be found._
+> _**Note:** To execute `docker-compose` commands you must be in the `docker/` subdirectory so that the Docker Compose template can be found._
 
-----
+```bash
+$ eval $(terraform output docker_env_vars)
+$ cd ../lib/docker/
+$ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
+$ alias krillc="docker exec \
+    -e KRILL_CLI_SERVER=https://localhost:3000/ \
+    -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} \
+    krill krillc"
+```
 
-    $ eval $(terraform output docker_env_vars)
-    $ cd ../lib/docker/
-    $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
-    $ alias krillc="docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} krill krillc"
-    $ krillc add --ca child
-    $ krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16"
-    $ krillc parents add --embedded --ca child --parent ta
+You are now ready to issue `krillc` commands.
 
-For the next step the `krillc` command takes a file as input and the demo
-mounts `/tmp/ka` in the container from the same location in the host, but the
-filesystem is that of the remote droplet, nor our host filesystem. So we have
-to copy the file to the droplet before we can import it into Krill:
+#### Create a CA as a child of the embedded TA
 
-    $ cat <<EOF >/tmp/delta.1
-    A: 10.0.0.0/24 => 64496
-    A: 10.0.1.0/24 => 64496
-    EOF
-    $ scp -i ${TF_VAR_ssh_key_path} /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
-    $ krillc roas update --ca child --delta /tmp/ka/delta.1
+```bash
+$ krillc add --ca child
+$ krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16"
+$ krillc parents add --embedded --ca child --parent ta
+```
+
+#### Create some fake ROAs
+
+For the next step the `krillc` command takes a file as input and the demo mounts `/tmp/ka` in the container from the same location in the host. However, the filesystem is that of the remote droplet, nor our host filesystem. So we have to copy the file to the droplet before we can import it into Krill:
+
+```bash
+$ cat <<EOF >/tmp/delta.1
+A: 10.0.0.0/24 => 64496
+A: 10.0.1.0/24 => 64496
+EOF
+$ scp -i ${TF_VAR_ssh_key_path} /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
+$ krillc roas update --ca child --delta /tmp/ka/delta.1
+```
 
 ### Inspect
 
@@ -361,27 +382,35 @@ The generate fake ROAs step above should have caused Routinator to fetch ROAs
 from Krill which should be visible in the Routinator Prometheus monitoring
 endpoints, in particular the `/json` endpoint should show:
 
-    {
+```json
+{
     "roas": [
         { "asn": "AS64496", "prefix": "10.0.1.0/24", "maxLength": 24, "ta": "ta" },
         { "asn": "AS64496", "prefix": "10.0.0.0/24", "maxLength": 24, "ta": "ta" }
     ]
-    }
+}
+```
 
 #### Display container logs
 
-    $ docker-compose logs -f
+```bash
+$ docker-compose logs -f
+```
 
 #### Explore the containers from within
 
 _Note: The shell that has to be invoked varies depending on the base image used to create the container._
 
-    $ docker-compose exec nginx /bin/bash
-    $ docker-compose exec routinator /bin/sh
-    $ docker-compose exec krill /bin/bash
-    $ docker-compose exec rsyncd /bin/bash
+```bash
+$ docker-compose exec nginx /bin/bash
+$ docker-compose exec routinator /bin/sh
+$ docker-compose exec krill /bin/bash
+$ docker-compose exec rsyncd /bin/bash
+```
 
 ### Undeploy
 
-    $ cd ../
-    $ terraform destroy
+```bash
+$ cd ../
+$ terraform destroy
+```
