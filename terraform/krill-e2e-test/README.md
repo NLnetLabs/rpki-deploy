@@ -31,7 +31,8 @@
       * [Display container logs](#display-container-logs)
       * [Explore the containers from within](#explore-the-containers-from-within)
    * [Undeploy](#undeploy)
-         
+* [Test results](#test-results) 
+
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
 
 ----
@@ -442,4 +443,15 @@ $ docker-compose exec rsyncd /bin/bash
 ```bash
 $ popd
 $ terraform destroy
+```
+## Test results
+
+```
+module.post.null_resource.run_tests[0] (local-exec): test_krill.sh: Try 1/12: test_compare_krill_roas_to_logs <RP NAME>:
+module.post.null_resource.run_tests[0] (local-exec): OKAY
+module.post.null_resource.run_tests[0] (local-exec): test_krill.sh: Try 1/12: test_compare_krill_roas_to_logs <RP NAME>:
+module.post.null_resource.run_tests[0] (local-exec): OKAY
+...
+module.post.null_resource.run_tests[0] (local-exec): TEST REPORT: M/N tests passed with O expected failures.
+module.post.null_resource.run_tests[0] (local-exec): TEST END
 ```
