@@ -4,7 +4,7 @@ Warning! This document is currently being updated to reflect recent changes from
 
 # Krill E2E Test Framework
 
-Contents
+## Contents
 
 * [Introduction](#introduction)
     * [Abbreviations used in this document](#abbreviations-used-in-this-document)
@@ -102,6 +102,28 @@ The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/act
 
 ## Architecture
 
+### Directory layout
+
+Platform specific artifacts:
+
+| Directory or File-                            | Platform | Description |
+| --------------------------------------------- | -------- | ----------- |
+| `terraform/plugins`                           | GHA      | Contains a copy of the Docker Machine x64 Terraform plugin, used to accelerate the GHA run. |
+| `terraform/krill-e2e-test/decrypt-ssh-key.sh` | GHA      | Script to decrypt `ssh_key.gpg`. |
+| `terraform/krill-e2e-test/ssh_key.gpg`        | GHA      | SSH key used to SSH into the deployed VM. |
+| `terraform/krill-e2e-test/run_on_aws/`        | AWS      | Starting point for deploying on AWS. |
+| `terraform/krill-e2e-test/run_on_do/`         | DO       | Starting point for deploying on DO. |
+
+Platform independent artifacts:
+
+| Directory or File-                     | Description |
+| -------------------------------------- | ----------- |
+| `terraform/krill-e2e-test/scripts/`    | Bash scripts to configure and test Krill. |
+| `terraform/krill-e2e-test/lib/docker/` | E2E Docker image definitions. |
+| `terraform/krill-e2e-test/lib/infra/`  | Terraform module for cloud-agnostic infrastructure deployment. |
+| `terraform/krill-e2e-test/lib/pre`     | Terraform module run before deployment. |
+| `terraform/krill-e2e-test/lib/post`    | Terraform module run after deployment, e.g. the `/scripts/` are invoked from here. |
+
 ### Cloud topology
 
 The diagram below describes the Digital Ocean topology and how Terraform creates it:
@@ -187,6 +209,10 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 - The rsyncd container image is extended via a `Dockerfile` with a config file telling rsyncd how to share the files mounted into the container from the krill rsync data Docker volume.
 - The Krill and rsyncd containers both mount the same Docker volume with Krill writing to it and rsyncd reading from it.
 
+### Docker images for 3rd party RP tools
+
+Not all 3rd party RP tools offer Docker images. For those that don't I have packaged them myself into Docker images. These images work well enough for this use case and hopefully can be made generally useful, but for now they are a limited work in progress. See https://github.com/ximon18/relyingpartydockerimages for more information.
+
 ## Running
 
 ### Requirements
@@ -203,8 +229,6 @@ This framework requires:
 
 To run the framework you will the required tools installed, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
 
-In the case of Krill @ GitHub the GHA workflow performs a shallow Git clone of this entire repository to obtain a copy of these files and uses a GitHub Secret to decrypt the `ssh_key.gpg` file stored in this directory. It uses the [Marrocchino Terraform GitHub v2 Action](https://github.com/marocchino/setup-terraform) to obtain Terraform. It does NOT use the [official Terraform GitHub v2 Action](https://github.com/hashicorp/terraform-github-actions) because it does not support `terraform destroy` and because the [official Terraform GitHub Actions documentation](https://www.terraform.io/docs/github-actions/getting-started/index.html) is for GitHub Actions v1, not v2.
-
 > _**Note:** `some.domain` should already be managed by Digital Ocean or AWS._
 
 ```bash
@@ -216,6 +240,8 @@ $ export TF_VAR_domain=some.domain
 ```
 
 If you want to change any of the default values in `variables.tf`, e.g. deployment region, droplet size, tags, [read this page](https://learn.hashicorp.com/terraform/getting-started/variables.html) to learn how to override them.
+
+> _**Note:** In the case of Krill @ GitHub the GHA workflow performs a shallow Git clone of this entire repository to obtain a copy of these files and uses a GitHub Secret to decrypt the `ssh_key.gpg` file stored in this directory, and a second GitHub Secret stores the required DO API token. The [Marrocchino Terraform GitHub v2 Action](https://github.com/marocchino/setup-terraform) action is used to install the Terraform CLI. The [official Terraform GitHub v2 Action](https://github.com/hashicorp/terraform-github-actions) is NOT used because it does not support `terraform destroy`._
 
 #### Prepare for Digital Ocean
 
@@ -250,9 +276,11 @@ Terraform will:
 2. Create A and AAAA DNS records pointing to the droplet/instance.
 3. Install Docker on the droplet and secure the Docker daemon with TLS authentication.
 4. Create "external" persistent volumes for Lets Encrypt certificates and for Krill RSYNC data.
-5. Invoke Docker Compose to deploy the private network and containers on the droplet.
+5. Invoke Docker Compose to build images, and deploy the private network and containers on the droplet.
 6. Configure Krill.
 7. Run the Krill E2E tests.
+
+> _**Note:** Even though off-the-shelf Docker images are used for the RPs, images still need to be built for them because some tooling is installed to fetch, process and install the TAL and to parse and convert the ROA output into a "standard" format expected by the test suite. Additionally the Krill image has to be built and preferably without having to build the entire Rust application and dependencies from scratch. Currently a "hack" is used to accelerate the Krill image build whereby a not-too-old copy of the Krill Docker image `builder` stage is used as the base for the new image, thereby leveraging the Cargo build cache that already exists in the (very large) image._
 
 #### Container startup sequence
 
@@ -340,7 +368,7 @@ Before you can use docker and docker-compose commands you must first tell docker
 
 ```bash
 $ eval $(terraform output docker_env_vars)
-$ cd ../lib/docker/
+$ pushd ../lib/docker/
 $ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 $ alias krillc="docker exec \
     -e KRILL_CLI_SERVER=https://localhost:3000/ \
@@ -370,6 +398,8 @@ EOF
 $ scp -i ${TF_VAR_ssh_key_path} /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
 $ krillc roas update --ca child --delta /tmp/ka/delta.1
 ```
+
+> When [issue #129](https://github.com/NLnetLabs/krill/issues/129) is resolved this will no longer require a file upload but will instead be possible via STDIN.
 
 ### Inspect
 
@@ -412,6 +442,6 @@ $ docker-compose exec rsyncd /bin/bash
 ### Undeploy
 
 ```bash
-$ cd ../
+$ popd
 $ terraform destroy
 ```
