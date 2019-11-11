@@ -6,17 +6,17 @@ Warning! This document is currently being updated to reflect recent changes from
 
 ## Introduction
 
-This directory contains a prototype framework for testing [Krill](https://www.nlnetlabs.nl/projects/rpki/krill/), a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/), end-to-end (E2E) in combination with various Relying Party implementations.
+This directory contains a prototype framework for testing [Krill](https://www.nlnetlabs.nl/projects/rpki/krill/) (a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/)) end-to-end (E2E) in combination with various [Relying Party implementations](https://rpki.readthedocs.io/en/latest/tools.html#relying-party-software).
 
-This project uses off-the-shelf containers from Docker Hub deployed in the cloud to demonstrate:
+This framework uses off-the-shelf containers from Docker Hub deployed in the cloud to:
 
-* Deployment of Krill behind an industry standard HTTP proxy (nginx) as advised by the [official Krill documentation](https://rpki.readthedocs.io/en/latest/krill/running.html#proxy-and-https).
-* Integration with a co-deployed rsync server for clients that do not support the RRDP protocol.
-* Various Relying Party implementations as clients of Krill, such as NLnet Labs [Routinator](https://www.nlnetlabs.nl/projects/rpki/routinator/).
+* Deploy Krill behind an industry standard HTTP proxy (nginx) as advised by the [official Krill documentation](https://rpki.readthedocs.io/en/latest/krill/running.html#proxy-and-https).
+* Integrate with a co-deployed [rsync server](https://hub.docker.com/r/vimagick/rsyncd) for clients that do not support the RRDP protocol.
+* Serve various Relying Party implementations, such as NLnet Labs [Routinator](https://www.nlnetlabs.nl/projects/rpki/routinator/), with data from Krill.
 
-The intent is to deploy Krill, supporting components and Relying Parties, then manipulate Krill and verify that the desired changes are observed at the Relying Parties (RPs) connected to it, thereby testing Krill "end-to-end" (E2E).
+In this environment we can then manipulate Krill and verify that the desired changes are observed at the Relying Parties (RPs) connected to it, thereby testing Krill "end-to-end" (E2E).
 
-This prototype began life as a combined deployment demo of the various components thus its architecture is subject to review and is likely to evolve in step with the needs of the Krill project.
+This framework prototype began life as a deployment demo of various NLnet Labs and 3rd party RPKI related components. Its architecture is subject to review and is likely to evolve in step with the needs of the Krill project.
 
 ----
 
@@ -38,23 +38,21 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 
 Currently the tests are limited to a proof of concept in which Krill is configured as both a CA and TA and then we test that ROAs output by various RP tools connected to Krill are the same as those reported by Krill itself. The intention is to build out a set of useful end-to-end tests using this framework as a base.
 
-## Cloud? Docker? Why?
+## Why is it based on Docker in the cloud?
 
-This demo uses Terraform, Docker-Machine, Docker-Compose and Docker to deploy to either the Digital Ocean or Amazon Web Services public clouds.
-
-The templates have been deliberately structured such that the cloud and Docker parts are separated. Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
+The combination of Terraform, Docker-Machine, Docker-Compose and Docker supports many different deployment targets while minimizing the maintenance effort per component. The templates have been deliberately structured such that the cloud and Docker parts are separated. Deployment can be done with Docker alone or with Docker in the cloud, potentially also to targets such as the GitHub Actions Docker or DO/AWS Kubernetes platforms. Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
 
 The beauty of Terraform is the huge number of deployment targets that it supports. 
  
 The beauty of Docker is the ability to use the same core to run on those many different deployment targets and the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle.
 
-A VM with a public IP address and associated DNS A/AAAA records enable the framework to obtain a Lets Encrypt HTTPS certificate for NGINX such that Krill clients can trust the HTTPS certificate presented to them, while using NGINX to shield Krill from the Internet.
+By using a VM with a public IP address and associated DNS A/AAAA records the framework is able to obtain a Lets Encrypt HTTPS certificate for NGINX such that Krill clients can trust the HTTPS certificate presented to them, while using NGINX to shield Krill from the Internet. A VM also offers the potential to scale beyond the capabilities of a CI only platform such as GitHub Actions (where for example the deployment environment is currently limited to [2-core with 7 GiB RAM](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/virtual-environments-for-github-hosted-runners#supported-runners-and-hardware-resources)) which could be useful given that some RP tools require a lot of memory (e.g. [RIPE NCC RPKI Validator 3](https://github.com/RIPE-NCC/rpki-validator-3)) requires a minimum of 1 GiB RAM by default just for itself, and larger numbers of certificate authorities and ROAs will increase the resources required by Krill).
 
 Currently all clients are deployed as containers on the same host VM as Krill itself but the architecture supports splitting the containers out across multiple hosts. However some changes would be required to actually deploy using Docker Swarm or Kubernetes (for example) for such a scenario.
 
 Conversely, except for the real HTTPS certificate requiring routing from the Internet to NGINX by registered name, it should in theory be possible to omit the public cloud layer and use the Docker Compose layer directly with GitHub Actions, however this has not been tested.
 
-## Integration with Krill @ GitHub
+## Integration with Krill @ GitHub via GitHub Actions
 
 The [Krill GitHub repository](https://github.com/NLnetLabs/krill) contains a [GitHub Actions Workflow](https://github.com/NLnetLabs/krill/blob/master/.github/workflows/main.yml) definition that clones this E2E framework repository and uses it to test Krill with the most recent commit to master or commits to a Pull Request.
 
@@ -64,9 +62,9 @@ This framework requires:
 - A Digital Ocean or Amazon Web Services account.
 - A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
 - A DNS domain managed by Digital Ocean or Amazon Web Services.
-- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.7)
+- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
-- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.0) command line tool.
+- The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
 
 ## Protecting secrets
 
