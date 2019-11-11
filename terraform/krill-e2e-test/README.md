@@ -27,11 +27,12 @@
       * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
       * [Create some fake ROAs](#create-some-fake-roas)
    * [Inspect](#inspect)
-      * [Query the state of the Routinator](#query-the-state-of-the-routinator)
       * [Display container logs](#display-container-logs)
       * [Explore the containers from within](#explore-the-containers-from-within)
    * [Undeploy](#undeploy)
-* [Test results](#test-results) 
+* [Testing](#testing)
+   * [Querying the RPs](#querying-the-rps)
+   * [Results](#results) 
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
 
@@ -404,25 +405,6 @@ $ krillc roas update --ca child --delta /tmp/ka/delta.1
 
 ### Inspect
 
-#### Query the state of the Routinator
-
-- http://some.domain:9556/status
-- http://some.domain:9556/metrics
-- http://some.domain:9556/json
-
-The generate fake ROAs step above should have caused Routinator to fetch ROAs
-from Krill which should be visible in the Routinator Prometheus monitoring
-endpoints, in particular the `/json` endpoint should show:
-
-```json
-{
-    "roas": [
-        { "asn": "AS64496", "prefix": "10.0.1.0/24", "maxLength": 24, "ta": "ta" },
-        { "asn": "AS64496", "prefix": "10.0.0.0/24", "maxLength": 24, "ta": "ta" }
-    ]
-}
-```
-
 #### Display container logs
 
 ```bash
@@ -446,7 +428,28 @@ $ docker-compose exec rsyncd /bin/bash
 $ popd
 $ terraform destroy
 ```
-## Test results
+
+## Testing
+
+### Querying the RPs
+
+Each RP has its own external interfaces (logging, writing to a file, serving a HTTP endpoint), run mode (daemon or one shot or both) and format in which the data is exposed.
+
+Rather than have the test script know about and deal with each of these differences, instead each RP Docker image is extended to extract the ROA data and log it in a "standard" format that the test script can extract using the `docker logs` command:
+
+```
+TEST OUT: { "roas": [ <ROA>, <ROA>, ... ] }
+```
+
+Where the content after `TEST OUT: ` is JSON and is all one one line, and where `<ROA>` is of the form:
+
+```
+{ "asn": "AS64496", "prefix": "10.0.1.0/24", "maxLength": 24, "ta": "ta" }
+```
+
+The test script uses [./jq](https://stedolan.github.io/jq/) to parse the JSON output and then uses `sort` and `diff` to compare the output to expected output in the same format, but based on the output of Krill.
+
+### Results
 
 ```
 module.post.null_resource.run_tests[0] (local-exec): test_krill.sh: Try 1/12: test_compare_krill_roas_to_logs <RP NAME>:
