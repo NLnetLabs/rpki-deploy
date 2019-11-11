@@ -21,7 +21,7 @@ Table of Contents
          * [Docker topology](#docker-topology)
          * [Special configuration](#special-configuration)
       * [Running](#running)
-      * [Requirements](#requirements)
+         * [Requirements](#requirements)
          * [Prepare](#prepare)
          * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
          * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
@@ -188,7 +188,7 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 
 ## Running
 
-## Requirements
+### Requirements
 
 This framework requires:
 - A Digital Ocean or Amazon Web Services account.
