@@ -172,4 +172,4 @@ done
 echo "TEST END"
 
 # THE END
-[ ${PASS_COUNT} -lt ${TEST_COUNT} ] && exit 1
+[ $(( PASS_COUNT + XFAIL_COUNT )) -eq ${TEST_COUNT} ]
