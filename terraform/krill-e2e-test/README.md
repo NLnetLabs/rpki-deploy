@@ -1,39 +1,37 @@
-Warning! This document is currently being updated to reflect recent changes from demo to e2e framework. These edits are currently incomplete and thus this document is somewhere between the two states at present.
-
-----
-
 # Krill E2E Test Framework
 
 ## Contents
 
 * [Introduction](#introduction)
-    * [Abbreviations used in this document](#abbreviations-used-in-this-document)
-    * [What is tested?](#what-is-tested)
-    * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
+   * [Abbreviations used in this document](#abbreviations-used-in-this-document)
+   * [What is tested?](#what-is-tested)
+   * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
 * [Integration with Krill @ GitHub](#integration-with-krill--github)
-    * [Using GitHub Actions](#using-github-actions)
-    * [Protecting secrets](#protecting-secrets)
+   * [Using GitHub Actions](#using-github-actions)
+   * [Protecting secrets](#protecting-secrets)
 * [Architecture](#architecture)
-    * [Cloud topology](#cloud-topology)
-    * [Docker topology](#docker-topology)
-    * [Special configuration](#special-configuration)
+   * [Directory layout](#directory-layout)
+   * [Cloud topology](#cloud-topology)
+   * [Docker topology](#docker-topology)
+   * [Special configuration](#special-configuration)
+   * [Docker images for 3rd party RP tools](#docker-images-for-3rd-party-rp-tools)
 * [Running](#running)
-    * [Requirements](#requirements)
-    * [Prepare](#prepare)
-        * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
-        * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
-    * [Deploy](#deploy)
-        * [Container startup sequence](#container-startup-sequence)
-    * [Post deployment](#post-deployment)
-        * [Prepare to use Krillc](#prepare-to-use-krillc)
-        * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
-        * [Create some fake ROAs](#create-some-fake-roas)
-    * [Inspect](#inspect)
-        * [Query the state of the Routinator](#query-the-state-of-the-routinator)
-        * [Display container logs](#display-container-logs)
-        * [Explore the containers from within](#explore-the-containers-from-within)
-    * [Undeploy](#undeploy)
-
+   * [Requirements](#requirements)
+   * [Prepare](#prepare)
+      * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
+      * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
+   * [Deploy](#deploy)
+      * [Container startup sequence](#container-startup-sequence)
+   * [Post deployment](#post-deployment)
+      * [Prepare to use Krillc](#prepare-to-use-krillc)
+      * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
+      * [Create some fake ROAs](#create-some-fake-roas)
+   * [Inspect](#inspect)
+      * [Query the state of the Routinator](#query-the-state-of-the-routinator)
+      * [Display container logs](#display-container-logs)
+      * [Explore the containers from within](#explore-the-containers-from-within)
+   * [Undeploy](#undeploy)
+         
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
 
 ----
