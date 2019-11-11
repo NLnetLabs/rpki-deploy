@@ -103,25 +103,27 @@ The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/act
 
 ### Directory layout
 
+Below the `terraform` directory:
+
 Platform specific artifacts:
 
-| Directory or File-                            | Platform | Description |
-| --------------------------------------------- | -------- | ----------- |
-| `terraform/plugins`                           | GHA      | Contains a copy of the Docker Machine x64 Terraform plugin, used to accelerate the GHA run. |
-| `terraform/krill-e2e-test/decrypt-ssh-key.sh` | GHA      | Script to decrypt `ssh_key.gpg`. |
-| `terraform/krill-e2e-test/ssh_key.gpg`        | GHA      | SSH key used to SSH into the deployed VM. |
-| `terraform/krill-e2e-test/run_on_aws/`        | AWS      | Starting point for deploying on AWS. |
-| `terraform/krill-e2e-test/run_on_do/`         | DO       | Starting point for deploying on DO. |
+| Directory or File-                  | Platform | Description |
+| ----------------------------------- | -------- | ----------- |
+| `plugins`                           | GHA      | Contains a copy of the Docker Machine x64 Terraform plugin, used to accelerate the GHA run. |
+| `krill-e2e-test/decrypt-ssh-key.sh` | GHA      | Script to decrypt `ssh_key.gpg`. |
+| `krill-e2e-test/ssh_key.gpg`        | GHA      | SSH key used to SSH into the deployed VM. |
+| `krill-e2e-test/run_on_aws/`        | AWS      | Starting point for deploying on AWS. |
+| `krill-e2e-test/run_on_do/`         | DO       | Starting point for deploying on DO. |
 
 Platform independent artifacts:
 
-| Directory or File-                     | Description |
-| -------------------------------------- | ----------- |
-| `terraform/krill-e2e-test/scripts/`    | Bash scripts to configure and test Krill. |
-| `terraform/krill-e2e-test/lib/docker/` | E2E Docker image definitions. |
-| `terraform/krill-e2e-test/lib/infra/`  | Terraform module for cloud-agnostic infrastructure deployment. |
-| `terraform/krill-e2e-test/lib/pre`     | Terraform module run before deployment. |
-| `terraform/krill-e2e-test/lib/post`    | Terraform module run after deployment, e.g. the `/scripts/` are invoked from here. |
+| Directory or File-           | Description |
+| ---------------------------- | ----------- |
+| `krill-e2e-test/scripts/`    | Bash scripts to configure and test Krill. |
+| `krill-e2e-test/lib/docker/` | E2E Docker image definitions. |
+| `krill-e2e-test/lib/infra/`  | Terraform module for cloud-agnostic infrastructure deployment. |
+| `krill-e2e-test/lib/pre`     | Terraform module run before deployment. |
+| `krill-e2e-test/lib/post`    | Terraform module run after deployment, e.g. the `/scripts/` are invoked from here. |
 
 ### Cloud topology
 
