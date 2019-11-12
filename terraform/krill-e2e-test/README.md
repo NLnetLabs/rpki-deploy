@@ -126,6 +126,8 @@ Platform specific artifacts:
 | `krill-e2e-test/ssh_key.gpg`        | GHA      | SSH key used to SSH into the deployed VM. |
 | `krill-e2e-test/run_on_aws/`        | AWS      | Starting point for deploying on AWS. |
 | `krill-e2e-test/run_on_do/`         | DO       | Starting point for deploying on DO. |
+| `krill-e2e-test/lib/infra/aws/`     | AWS      | Terraform module for AWS infrastructure deployment. |
+| `krill-e2e-test/lib/infra/do/ `     | DO       | Terraform module for DO infrastructure deployment. |
 
 Platform independent artifacts:
 
@@ -133,7 +135,6 @@ Platform independent artifacts:
 | ---------------------------- | ----------- |
 | `krill-e2e-test/scripts/`    | Bash scripts to configure and test Krill. |
 | `krill-e2e-test/lib/docker/` | E2E Docker image definitions. |
-| `krill-e2e-test/lib/infra/`  | Terraform module for cloud-agnostic infrastructure deployment. |
 | `krill-e2e-test/lib/pre`     | Terraform module run before deployment. |
 | `krill-e2e-test/lib/post`    | Terraform module run after deployment, e.g. the `/scripts/` are invoked from here. |
 
