@@ -349,13 +349,15 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
    d. The RP tool (periodically) queries the Krill RRDP server at https://some.domain/rrdp/notification.xml and follows links contained in the response.
    e. The RP tool outputs, or a helper script queries, the ROAs from the RP and outputs them to standard out / the Docker logs.
 
-5. An operator creates [ROAs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-authorisations) in Krill.
+5. Terraform runs the configure Krill script which creates [ROAs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-authorisations) in Krill.
 
 6. Krill announces the ROAs.
 
-7. Routinator detects them via RRDP, validates them and serves them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity) to any connected Routers.
+7. RPs detect the ROAs via RRDP, validate and serve/output them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity). In a real deployment these VRPs would be consumed by Routers connected to the RPs.
 
 ### Post deployment
+
+> Terraform does these steps automatically via the configure Krill script.
 
 We can use the `krillc` binary installed in the `krill` container to create a CA that is a child of the embedded TA and then create ROAs in the child.
 
