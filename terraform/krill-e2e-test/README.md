@@ -544,7 +544,7 @@ Notes:
 
 | Property | Value |
 |----------|-------|
-| Vendor   | RIPE NCC |
+| Vendor   | [RIPE NCC](https://www.ripe.net/) |
 | Version  | alpine latest |
 | Image    | [`ripencc/rpki-validator-3-docker:alpine`](https://hub.docker.com/r/ripencc/rpki-validator-3-docker) |
 
