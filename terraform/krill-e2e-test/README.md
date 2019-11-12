@@ -100,7 +100,7 @@ The [Krill GitHub repository](https://github.com/NLnetLabs/krill) contains a [Gi
 
 The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets) to:
 - Protect the Digital Ocean API token or AWS credentials used to deploy in the public cloud.
-- Protect the decryption passphrase used to protect the SSH key used to SSH to the cloud VM.
+- Protect the SSH key decryption passphrase for the key that grants remote shell access to the deployed cloud VM.
 
 ## Architecture
 
