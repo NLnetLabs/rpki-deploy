@@ -116,32 +116,33 @@ The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/act
 ### Directory layout
 
 ```
-$ tree -d
+$ tree -d                                    Type
+==============================================================
 .
 └── terraform
     ├── krill-e2e-test
     │   ├── lib
     │   │   ├── docker
-    │   │   │   ├── krill
-    │   │   │   ├── nginx
-    │   │   │   ├── relyingparties
-    │   │   │   │   ├── base
-    │   │   │   │   ├── fortvalidator
-    │   │   │   │   ├── octorpki
-    │   │   │   │   ├── rcynic
-    │   │   │   │   ├── routinator
-    │   │   │   │   ├── rpki-client
-    │   │   │   │   └── rpkivalidator3
-    │   │   │   └── rsyncd
+    │   │   │   ├── krill                    Docker image
+    │   │   │   ├── nginx                    Docker image
+    │   │   │   ├── relyingparties           Docker image
+    │   │   │   │   ├── base                 Docker image
+    │   │   │   │   ├── fortvalidator        Docker image
+    │   │   │   │   ├── octorpki             Docker image
+    │   │   │   │   ├── rcynic               Docker image
+    │   │   │   │   ├── routinator           Docker image
+    │   │   │   │   ├── rpki-client          Docker image
+    │   │   │   │   └── rpkivalidator3       Docker image
+    │   │   │   └── rsyncd                   Docker image
     │   │   ├── infra
-    │   │   │   ├── aws
-    │   │   │   └── do
-    │   │   ├── post
-    │   │   └── pre
-    │   ├── run_on_aws
-    │   ├── run_on_do
-    │   └── scripts
-    └── plugins
+    │   │   │   ├── aws                      Terraform module
+    │   │   │   └── do                       Terraform module
+    │   │   ├── post                         Terraform module
+    │   │   └── pre                          Terraform module
+    │   ├── run_on_aws                       Terraform module
+    │   ├── run_on_do                        Terraform module
+    │   └── scripts                          Bash scripts
+    └── plugins                              Terraform plugins
 ```
 
 Platform specific artifacts:
