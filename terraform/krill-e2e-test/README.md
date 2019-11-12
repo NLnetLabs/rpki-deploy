@@ -125,7 +125,7 @@ $ tree -d                                    Type
     │   │   ├── docker
     │   │   │   ├── krill                    Docker image
     │   │   │   ├── nginx                    Docker image
-    │   │   │   ├── relyingparties           Docker image
+    │   │   │   ├── relyingparties
     │   │   │   │   ├── base                 Docker image
     │   │   │   │   ├── fortvalidator        Docker image
     │   │   │   │   ├── octorpki             Docker image
