@@ -115,7 +115,34 @@ The Krill GitHub repository uses [GitHub Secrets](https://help.github.com/en/act
 
 ### Directory layout
 
-Below the `terraform` directory:
+```
+$ tree -d
+.
+└── terraform
+    ├── krill-e2e-test
+    │   ├── lib
+    │   │   ├── docker
+    │   │   │   ├── krill
+    │   │   │   ├── nginx
+    │   │   │   ├── relyingparties
+    │   │   │   │   ├── base
+    │   │   │   │   ├── fortvalidator
+    │   │   │   │   ├── octorpki
+    │   │   │   │   ├── rcynic
+    │   │   │   │   ├── routinator
+    │   │   │   │   ├── rpki-client
+    │   │   │   │   └── rpkivalidator3
+    │   │   │   └── rsyncd
+    │   │   ├── infra
+    │   │   │   ├── aws
+    │   │   │   └── do
+    │   │   ├── post
+    │   │   └── pre
+    │   ├── run_on_aws
+    │   ├── run_on_do
+    │   └── scripts
+    └── plugins
+```
 
 Platform specific artifacts:
 
