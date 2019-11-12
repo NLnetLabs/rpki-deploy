@@ -445,7 +445,7 @@ Rather than have the test script know about and deal with each of these differen
 TEST OUT: { "roas": [ <ROA>, <ROA>, ... ] }
 ```
 
-Where the content after `TEST OUT: ` is JSON and is all one one line, and where `<ROA>` is of the form:
+Where the content after `TEST OUT: ` is JSON and is all on one line, and where `<ROA>` is of the form:
 
 ```
 { "asn": "AS64496", "prefix": "10.0.1.0/24", "maxLength": 24, "ta": "ta" }
