@@ -3,36 +3,43 @@
 ## Contents
 
 * [Introduction](#introduction)
-   * [Abbreviations used in this document](#abbreviations-used-in-this-document)
-   * [What is tested?](#what-is-tested)
-   * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
+    * [Abbreviations used in this document](#abbreviations-used-in-this-document)
+    * [What is tested?](#what-is-tested)
+    * [Why is it based on Docker in the cloud?](#why-is-it-based-on-docker-in-the-cloud)
 * [Integration with Krill @ GitHub](#integration-with-krill--github)
-   * [Using GitHub Actions](#using-github-actions)
-   * [Protecting secrets](#protecting-secrets)
+    * [Using GitHub Actions](#using-github-actions)
+    * [Protecting secrets](#protecting-secrets)
 * [Architecture](#architecture)
-   * [Directory layout](#directory-layout)
-   * [Cloud topology](#cloud-topology)
-   * [Docker topology](#docker-topology)
-   * [Special configuration](#special-configuration)
-   * [Docker images for 3rd party RP tools](#docker-images-for-3rd-party-rp-tools)
+    * [Directory layout](#directory-layout)
+    * [Cloud topology](#cloud-topology)
+    * [Docker topology](#docker-topology)
+    * [Special configuration](#special-configuration)
+    * [Docker images for 3rd party RP tools](#docker-images-for-3rd-party-rp-tools)
 * [Running](#running)
-   * [Requirements](#requirements)
-   * [Prepare](#prepare)
-      * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
-      * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
-   * [Deploy](#deploy)
-      * [Container startup sequence](#container-startup-sequence)
-   * [Post deployment](#post-deployment)
-      * [Prepare to use Krillc](#prepare-to-use-krillc)
-      * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
-      * [Create some fake ROAs](#create-some-fake-roas)
-   * [Inspect](#inspect)
-      * [Display container logs](#display-container-logs)
-      * [Explore the containers from within](#explore-the-containers-from-within)
-   * [Undeploy](#undeploy)
+    * [Requirements](#requirements)
+    * [Prepare](#prepare)
+        * [Prepare for Digital Ocean](#prepare-for-digital-ocean)
+        * [Prepare for Amazon Web Services](#prepare-for-amazon-web-services)
+    * [Deploy](#deploy)
+        * [Container startup sequence](#container-startup-sequence)
+    * [Post deployment](#post-deployment)
+        * [Prepare to use Krillc](#prepare-to-use-krillc)
+        * [Create a CA as a child of the embedded TA](#create-a-ca-as-a-child-of-the-embedded-ta)
+        * [Create some fake ROAs](#create-some-fake-roas)
+    * [Inspect](#inspect)
+        * [Display container logs](#display-container-logs)
+        * [Explore the containers from within](#explore-the-containers-from-within)
+    * [Undeploy](#undeploy)
 * [Testing](#testing)
-   * [Querying the RPs](#querying-the-rps)
-   * [Results](#results) 
+    * [Querying the RPs](#querying-the-rps)
+    * [Results](#results)
+* [RP Details](#rp-details)
+    * [FORT Validator](#fort-validator)
+    * [OctoRPKI](#octorpki)
+    * [Routinator](#routinator)
+    * [Rcynic](#rcynic)
+    * [rpki-client](#rpki-client)
+    * [RPKI Validator 3](#rpki-validator-3)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
 
@@ -75,6 +82,8 @@ _**WARNING!** This framework creates resources in the [Digital Ocean](https://ww
 Currently the tests are limited to a proof of concept in which Krill is configured as both a CA and TA and then we test that ROAs output by various RP tools connected to Krill are the same as those reported by Krill itself. The intention is to build out a set of useful end-to-end tests using this framework as a base.
 
 View [E2E Test Framework logs for recent Krill commits](https://github.com/nlnetlabs/krill/actions).
+
+For details on which RPs are tested against Krill see the [RP details](#rp-details) section below.
 
 ### Why is it based on Docker in the cloud?
 
@@ -464,3 +473,81 @@ module.post.null_resource.run_tests[0] (local-exec): OKAY
 module.post.null_resource.run_tests[0] (local-exec): TEST REPORT: M/N tests passed with O expected failures.
 module.post.null_resource.run_tests[0] (local-exec): TEST END
 ```
+
+## RP details
+
+This section details which Relying Party tools are tested against Krill. The information below is correct at the time of wriitng.
+
+### FORT Validator
+
+| Property | Value |
+|----------|-------|
+| Vendor   | FORT Project by [LACNIC](https://www.lacnic.net/) and [NIC.MX](https://www.nicmexico.mx/) |
+| Version  | 1.1.1 |
+| Image    | [`ximoneigteen/fortvalidator`](https://hub.docker.com/r/ximoneighteen/fortvalidator) |
+
+Notes:
+- Invoked with `--mode standalone --output.roa`
+
+### OctoRPKI
+
+| Property | Value |
+|----------|-------|
+| Vendor   | [CloudFlare](https://blog.cloudflare.com/cloudflares-rpki-toolkit/) |
+| Version  | Latest |
+| Image    | [`cloudflare/octorpki`](https://hub.docker.com/r/cloudflare/octorpki) |
+
+Notes:
+- Invoked with `-mode oneoff -output.roa`
+
+### Routinator
+
+| Property | Value |
+|----------|-------|
+| Vendor   | [NLNet Labs](https://nlnetlabs.nl/projects/rpki/routinator/) |
+| Version  | Latest |
+| Image    | [`nlnetlabs/routinator`](https://hub.docker.com/r/nlnetlabs/routinator) |
+
+Notes:
+- Invoked with `vrps -o -f json --complete`
+
+### Rcynic
+
+| Property | Value |
+|----------|-------|
+| Vendor   | [Dragon Research Labs](https://github.com/dragonresearch/rpki.net/tree/master/rp/rcynic) |
+| Version  | buildbot-1.0.1544679302 |
+| Image    | [`ximoneighteen/rcynic`](https://hub.docker.com/r/ximoneighteen/rcynic) |
+
+Notes:
+- Invoked with `rcynic --config --xml-file --no-prefer-rsync`.
+- Configured to log at debug level to stderr and to use sqlite3 as the db engine.
+- Binary DER ROA objects are retrieved via SQLite query from DB table `rcynicdb_rpkiobject`.
+- When not using the Krill embedded TA, ROA objects who `uri` field is `LIKE` the FQDN in the TAL are excluded.
+- `SELECT writefiled(id, der)` output is converted to text using `print_roa`.
+
+### rpki-client
+
+| Property | Value |
+|----------|-------|
+| Vendor   | [kristapsdz](https://github.com/kristapsdz/rpki-client) |
+| Version  | commit 5b09ea2 (Aug 24 2019) |
+| Image    | [`ximoneighteen/rpki-client:latest`](https://hub.docker.com/r/ximoneighteen/rpki-client) |
+
+Notes:
+- Invoked with `-e /usr/bin/rsync`.
+- The v0.2.0 release (Jun 16 2019) is not used because it causes error `tal.c:109: tal_parse_stream: Assertion ``line[linelen - 1] == '\n'' failed`.
+- The `kristapsdz` version is used (as opposed to the OpenBSD version) because it supports Linux and OpenBSD cannot run inside a Docker container.
+
+
+### RPKI Validator 3
+
+| Property | Value |
+|----------|-------|
+| Vendor   | RIPE NCC |
+| Version  | alpine latest |
+| Image    | [`ripencc/rpki-validator-3-docker:alpine`](https://hub.docker.com/r/ripencc/rpki-validator-3-docker) |
+
+Notes:
+- JVM min/max memory permitted is reduced from the default 1-1.5 GiB to 256-512 MiB.
+- ROAs are retrieved by `test_krill.sh` from the container at `:8080/api/export.json`.
