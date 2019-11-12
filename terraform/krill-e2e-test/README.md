@@ -231,7 +231,7 @@ This framework requires:
 
 ### Prepare
 
-To run the framework you will the required tools installed, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
+To run the framework you will need the required tools, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
 
 > _**Note:** `some.domain` should already be managed by Digital Ocean or AWS._
 
