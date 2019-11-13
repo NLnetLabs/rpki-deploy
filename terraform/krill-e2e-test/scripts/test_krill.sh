@@ -80,7 +80,7 @@ test_compare_krill_roas_to_logs() {
             echo "Unable to examine container logs"
         fi
         return ${RC}
-    elif [ "${MYPS}" == "0 141 0" ]; then
+    elif [[ ${RC} -eq 0 || "${MYPS}" == "0 141 0" ]]; then
         # We got ROAs, compare them to our expectations!
         echo ${TEST_OUT} | sed -e 's|TEST OUT: ||' \
             | test_compare_krill_roas_to_json
