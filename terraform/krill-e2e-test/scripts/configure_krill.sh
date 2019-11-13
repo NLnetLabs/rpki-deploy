@@ -18,6 +18,18 @@ krillc() {
         krillc $@
 }
 
+get_ta_child_count() {
+    krillc show --ca ta --format json | jq '.children | length'
+}
+
+get_ca_parent_count() {
+    krillc show --ca child --format json | jq '.parents | length'
+}
+
+get_ca_roa_count() {
+    krillc roas list --ca child --format json | jq '. | length'
+}
+
 my_log "Use embedded trust anchor? ${KRILL_USE_TA}"
 my_log "TAL to be used by clients: ${SRC_TAL}"
 
@@ -33,19 +45,19 @@ if [[ "${KRILL_USE_TA}" == "true" ]]; then
     fi
 
     my_log "Checking to see if the parent CA -> child CA relationship exists"
-    NUM_CHILDREN=$(my_log_cmd krillc show --ca ta --format json | jq '.children | length')
+    NUM_CHILDREN=$(my_retry 5 5 get_ta_child_count)
     if [ ${NUM_CHILDREN} -eq 0 ]; then
         my_retry 5 5 krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16" --ipv6 "2001:3200:3200::66" --asn 1
     fi
 
     my_log "Checking to see if the child CA -> parent CA relationship exists"
-    NUM_PARENTS=$(my_log_cmd krillc show --ca child --format json | jq '.parents | length')
+    NUM_PARENTS=$(my_retry 5 5 get_ca_parent_count)
     if [ ${NUM_PARENTS} -eq 0 ]; then
         my_retry 5 5 krillc parents add --embedded --ca child --parent ta
     fi
 
     my_log "Checking to see if the child CA ROAs exist"
-    NUM_CHILD_ROAS=$(my_log_cmd krillc roas list --ca child --format json | jq '. | length')
+    NUM_CHILD_ROAS=$(my_retry 5 5 get_ca_roa_count)
     if [ ${NUM_CHILD_ROAS} -eq 0 ]; then
         my_retry 5 5 krillc roas update --ca child --delta /tmp/ka/delta.1
     fi
