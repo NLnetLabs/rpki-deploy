@@ -53,7 +53,7 @@ test_krill_has_roas() {
 # previously defined set of expected ROAs.
 test_compare_krill_roas_to_json() {
     jq -r '.roas[] | '$JQ_SELECT \
-        | jq -r '"\(.prefix) => \(.asn | sub("AS";""))"' \
+        | jq -r '"\(.prefix),\(.asn | sub("AS";""))"' \
         | sort \
         | diff -u ${EXPECTED_ROAS_FILE} -
 }
@@ -117,10 +117,10 @@ if [ "$KRILL_USE_TA" == "true" ]; then
     test_krill_has_roas || log_test_failure "Krill should have a child CA with at least one ROA."
 
     # Obtain the child CA ROAs
-    krillc roas list --ca child --format json | jq -r '.[]' | sort >$EXPECTED_ROAS_FILE
+    krillc roas list --ca child --format json | jq -r '.[] | "\(.prefix),\(.asn)"' | sort >$EXPECTED_ROAS_FILE
 
     # We're only interested in ROAs for our TA
-    JQ_SELECT='select(.ta=="ta")'
+    JQ_SELECT='.'
 else
     # Not using the Krill testing embedded TA, instead using some other TA
     # Expect ROAs for the NLnet Labs network to be advertised by the TA and
