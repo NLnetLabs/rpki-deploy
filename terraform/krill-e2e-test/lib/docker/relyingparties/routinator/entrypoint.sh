@@ -20,6 +20,13 @@ routinator \
     -f json \
     --complete
 
+my_log "Checking that at least one ROA was output"
+NUM_ROAS=$(cat ${DATA_DIR}/output.json | jq '.roas | length')
+if [ ${NUM_ROAS} -le 1 ]; then
+    my_log "ERROR: Output does not contain any ROAs"
+    exit 1
+fi
+
 my_log "Dumping received ROAs in the format expected by test_krill.sh"
 echo -n "TEST OUT: "
 cat ${DATA_DIR}/output.json | paste -sd ' ' -
