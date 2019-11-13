@@ -389,7 +389,7 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
 
 5. Terraform runs the configure Krill script which creates [ROAs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-authorisations) in Krill.
 
-6. Krill announces the ROAs.
+6. Krill publishes the ROAs.
 
 7. RPs detect the ROAs via RRDP, validate and serve/output them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity). In a real deployment these VRPs would be consumed by Routers connected to the RPs.
 
