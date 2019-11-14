@@ -12,7 +12,7 @@ variable "run_tests" {
 }
 
 resource "null_resource" "run_tests" {
-    count = "${var.run_tests  ? 1 : 0}"
+    count = var.run_tests  ? 1 : 0
 
     triggers = {
         docker_url = "${var.docker_url}"
@@ -29,8 +29,8 @@ resource "null_resource" "run_tests" {
         connection {
             type        = "ssh"
             user        = var.ssh_user
-            private_key = "${file(var.ssh_key_path)}"
-            host        = "${var.krill_fqdn}"
+            private_key = file(var.ssh_key_path)
+            host        = var.krill_fqdn
         }
     }
 
