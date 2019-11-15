@@ -44,6 +44,7 @@ module "post" {
   hostname         = module.pre.hostname
   docker_url       = "${module.docker_deploy.docker_url}"
   docker_cert_path = "${module.docker_deploy.cert_path}"
+  krill_build_path = var.krill_build_path
   krill_fqdn       = module.pre.fqdn
   krill_use_ta     = var.krill_use_ta
   ssh_key_path     = module.pre.ssh_key_path

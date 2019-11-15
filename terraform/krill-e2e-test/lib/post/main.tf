@@ -4,6 +4,7 @@ variable "docker_url" {}
 variable "docker_cert_path" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
+variable "krill_build_path" {}
 variable "krill_fqdn" {}
 variable "krill_use_ta" {}
 variable "src_tal" {}
@@ -63,5 +64,22 @@ resource "null_resource" "run_tests" {
         interpreter = ["/bin/bash"]
         working_dir = "../lib/docker"
         command = "../../scripts/test_krill.sh"
+    }
+
+    provisioner "local-exec" {
+        environment = {
+            DOCKER_TLS_VERIFY="1"
+            DOCKER_MACHINE_NAME="${var.hostname}"
+            DOCKER_HOST="${var.docker_url}"
+            DOCKER_CERT_PATH="${var.docker_cert_path}"
+            KRILL_BUILD_PATH="${krill_build_path}"
+            KRILL_FQDN="${var.krill_fqdn}"
+            KRILL_USE_TA="${var.krill_use_ta}"
+            SRC_TAL="${var.src_tal}"
+        }
+
+        interpreter = ["/bin/bash"]
+        working_dir = "../lib/docker"
+        command = "../../scripts/test_python_client.sh"
     }
 }
