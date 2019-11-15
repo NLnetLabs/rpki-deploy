@@ -19,10 +19,7 @@ TMPDIR=$(mktemp -d)
 my_log "Generating Python client library from OpenAPI spec ${KRILL_OPENAPI_SPEC_PATH} in tmp dir ${TMPDIR}"
 cp ${KRILL_OPENAPI_SPEC_PATH} ${TMPDIR}/
 
-# Generate the library files using our UID:GID, otherwise by default the Docker
-# container will write the files out as root and we would have to use sudo to
-# clean up at the end.
-docker run -u ${UID}:${GROUPS} --rm -v ${TMPDIR}:/local \
+docker run --rm -v ${TMPDIR}:/local \
     openapitools/openapi-generator-cli generate \
     -i /local/openapi.yaml \
     -g python \
@@ -63,7 +60,7 @@ try:
     for ca in api_response.cas:
         print(f'  CA: {ca.name}')
 except ApiException as e:
-    print("Exception when calling CertificateAuthoritiesApi->cas_get: %s\n" % e)
+    print(f'Exception when calling CertificateAuthoritiesApi->cas_get: {e}\n')
 
 print('Finished')
 EOT
