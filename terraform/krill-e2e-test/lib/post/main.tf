@@ -68,10 +68,10 @@ resource "null_resource" "run_tests" {
 
     provisioner "local-exec" {
         environment = {
-            DOCKER_TLS_VERIFY="1"
-            DOCKER_MACHINE_NAME="${var.hostname}"
-            DOCKER_HOST="${var.docker_url}"
-            DOCKER_CERT_PATH="${var.docker_cert_path}"
+            #DOCKER_TLS_VERIFY="1"
+            #DOCKER_MACHINE_NAME="${var.hostname}"
+            #DOCKER_HOST="${var.docker_url}"
+            #DOCKER_CERT_PATH="${var.docker_cert_path}"
             KRILL_BUILD_PATH="${var.krill_build_path}"
             KRILL_FQDN="${var.krill_fqdn}"
             KRILL_USE_TA="${var.krill_use_ta}"
