@@ -36,6 +36,8 @@ docker run --rm -v ${TMPDIR}:/local \
 my_log "Installing generated library in a Python 3 venv"
 
 # Create and enter Python3 venv
+sudo apt-get install -y python3-venv
+
 pushd ${TMPDIR}
 set +u; python3 -m venv venv; source venv/bin/activate; set -u
 
