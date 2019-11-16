@@ -84,6 +84,6 @@ set +u; deactivate; set -u
 popd
 
 my_log "Cleaning up"
-rm -Rf ${TMPDIR}
+sudo rm -R ${TMPDIR}
 
 my_log "End of Python client test"
