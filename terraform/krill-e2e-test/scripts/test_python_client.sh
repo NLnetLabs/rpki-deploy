@@ -19,6 +19,13 @@ TMPDIR=$(mktemp -d)
 my_log "Generating Python client library from OpenAPI spec ${KRILL_OPENAPI_SPEC_PATH} in tmp dir ${TMPDIR}"
 cp ${KRILL_OPENAPI_SPEC_PATH} ${TMPDIR}/
 
+# Unset Docker env so that we communicate with
+# the local Docker daemon, not the remote one:
+unset DOCKER_TLS_VERIFY
+unset DOCKER_MACHINE_NAME
+unset DOCKER_HOST
+unset DOCKER_CERT_PATH
+
 docker run --rm -v ${TMPDIR}:/local \
     openapitools/openapi-generator-cli generate \
     -i /local/openapi.yaml \
