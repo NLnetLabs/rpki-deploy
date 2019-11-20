@@ -153,7 +153,7 @@ fi
 # Output diagnostic logs:
 # -----------------------------------------------------------------------------
 my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
-docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
+docker-compose logs | grep -Eiw ${BAD_LOG_FILTER} || true
 
 # -----------------------------------------------------------------------------
 # Summarize the test results:

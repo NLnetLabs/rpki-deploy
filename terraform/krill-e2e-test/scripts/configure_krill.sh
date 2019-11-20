@@ -12,7 +12,7 @@ source ../lib/docker/relyingparties/base/my_funcs.sh
 
 dump_container_errors() {
     my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
-    docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
+    docker-compose logs | grep -Eiw ${BAD_LOG_FILTER} || true
 }
 
 krillc() {
