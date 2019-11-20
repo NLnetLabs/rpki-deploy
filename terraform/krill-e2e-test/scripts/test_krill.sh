@@ -152,22 +152,22 @@ fi
 # -----------------------------------------------------------------------------
 # Output diagnostic logs:
 # -----------------------------------------------------------------------------
-echo "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
+my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
 docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
 
 # -----------------------------------------------------------------------------
 # Summarize the test results:
 # -----------------------------------------------------------------------------
-echo "TEST REPORT: ${PASS_COUNT}/${TEST_COUNT} tests passed with ${XFAIL_COUNT} expected failures."
-echo "TEST FAILURES:"
+my_log "TEST REPORT: ${PASS_COUNT}/${TEST_COUNT} tests passed with ${XFAIL_COUNT} expected failures."
+my_log "TEST FAILURES:"
 for TEST_FAILURE in "${TEST_FAILURES[@]}"; do
-    echo "  - ${TEST_FAILURE}"
+    my_log "  - ${TEST_FAILURE}"
 done
-echo "TEST XFAILURES:"
+my_log "TEST XFAILURES:"
 for TEST_XFAILURE in "${TEST_XFAILURES[@]}"; do
-    echo "  - ${TEST_XFAILURE}"
+    my_log "  - ${TEST_XFAILURE}"
 done
-echo "TEST END"
+my_log "TEST END"
 
 # THE END
 [ $(( PASS_COUNT + XFAIL_COUNT )) -eq ${TEST_COUNT} ]
