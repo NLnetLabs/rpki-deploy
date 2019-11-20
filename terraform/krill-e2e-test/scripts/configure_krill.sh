@@ -10,6 +10,11 @@ WGET_UNSAFE_TO_STDOUT="${WGET_UNSAFE_QUIET}O-"
 
 source ../lib/docker/relyingparties/base/my_funcs.sh
 
+dump_container_errors() {
+    my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
+    docker-compose logs | grep -Eiw ${BAD_LOG_FILTER}
+}
+
 krillc() {
     docker exec \
         -e KRILL_CLI_SERVER=https://localhost:3000/ \
@@ -29,6 +34,8 @@ get_ca_parent_count() {
 get_ca_roa_count() {
     krillc roas list --ca child --format json | jq '. | length'
 }
+
+trap dump_container_errors EXIT
 
 my_log "Use embedded trust anchor? ${KRILL_USE_TA}"
 my_log "TAL to be used by clients: ${SRC_TAL}"
