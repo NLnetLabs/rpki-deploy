@@ -19,6 +19,13 @@ TMPDIR=$(mktemp -d)
 my_log "Generating Python client library from OpenAPI spec ${KRILL_OPENAPI_SPEC_PATH} in tmp dir ${TMPDIR}"
 cp ${KRILL_OPENAPI_SPEC_PATH} ${TMPDIR}/
 
+# Unset Docker env so that we communicate with
+# the local Docker daemon, not the remote one:
+unset DOCKER_TLS_VERIFY
+unset DOCKER_MACHINE_NAME
+unset DOCKER_HOST
+unset DOCKER_CERT_PATH
+
 docker run --rm -v ${TMPDIR}:/local \
     openapitools/openapi-generator-cli generate \
     -i /local/openapi.yaml \
@@ -29,6 +36,8 @@ docker run --rm -v ${TMPDIR}:/local \
 my_log "Installing generated library in a Python 3 venv"
 
 # Create and enter Python3 venv
+sudo apt-get install -y python3-venv
+
 pushd ${TMPDIR}
 set +u; python3 -m venv venv; source venv/bin/activate; set -u
 
@@ -75,6 +84,6 @@ set +u; deactivate; set -u
 popd
 
 my_log "Cleaning up"
-rm -Rf ${TMPDIR}
+sudo rm -R ${TMPDIR}
 
 my_log "End of Python client test"

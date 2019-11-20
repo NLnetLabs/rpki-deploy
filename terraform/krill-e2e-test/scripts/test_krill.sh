@@ -145,10 +145,8 @@ for relyingparty in routinator octorpki fortvalidator rcynic rpkiclient; do
     fi
 done
 
-if ! incr_test_counters my_retry 3 10 test_compare_krill_roas_to_url rpki-validator-3 http://${KRILL_FQDN}:8080/api/export.json; then
-    log_expected_test_failure "rpki-validator-3 ROAs do not match those of Krill"
-else
-    log_test_failure "rpki-validator-3 unexpectedly passed the test???"
+if ! incr_test_counters my_retry 24 10 test_compare_krill_roas_to_url rpki-validator-3 http://${KRILL_FQDN}:8080/api/export.json; then
+    log_test_failure "rpki-validator-3 ROAs do not match those of Krill"
 fi
 
 # -----------------------------------------------------------------------------
