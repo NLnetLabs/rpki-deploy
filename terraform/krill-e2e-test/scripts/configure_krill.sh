@@ -7,6 +7,7 @@ KRILL_CONTAINER="krill"
 KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 WGET_UNSAFE_QUIET="wget -4 --no-check-certificate -q"
 WGET_UNSAFE_TO_STDOUT="${WGET_UNSAFE_QUIET}O-"
+BAD_LOG_FILTER='(ERR|Bad|Fail|WARN)'
 
 source ../lib/docker/relyingparties/base/my_funcs.sh
 
