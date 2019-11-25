@@ -21,21 +21,23 @@ module "create_infra" {
 }
 
 module "docker_deploy" {
-  source             = "../lib/docker"
-  docker_compose_dir = var.docker_compose_dir
-  domain             = var.domain
-  hostname           = module.pre.hostname
-  krill_auth_token   = var.krill_auth_token
-  krill_build_path   = var.krill_build_path
-  krill_log_level    = var.krill_log_level
-  krill_version      = var.krill_version
-  krill_use_ta       = var.krill_use_ta
-  krill_fqdn         = module.pre.fqdn
-  use_staging_cert   = var.use_staging_cert
-  ipv4_address       = module.create_infra.ipv4_address
-  ssh_key_path       = module.pre.ssh_key_path
-  ssh_user           = module.create_infra.ssh_user
-  src_tal            = module.pre.src_tal
+  source              = "../lib/docker"
+  docker_compose_dir  = var.docker_compose_dir
+  domain              = var.domain
+  hostname            = module.pre.hostname
+  krill_auth_token    = var.krill_auth_token
+  krill_build_path    = var.krill_build_path
+  krill_log_level     = var.krill_log_level
+  krill_version       = var.krill_version
+  krill_use_ta        = var.krill_use_ta
+  krill_fqdn          = module.pre.fqdn
+  use_staging_cert    = var.use_staging_cert
+  ipv4_address        = module.create_infra.ipv4_address
+  ssh_key_path        = module.pre.ssh_key_path
+  ssh_user            = module.create_infra.ssh_user
+  src_tal             = module.pre.src_tal
+  docker_reg_username = var.docker_reg_username
+  docker_reg_password = var.docker_reg_password
 }
 
 module "post" {

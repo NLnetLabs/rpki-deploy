@@ -57,6 +57,7 @@ services:
     restart: unless-stopped
   
   routinator:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/routinator
     build:
       context: relyingparties/routinator
       network: host
@@ -73,6 +74,7 @@ services:
       - relyingpartybase
 
   octorpki:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/octorpki
     build:
       context: relyingparties/octorpki
       network: host
@@ -86,6 +88,7 @@ services:
       - relyingpartybase
 
   fortvalidator:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/fortvalidator
     build:
       context: relyingparties/fortvalidator
       network: host
@@ -99,6 +102,7 @@ services:
       - relyingpartybase
 
   rpkivalidator3:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/rpkivalidator3
     build:
       context: relyingparties/rpkivalidator3
       network: host
@@ -115,6 +119,7 @@ services:
       - nginx
 
   rcynic:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/rcynic
     build:
       context: relyingparties/rcynic
       network: host
@@ -129,6 +134,7 @@ services:
       - relyingpartybase
 
   rpkiclient:
+    image: docker-reg.do.nlnetlabs.nl/relyingparties/rpki-client
     build:
       context: relyingparties/rpki-client
       network: host
@@ -142,7 +148,7 @@ services:
       - relyingpartybase
 
   relyingpartybase:
-    image: relyingpartybase
+    image: docker-reg.do.nlnetlabs.nl/relyingpartybase
     build:
       context: relyingparties/base
       network: host

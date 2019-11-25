@@ -12,6 +12,8 @@ variable "ipv4_address" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
 variable "src_tal" {}
+variable "docker_reg_username" {}
+variable "docker_reg_password" {}
 
 
 # This provider is used to resolve conditional or incomplete values which are
@@ -82,6 +84,8 @@ resource "dockermachine_generic" "docker_deploy" {
       DOCKER_HOST         = "${self.docker_url}"
       DOCKER_CERT_PATH    = "${self.storage_path_computed}"
       DOCKER_MACHINE_NAME = "${self.name}"
+      DOCKER_REG_USERNAME = var.docker_reg_username
+      DOCKER_REG_PASSWORD = var.docker_reg_password
       KRILL_STAGING_CERT  = var.use_staging_cert
       KRILL_AUTH_TOKEN    = var.krill_auth_token
       KRILL_LOG_LEVEL     = var.krill_log_level
@@ -91,7 +95,7 @@ resource "dockermachine_generic" "docker_deploy" {
       SRC_TAL             = var.src_tal
     }
     working_dir = var.docker_compose_dir
-    command     = "docker-compose up --build -d"
+    command     = "docker login -u ${var.docker_reg_username} -p ${var.docker_reg_password} docker-reg.do.nlnetlabs.nl && docker-compose pull --ignore-pull-failures && docker-compose up -d"
   }
 }
 

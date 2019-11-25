@@ -103,3 +103,11 @@ variable "run_tests" {
   default     = true
   description = "Whether or not to run the post deployment tests."
 }
+
+variable "docker_reg_username" {
+  type        = string
+}
+
+variable "docker_reg_password" {
+  type        = string
+}
