@@ -1,6 +1,5 @@
-# This file is intended to replace the official Dockerfile in the Krill repo.
-# Aside from the variable base image it is identical to the official Krill
-# Dockerfile.
+# This file makes assumptions about how it can "cheat" to speed up the Docker
+# build of the Krill image for E2E testing purposes.
 #
 # Define a variable base image defaulting to Ubuntu 16.04 LTS (because that is
 # what the Krill Travis CI build uses). The purpose of using a variable base
@@ -43,42 +42,15 @@ COPY Cargo.toml /tmp/krill/
 COPY src /tmp/krill/src/
 RUN cargo build --release
 
-#
-# -- stage 2: create an image containing just the binaries, configs &
-#             scripts needed to run Krill, and not the things needed to build
-#             it.
-#
-FROM ubuntu:16.04
+# Use an existing runnable Krill image which has the necessary runtime
+# dependencies installed already, just copy in the binaries built in the
+# previous stage. This avoids installing runtime dependencies on every E2E test
+# run even though most of the time these don't change.
+# TODO: update FROM to use :latest once published
+FROM nlnetlabs/krill:v0.3.0
+
 COPY --from=builder /tmp/krill/target/release/krill /usr/local/bin/
 COPY --from=builder /tmp/krill/target/release/krillc /usr/local/bin/
-
-# Build variables for uid and guid of user to run container
-ARG RUN_USER=krill
-ARG RUN_USER_UID=1012
-ARG RUN_USER_GID=1012
-
-# Install openssl as Krill depends on it.
-# Install uuid-runtime for generating an authorization token on startup.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        openssl \
-        uuid-runtime
-
-RUN groupadd -g ${RUN_USER_GID} ${RUN_USER} && \
-    useradd -g ${RUN_USER_GID} -u ${RUN_USER_UID} ${RUN_USER}
-
-# Create the data directory structure and install a config file that uses it
-WORKDIR /var/krill/data
-COPY docker/krill.conf .
-RUN chown -R ${RUN_USER}: .
-
-# Install a Docker entrypoint script that will be executed when the container
-# runs
-COPY docker/entrypoint.sh /opt/
-RUN chown ${RUN_USER}: /opt/entrypoint.sh
-
-EXPOSE 3000/tcp
 
 ENTRYPOINT ["/opt/entrypoint.sh"]
 CMD ["krill", "-c", "/var/krill/data/krill.conf"]
