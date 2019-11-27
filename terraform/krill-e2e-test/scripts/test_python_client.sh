@@ -67,7 +67,7 @@ try:
     print('Connected. Listing CAs..')
     api_response = api_instance.cas_get()
     for ca in api_response.cas:
-        print(f'  CA: {ca.name}')
+        print(f'  CA: {ca.handle}')
 except ApiException as e:
     print(f'Exception when calling CertificateAuthoritiesApi->cas_get: {e}\n')
 
