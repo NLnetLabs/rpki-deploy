@@ -23,23 +23,6 @@ resource "digitalocean_droplet" "krilldemo" {
   ipv6     = true
   ssh_keys = [var.key_fingerprint]
   tags     = var.tags
-
-#   # Install the new Digital Ocean metrics agent
-#   provisioner "remote-exec" {
-#     connection {
-#       host        = self.ipv4_address
-#       user        = "root"
-#       type        = "ssh"
-#       private_key = "${file(var.ssh_key_path)}"
-#       timeout     = "2m"
-#     }
-
-#     inline = [
-#       "curl -sSL https://repos.insights.digitalocean.com/install.sh | bash"
-#     ]
-
-#     on_failure = "continue"
-#   }
 }
 
 # Create a DNS A record in Digital Ocean for the new Droplet.
