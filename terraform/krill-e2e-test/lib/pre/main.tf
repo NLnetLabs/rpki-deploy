@@ -5,11 +5,11 @@ variable "src_tal" {}
 
 # Digital Ocean error "Only valid hostname characters are allowed. (a-z, A-Z, 0-9, . and -)""
 resource "random_string" "hostname" {
-    length = 9
-    upper = true
-    lower = true
-    number = true
-    special = false
+  length  = 9
+  upper   = true
+  lower   = true
+  number  = true
+  special = false
 }
 
 data "tls_public_key" "ssh_key" {
@@ -20,7 +20,7 @@ data "tls_public_key" "ssh_key" {
 data "null_data_source" "prevalues1" {
   inputs = {
     # ke2et stands for Krill end-to-end test
-    hostname = "%{ if var.hostname != "" }${var.hostname}%{ else }ke2et${random_string.hostname.result}%{ endif }"
+    hostname = "%{if var.hostname != ""}${var.hostname}%{else}ke2et${random_string.hostname.result}%{endif}"
   }
 }
 
