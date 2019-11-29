@@ -7,17 +7,7 @@ module "pre" {
 }
 
 module "create_infra" {
-  source          = "../lib/infra/do"
-  do_token        = var.do_token
-  size            = var.size
-  tags            = var.tags
-  admin_ipv4_cidr = var.admin_ipv4_cidr
-  admin_ipv6_cidr = var.admin_ipv6_cidr
-  domain          = var.domain
-  hostname        = module.pre.hostname
-  region          = var.region
-  key_fingerprint = module.pre.tls_public_key.public_key_fingerprint_md5
-  ssh_key_path    = module.pre.ssh_key_path
+  ingress_tcp_ports = module.pre.ingress_tcp_ports
 }
 
 module "docker_deploy" {

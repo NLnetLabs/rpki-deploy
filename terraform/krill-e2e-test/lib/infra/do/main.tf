@@ -8,6 +8,7 @@ variable "admin_ipv4_cidr" {}
 variable "admin_ipv6_cidr" {}
 variable "region" {}
 variable "ssh_key_path" {}
+variable "ingress_tcp_ports" {}
 
 provider "digitalocean" {
   token   = var.do_token
@@ -64,59 +65,20 @@ resource "digitalocean_firewall" "krilldemo" {
   name        = join("", [var.hostname, "firewall"])
   droplet_ids = [digitalocean_droplet.krilldemo.id]
 
-  # -> ssh
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "22"
-    source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
-  }
-
-  # -> http
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  # -> https
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+  dynamic "inbound_rule" {
+    iterator = port
+    for_each = var.ingress_tcp_ports
+    content {
+        port_range = port.value
+        protocol = "tcp"
+        source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
+    }
   }
 
   # -> icmp
   inbound_rule {
     protocol         = "icmp"
     source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  # -> docker daemon
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = 2376
-    source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
-  }
-
-  # -> rsync
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = 873
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-
-  # -> routinator prometheus exportor
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = 9556
-    source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
-  }
-
-  # -> RIPE NCC RPKI validator 3 HTTP listen port
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = 8080
-    source_addresses = [var.admin_ipv4_cidr, var.admin_ipv6_cidr]
   }
 
   # allow all outbound TCP

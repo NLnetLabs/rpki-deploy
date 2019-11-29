@@ -25,7 +25,22 @@ resource "null_resource" "run_tests" {
         A: 10.0.0.0/24 => 64496
         A: 10.0.1.0/24 => 64496
         EOT
-        destination = "/tmp/ka/delta.1"
+        destination = "/tmp/delta.1"
+
+        connection {
+            type        = "ssh"
+            user        = var.ssh_user
+            private_key = file(var.ssh_key_path)
+            host        = var.krill_fqdn
+        }
+    }
+
+    # requires root because the /tmp/ka path was created by Docker when
+    # mounting /tmp/ka into the Krill volume.
+    provisioner "remote-exec" {
+        inline = [
+            "sudo mv /tmp/delta.1 /tmp/ka/"
+        ]
 
         connection {
             type        = "ssh"

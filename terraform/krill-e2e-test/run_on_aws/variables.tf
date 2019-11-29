@@ -23,8 +23,8 @@ variable "hostname" {
 
 variable "domain" {
   type        = string
-  description = "The domain under which DigitalOcean A and AAAA DNS records will be created for hostname."
-  default     = "do.nlnetlabs.nl"
+  description = "The domain under which AWS Route53 A and AAAA DNS records will be created for hostname."
+  default     = "ximoneighteen.com"
 }
 
 variable "size" {
@@ -35,14 +35,14 @@ variable "size" {
 
 variable "region" {
   type        = string
-  description = "The Amazon Web Services region in which to create the new EC2 instance . Default: Paris (eu-west-3)"
+  description = "The Amazon Web Services region in which to create the new EC2 instance. Default: Paris (eu-west-3)"
   default     = "eu-west-3"
 }
 
 variable "tags" {
-  type        = set(string)
+  type        = map(string)
   description = "One or more strings to tag the new Amazon Web Services EC2 instance with. Default: None."
-  default     = []
+  default     = {}
 }
 
 variable "krill_auth_token" {
@@ -91,4 +91,10 @@ variable "krill_use_ta" {
   type        = bool
   default     = true
   description = "Whether or not Krill should act as a TA for testing purposes. Default: true. Set to false when using an alternate src_tal."
+}
+
+variable "run_tests" {
+  type        = bool
+  default     = true
+  description = "Whether or not to run the post deployment tests."
 }

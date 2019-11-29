@@ -7,14 +7,17 @@ module "pre" {
 }
 
 module "create_infra" {
-  source        = "../lib/infra/aws"
-  key_name      = "krill"
-  key_openssh   = module.pre.tls_public_key.public_key_openssh
-  instance_type = var.size
-  subnet_id     = "subnet-b3a4d8c4"
-  domain        = var.domain
-  hostname      = module.pre.hostname
-  region        = var.region
+  source            = "../lib/infra/aws"
+  instance_type     = var.size
+  tags              = var.tags
+  admin_ipv4_cidr   = var.admin_ipv4_cidr
+  admin_ipv6_cidr   = var.admin_ipv6_cidr
+  domain            = var.domain
+  hostname          = module.pre.hostname
+  region            = var.region
+  key_name          = "krill"
+  key_openssh       = module.pre.tls_public_key.public_key_openssh
+  ingress_tcp_ports = module.pre.ingress_tcp_ports
 }
 
 module "docker_deploy" {
@@ -41,6 +44,7 @@ module "post" {
   hostname         = module.pre.hostname
   docker_url       = "${module.docker_deploy.docker_url}"
   docker_cert_path = "${module.docker_deploy.cert_path}"
+  krill_build_path = var.krill_build_path
   krill_fqdn       = module.pre.fqdn
   krill_use_ta     = var.krill_use_ta
   ssh_key_path     = module.pre.ssh_key_path

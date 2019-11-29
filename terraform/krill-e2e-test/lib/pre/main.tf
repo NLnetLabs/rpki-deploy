@@ -56,3 +56,15 @@ output "src_tal" {
 output "ssh_key_path" {
   value = pathexpand(var.ssh_key_path)
 }
+
+output "ingress_tcp_ports" {
+  value = [
+    22,   # SSH
+    80,   # NGINX redirect to HTTPS
+    443,  # NGINX proxy to Krill
+    873,  # Rsync
+    2376, # Docker daemon
+    8080, # RIPE NCC RPKI validator 3 (HTTP)
+    9556  # Routinator prometheus exportor (HTTP)
+  ]
+}
