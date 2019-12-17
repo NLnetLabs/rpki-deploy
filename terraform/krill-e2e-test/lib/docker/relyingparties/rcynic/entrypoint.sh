@@ -54,7 +54,7 @@ else
     cd ${TMPDIR}
     sqlite3 ${RCYNIC_DB_PATH} "SELECT writefile(id, der) FROM ${DB_TABLE} WHERE ${DB_MATCH_CRITERIA}" >/dev/null
     echo -n 'TEST OUT: { "roas": ['
-    print_roa --brief * | sed -e 's|^\([0-9]\+\) \([^/]\+\)/\([0-9]\+\)|{ "asn": "AS\1", "prefix": "\2/\3", "maxLength": \3, "ta": "ta" }|' | paste -sd ',' - | sed -e 's|$|] }|'
+    print_roa --brief * | sed -e 's|^\([0-9]\+\) \([^/]\+\)/\([0-9]\+\)\(-[0-9]\+\)\?|{ "asn": "AS\1", "prefix": "\2/\3", "maxLength": \3, "ta": "ta" }|' | paste -sd ',' - | sed -e 's|$|] }|'
     cd /
     #rm -Rf ${TMPDIR}
 fi
