@@ -26,16 +26,19 @@ krillc() {
         krillc $@
 }
 
-get_ta_child_count() {
-    krillc show --ca ta --format json | jq '.children | length'
+get_ca_child_count() {
+    CA="$1"
+    krillc show --ca ${CA} --format json | jq '.children | length'
 }
 
 get_ca_parent_count() {
-    krillc show --ca child --format json | jq '.parents | length'
+    CA="$1"
+    krillc show --ca ${CA} --format json | jq '.parents | length'
 }
 
 get_ca_roa_count() {
-    krillc roas list --ca child --format json | jq '. | length'
+    CA="$1"
+    krillc roas list --ca ${CA} --format json | jq '. | length'
 }
 
 trap dump_container_errors EXIT
@@ -49,25 +52,54 @@ my_retry 12 5 ${WGET_UNSAFE_TO_STDOUT} -S https://${KRILL_FQDN}/health
 if [[ "${KRILL_USE_TA}" == "true" ]]; then
     my_log "Using Krill embedded TA"
 
+    my_log "Checking to see if the parent CA exists"
+    if ! my_try_cmd krillc show --ca parent --format none; then
+        my_retry 5 2 krillc add --ca parent
+        my_retry 5 2 krillc repo update embedded --ca parent
+    fi
+
+    my_log "Checking to see if the TA -> CA relationship exists"
+    NUM_CHILDREN=$(my_retry 5 5 get_ca_child_count ta)
+    if [ ${NUM_CHILDREN} -eq 0 ]; then
+        # my_retry 5 5 krillc children add --embedded --ca ta --child parent --ipv4 "${KRILL_PARENT_IPV4S}" --ipv6 "${KRILL_PARENT_IPV6S}" --asn "${KRILL_PARENT_ASNS}"
+        CMD="docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} ${KRILL_CONTAINER} krillc"' children add --embedded --ca ta --child parent --ipv4 "${KRILL_PARENT_IPV4S}" --ipv6 "${KRILL_PARENT_IPV6S}" --asn "${KRILL_PARENT_ASNS}"'
+        cp ./resources/parent.sh /tmp/$$.cmd
+        echo ${CMD} >> /tmp/$$.cmd
+        my_retry 5 5 sh /tmp/$$.cmd
+        rm /tmp/$$.cmd
+    fi
+
+    my_log "Checking to see if the TA <- CA relationship exists"
+    NUM_PARENTS=$(my_retry 5 5 get_ca_parent_count parent)
+    if [ ${NUM_PARENTS} -eq 0 ]; then
+        my_retry 5 5 krillc parents add --embedded --ca parent --parent ta
+    fi
+
     my_log "Checking to see if the child CA exists"
     if ! my_try_cmd krillc show --ca child --format none; then
         my_retry 5 2 krillc add --ca child
+        my_retry 5 2 krillc repo update embedded --ca child
     fi
 
-    my_log "Checking to see if the parent CA -> child CA relationship exists"
-    NUM_CHILDREN=$(my_retry 5 5 get_ta_child_count)
+    my_log "Checking to see if the CA -> CA relationship exists"
+    NUM_CHILDREN=$(my_retry 5 5 get_ca_child_count parent)
     if [ ${NUM_CHILDREN} -eq 0 ]; then
-        my_retry 5 5 krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16" --ipv6 "2001:3200:3200::66" --asn 1
+        # my_retry 5 5 krillc children add --embedded --ca parent --child child --ipv4 "${KRILL_CHILD_IPV4S}" --ipv6 "${KRILL_CHILD_IPV6S}" --asn "${KRILL_CHILD_ASNS}"
+        CMD="docker exec -e KRILL_CLI_SERVER=https://localhost:3000/ -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} ${KRILL_CONTAINER} krillc"' children add --embedded --ca parent --child child --ipv4 "${KRILL_CHILD_IPV4S}" --ipv6 "${KRILL_CHILD_IPV6S}" --asn "${KRILL_CHILD_ASNS}"'
+        cp ./resources/child.sh /tmp/$$.cmd
+        echo ${CMD} >> /tmp/$$.cmd
+        my_retry 5 5 sh /tmp/$$.cmd
+        rm /tmp/$$.cmd
     fi
 
-    my_log "Checking to see if the child CA -> parent CA relationship exists"
-    NUM_PARENTS=$(my_retry 5 5 get_ca_parent_count)
+    my_log "Checking to see if the CA <- CA relationship exists"
+    NUM_PARENTS=$(my_retry 5 5 get_ca_parent_count child)
     if [ ${NUM_PARENTS} -eq 0 ]; then
-        my_retry 5 5 krillc parents add --embedded --ca child --parent ta
+        my_retry 5 5 krillc parents add --embedded --ca child --parent parent
     fi
 
     my_log "Checking to see if the child CA ROAs exist"
-    NUM_CHILD_ROAS=$(my_retry 5 5 get_ca_roa_count)
+    NUM_CHILD_ROAS=$(my_retry 5 5 get_ca_roa_count child)
     if [ ${NUM_CHILD_ROAS} -eq 0 ]; then
         my_retry 5 5 krillc roas update --ca child --delta /tmp/ka/delta.1
     fi
