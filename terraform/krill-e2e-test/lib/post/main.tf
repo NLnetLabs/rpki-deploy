@@ -22,8 +22,10 @@ resource "null_resource" "run_tests" {
 
     provisioner "file" {
         content     = <<-EOT
-        A: 10.0.0.0/24 => 64496
-        A: 10.0.1.0/24 => 64496
+        A: 2001:12ff::/32-48 => 22548
+        A: 200.160.0.0/20-24 => 22548
+        A: 189.76.96.0/19-24 => 11752
+        A: 2001:12fe::/32-48 => 11752
         EOT
         destination = "/tmp/delta.1"
 
@@ -62,7 +64,8 @@ resource "null_resource" "run_tests" {
         }
 
         interpreter = ["/bin/bash"]
-        command = "../scripts/configure_krill.sh"
+        working_dir = "../scripts"
+        command = "./configure_krill.sh"
     }
 
     provisioner "local-exec" {
