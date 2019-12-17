@@ -57,6 +57,7 @@ if [[ "${KRILL_USE_TA}" == "true" ]]; then
     my_log "Checking to see if the parent CA exists"
     if ! my_try_cmd krillc show --ca parent --format none; then
         my_retry 5 2 krillc add --ca parent
+        my_retry 5 2 krillc repo update embedded --ca parent
     fi
 
     my_log "Checking to see if the TA -> CA relationship exists"
@@ -79,6 +80,7 @@ if [[ "${KRILL_USE_TA}" == "true" ]]; then
     my_log "Checking to see if the child CA exists"
     if ! my_try_cmd krillc show --ca child --format none; then
         my_retry 5 2 krillc add --ca child
+        my_retry 5 2 krillc repo update embedded --ca child
     fi
 
     my_log "Checking to see if the CA -> CA relationship exists"
