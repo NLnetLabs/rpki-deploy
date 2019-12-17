@@ -10,8 +10,6 @@ WGET_UNSAFE_TO_STDOUT="${WGET_UNSAFE_QUIET}O-"
 BAD_LOG_FILTER='(ERR|Bad|Fail|WARN)'
 
 source ../lib/docker/relyingparties/base/my_funcs.sh
-source resources/parent.sh
-source resources/child.sh
 
 dump_container_errors() {
     my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
