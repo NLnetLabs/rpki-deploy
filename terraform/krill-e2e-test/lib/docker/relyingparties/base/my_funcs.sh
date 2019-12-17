@@ -103,7 +103,7 @@ install_tal_from_remote() {
     # When REWRITE is 1 the http(s):// URI will be rewritten to rsync://
     rewrite_https_tal_to_rsync() {
         if [ $1 -eq 1 ]; then
-            sed -e 's|.\+://\([^/]\+\)/\(.\+\)|rsync://\1/repo/\2|'
+            sed -e 's|https\?://\([^/]\+\)/\(.\+\)|rsync://\1/repo/\2|'
         else
             cat
         fi
