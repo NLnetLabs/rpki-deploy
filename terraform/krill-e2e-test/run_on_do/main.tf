@@ -37,6 +37,7 @@ module "docker_deploy" {
   ssh_key_path       = module.pre.ssh_key_path
   ssh_user           = module.create_infra.ssh_user
   src_tal            = module.pre.src_tal
+  rsync_base         = module.pre.rsync_base
 }
 
 module "post" {
@@ -52,4 +53,5 @@ module "post" {
   ssh_user         = module.create_infra.ssh_user
   src_tal          = module.pre.src_tal
   run_tests        = var.run_tests
+  rsync_base       = module.pre.rsync_base
 }

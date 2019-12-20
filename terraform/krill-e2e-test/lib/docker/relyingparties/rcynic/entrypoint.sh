@@ -10,7 +10,7 @@ mkdir -p ${TAL_DIR}
 export BANNER="Rcynic setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal ${RSYNC_BASE}
 
 my_log "Launching Rcynic"
 cd ${DATA_DIR}

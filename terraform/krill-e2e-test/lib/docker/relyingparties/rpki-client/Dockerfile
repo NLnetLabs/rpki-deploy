@@ -11,4 +11,6 @@ RUN apt-get update && \
 COPY --from=relyingpartybase /opt/* /opt/
 COPY entrypoint.sh /opt/
 RUN chmod +x /opt/entrypoint.sh
+RUN mv /opt/rootCA.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 ENTRYPOINT ["/opt/entrypoint.sh"]

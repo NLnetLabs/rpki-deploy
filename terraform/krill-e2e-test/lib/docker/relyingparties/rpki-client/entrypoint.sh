@@ -10,7 +10,8 @@ mkdir -p ${TAL_DIR}
 export BANNER="rpki-client setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal ${RSYNC_BASE}
+
 # Add a line break at the end ... at least with the embedded Krill TAL it
 # complains without this about "RFC 7730 section 2.1: failed to parse public key"
 echo >> ${TAL_DIR}/ta.tal
@@ -21,7 +22,7 @@ rpki-client \
     -e /usr/bin/rsync \
     -v ${TAL_DIR}/*.tal >${TMP_FILE}
 
-# Extract and convert the bgpd.conf format data from the output
+# Extract and convert the bgpd.confk  format data from the output
 my_log "Dumping received ROAs in the format expected by test_krill.sh"
 FIRST_LINE_OF_ROA_SET=$(fgrep -n roa-set ${TMP_FILE} | cut -d ':' -f 1)
 LAST_LINE_OF_ROA_SET=$(grep -En '^}' ${TMP_FILE} | cut -d ':' -f 1)

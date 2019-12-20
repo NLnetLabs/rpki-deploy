@@ -51,4 +51,5 @@ module "post" {
   ssh_user         = module.create_infra.ssh_user
   src_tal          = module.pre.src_tal
   run_tests        = var.run_tests
+  rsync_base       = "rsyncd.krill.test/repo/"
 }

@@ -20,6 +20,8 @@ services:
     ports:
       - "443:443"
       - "80:80"
+    networks:
+      - my-net
     volumes:
       - krill_letsencrypt_certs:/config/etc/letsencrypt
     restart: unless-stopped
@@ -30,19 +32,14 @@ services:
     image: nlnetlabs/krill:$KRILL_VERSION
     container_name: krill
     environment:
-      # Comment out the next line if using your own krill.conf file.
-      # Also see the comment in the 'volumes' section below.
-      - KRILL_LOG_LEVEL=debug
-      - KRILL_USE_TA
       - KRILL_AUTH_TOKEN
-      - KRILL_FQDN
     volumes:
       - krill_data:/var/kill/data
       - rsync_data:/var/krill/data/repo/rsync/
       - /tmp/ka:/tmp/ka
-      # Uncomment the next line to use your own krill.conf file.
-      # Remember to replace /local/path/to/your/ with the correct path.
-      # - /local/path/to/your/krill.conf:/var/krill/data/krill.conf
+      - /tmp/ka/krill.conf:/var/krill/data/krill.conf
+    networks:
+      - my-net
     restart: unless-stopped
 
   rsyncd:
@@ -52,6 +49,8 @@ services:
     container_name: rsyncd
     ports:
       - "873:873"
+    networks:
+      - my-net
     volumes:
       - rsync_data:/share:ro
     restart: unless-stopped
@@ -62,6 +61,8 @@ services:
       network: host
     container_name: routinator
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
@@ -78,9 +79,12 @@ services:
       network: host
     container_name: octorpki
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
+      - RSYNC_BASE
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -91,9 +95,12 @@ services:
       network: host
     container_name: fortvalidator
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
+      - RSYNC_BASE
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -104,9 +111,12 @@ services:
       network: host
     container_name: rpkivalidator3
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
+      - RSYNC_BASE
     ports:
       - "8080:8080"
     restart: on-failure
@@ -120,10 +130,13 @@ services:
       network: host
     container_name: rcynic
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - KRILL_USE_TA
       - SRC_TAL
+      - RSYNC_BASE
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -134,9 +147,12 @@ services:
       network: host
     container_name: rpkiclient
     dns: 8.8.8.8
+    networks:
+      - my-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
+      - RSYNC_BASE
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -172,3 +188,7 @@ volumes:
   rsync_data:
 
   tals:
+
+networks:
+  my-net:
+    name: krill.test

@@ -9,9 +9,12 @@ mkdir -p ${TAL_DIR}
 export BANNER="Fort Validator setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal ${RSYNC_BASE}
 
-my_log "Launching Fort Validator"
+my_log "Querying Fort Validator version"
+FORT_VER=$(fort -V)
+
+my_log "Launching Fort Validator version ${FORT_VER}"
 cd ${DATA_DIR}
 /opt/entrypoint.sh \
     --mode standalone \

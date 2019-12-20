@@ -2,14 +2,12 @@
 set -euo pipefail
 
 export BANNER="$(basename $0):"
+source ../lib/docker/relyingparties/base/my_funcs.sh
 
 KRILL_CONTAINER="krill"
-KRILL_AUTH_TOKEN=$(docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 WGET_UNSAFE_QUIET="wget -4 --no-check-certificate -q"
 WGET_UNSAFE_TO_STDOUT="${WGET_UNSAFE_QUIET}O-"
 BAD_LOG_FILTER='(ERR|Bad|Fail|WARN)'
-
-source ../lib/docker/relyingparties/base/my_funcs.sh
 
 dump_container_errors() {
     my_log "Dumping container logs that match error filter ${BAD_LOG_FILTER}"
@@ -24,6 +22,10 @@ krillc() {
         -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} \
         ${KRILL_CONTAINER} \
         krillc $@
+}
+
+get_krill_auth_token() {
+    docker logs ${KRILL_CONTAINER} 2>&1 | tac | grep -Eom 1 'token [a-z0-9-]+' | cut -d ' ' -f 2
 }
 
 get_ca_child_count() {
@@ -42,6 +44,8 @@ get_ca_roa_count() {
 }
 
 trap dump_container_errors EXIT
+
+KRILL_AUTH_TOKEN=$(my_retry 5 2 get_krill_auth_token)
 
 my_log "Use embedded trust anchor? ${KRILL_USE_TA}"
 my_log "TAL to be used by clients: ${SRC_TAL}"

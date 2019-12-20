@@ -12,7 +12,7 @@ source /opt/my_funcs.sh
 my_log "Removing existing TALs"
 rm ${TAL_DIR}/*.tal
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal ${RSYNC_BASE}
 
 my_log "Launching RIPE NCC RPKI Validator 3"
 cd ${DATA_DIR}

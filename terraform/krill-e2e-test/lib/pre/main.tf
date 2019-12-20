@@ -13,28 +13,21 @@ resource "random_string" "hostname" {
 }
 
 data "tls_public_key" "ssh_key" {
-  private_key_pem = "${file(pathexpand(var.ssh_key_path))}"
+  count           = var.hostname != "localhost" ? 1 : 0
+  private_key_pem = file(pathexpand(var.ssh_key_path))
 }
 
-# TODO: Use "locals" instead of "null_data_source".
-data "null_data_source" "prevalues1" {
-  inputs = {
-    # ke2et stands for Krill end-to-end test
-    hostname = "%{if var.hostname != ""}${var.hostname}%{else}ke2et${random_string.hostname.result}%{endif}"
-  }
+locals {
+  hostname   = var.hostname != "" ? var.hostname : "ke2et${random_string.hostname.result}"
 }
 
-data "null_data_source" "prevalues2" {
-  inputs = {
-    fqdn = join(".", [data.null_data_source.prevalues1.outputs["hostname"], var.domain])
-  }
+locals {
+  fqdn       = var.domain != "" ? join(".", [local.hostname, var.domain]) : local.hostname
 }
 
-data "null_data_source" "values" {
-  inputs = {
-    fqdn    = data.null_data_source.prevalues2.outputs["fqdn"]
-    src_tal = replace(var.src_tal, "<FQDN>", data.null_data_source.prevalues2.outputs["fqdn"])
-  }
+locals {
+  src_tal    = replace(var.src_tal, "<FQDN>", local.fqdn)
+  rsync_base = join("/", [local.fqdn, "/repo"])
 }
 
 output "tls_public_key" {
@@ -42,19 +35,19 @@ output "tls_public_key" {
 }
 
 output "hostname" {
-  value = data.null_data_source.prevalues1.outputs["hostname"]
+  value = local.hostname
 }
 
 output "fqdn" {
-  value = data.null_data_source.values.outputs["fqdn"]
+  value = local.fqdn
 }
 
 output "src_tal" {
-  value = data.null_data_source.values.outputs["src_tal"]
+  value = local.src_tal
 }
 
 output "ssh_key_path" {
-  value = pathexpand(var.ssh_key_path)
+  value = var.ssh_key_path != "" ? pathexpand(var.ssh_key_path) : ""
 }
 
 output "ingress_tcp_ports" {
@@ -67,4 +60,8 @@ output "ingress_tcp_ports" {
     8080, # RIPE NCC RPKI validator 3 (HTTP)
     9556  # Routinator prometheus exportor (HTTP)
   ]
+}
+
+output "rsync_base" {
+  value = local.rsync_base
 }

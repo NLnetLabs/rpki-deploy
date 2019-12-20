@@ -34,7 +34,7 @@ variable "domain" {
 
 variable "size" {
   type        = string
-  default     = "s-4vcpu-8gb"
+  default     = "g-8vcpu-32gb"
   description = "The size of the Digital Ocean Droplet to create. Default: s-4vcpu-8gb"
 }
 
@@ -52,7 +52,7 @@ variable "tags" {
 
 variable "krill_auth_token" {
   type        = string
-  default     = "None"
+  default     = "61d81ea4-8a89-42c1-bb23-3e7eb79eaa60"
   description = "The authentication token Krill should restrict access to. Default: Random."
 }
 
@@ -76,7 +76,7 @@ variable "krill_build_path" {
 
 variable "krill_version" {
   type        = string
-  default     = "v0.3.0"
+  default     = "v0.4.0"
   description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.1.0. Ignored if krill_build_path is set."
 }
 
