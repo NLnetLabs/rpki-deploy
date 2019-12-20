@@ -22,7 +22,7 @@ rpki-client \
     -e /usr/bin/rsync \
     -v ${TAL_DIR}/*.tal >${TMP_FILE}
 
-# Extract and convert the bgpd.confk  format data from the output
+# Extract and convert the bgpd.conf format data from the output
 my_log "Dumping received ROAs in the format expected by test_krill.sh"
 FIRST_LINE_OF_ROA_SET=$(fgrep -n roa-set ${TMP_FILE} | cut -d ':' -f 1)
 LAST_LINE_OF_ROA_SET=$(grep -En '^}' ${TMP_FILE} | cut -d ':' -f 1)
