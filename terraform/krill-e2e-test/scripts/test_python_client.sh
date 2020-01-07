@@ -65,7 +65,7 @@ api_instance = openapi_client.CertificateAuthoritiesApi(openapi_client.ApiClient
 
 try:
     print('Connected. Listing CAs..')
-    api_response = api_instance.cas_get()
+    api_response = api_instance.list_cas()
     for ca in api_response.cas:
         print(f'  CA: {ca.handle}')
 except ApiException as e:
