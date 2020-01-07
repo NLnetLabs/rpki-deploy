@@ -36,6 +36,7 @@ services:
       - KRILL_USE_TA
       - KRILL_AUTH_TOKEN
       - KRILL_FQDN
+      - KRILL_REPO_ENABLED=true
     volumes:
       - krill_data:/var/kill/data
       - rsync_data:/var/krill/data/repo/rsync/
