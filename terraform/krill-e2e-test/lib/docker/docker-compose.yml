@@ -10,20 +10,12 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Amsterdam
-      - VALIDATION=http
       - URL=$KRILL_FQDN  # the FQDN of the DNS record of the host (used by Lets Encrypt)
-      - STAGING=$KRILL_STAGING_CERT # true if the LetsEncrypt cert should be for testing
-      - DHLEVEL=1024 # speed up deployment, perhaps use an alternate NGINX container to avoid this delay?
     ports:
       - "443:443"
       - "80:80"
     networks:
       - my-net
-    volumes:
-      - krill_letsencrypt_certs:/config/etc/letsencrypt
     restart: unless-stopped
     depends_on:
       - krill
@@ -166,24 +158,6 @@ services:
 
 volumes:
   krill_data:
-
-  # Volume for storing Lets Encrypt certificate details.
-  # Before you can use this compose file for the first time you will need to
-  # create this volume using the command:
-  #
-  #   docker volume create krill_letsencrypt_certs
-  #
-  # Why? If you destroy and recreate the nginx container the cert data is
-  # preserved. Without this the certificate will be re-requested from Lets
-  # Encrypt every time the container runs and you risk Lets Encrypt blocking
-  # you for a _week_! The limits are low enough that if you are iterating on
-  # the Docker setup and forget to use Lets Encrypt staging mode (which has
-  # higher rate limits) you can easily hit the limits and get blocked. Thus
-  # it's a good idea to use an externally managed volume to store this data.
-  #
-  # See: https://letsencrypt.org/docs/rate-limits/
-  krill_letsencrypt_certs:
-    external: true
   
   rsync_data:
 

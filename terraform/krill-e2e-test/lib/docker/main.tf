@@ -82,7 +82,7 @@ resource "null_resource" "setup_local" {
     count = var.docker_is_local ? 1 : 0
 
     provisioner "local-exec" {
-        command = <<EOT
+        command = <<-EOT
           mkdir /tmp/ka
           cp ../scripts/resources/krill.conf /tmp/ka/
           cp ../scripts/resources/roa.delta /tmp/ka/delta.1
@@ -106,26 +106,11 @@ resource "null_resource" "setup_docker" {
     command     = local.krill_build_cmd
   }
 
-  # Deploy nginx, Routinator, Krill and rsyncd containers via the _remote_
-  # Docker daemon running on the Digital Ocean droplet.
-  provisioner "local-exec" {
-    environment = merge(local.docker_env_vars, local.krill_env_vars)
-    working_dir = var.docker_compose_dir
-    command = <<EOT
-      docker volume create krill_letsencrypt_certs
-      docker-compose config
-      docker-compose up --build -d
-EOT
-  }
-
   provisioner "local-exec" {
     when = destroy
     environment = merge(local.docker_env_vars, local.krill_env_vars)
     working_dir = var.docker_compose_dir
-    command = <<EOT
-      docker-compose kill
-      docker-compose down -v
-      docker volume rm krill_letsencrypt_certs
+    command = <<-EOT
       sudo rm -R /tmp/ka
 EOT
   }
