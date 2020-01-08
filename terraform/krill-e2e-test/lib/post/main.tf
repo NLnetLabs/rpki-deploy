@@ -55,45 +55,10 @@ resource "null_resource" "setup_remote" {
     triggers = {
         docker_ready = "${var.docker_ready}"
     }
-
-    provisioner "file" {
-        connection {
-            type        = "ssh"
-            user        = var.ssh_user
-            private_key = file(var.ssh_key_path)
-            host        = var.krill_fqdn
-        }
-
-        source = "../scripts/resources/roa.delta"
-        destination = "/tmp/delta.1"
-    }
-
-    # requires root because the /tmp/ka path was created by Docker when
-    # mounting /tmp/ka into the Krill volume.
-    provisioner "remote-exec" {
-        connection {
-            type        = "ssh"
-            user        = var.ssh_user
-            private_key = file(var.ssh_key_path)
-            host        = var.krill_fqdn
-        }
-
-        inline = [
-            "sudo mv /tmp/delta.1 /tmp/ka/"
-        ]
-    }
 }
 
 resource "null_resource" "setup_local" {
     count = var.docker_is_local ? 1 : 0
-
-    provisioner "local-exec" {
-        environment = local.tmp_dir_vars
-        command = <<-EOT
-            mkdir -p $TMPDIR
-            cp ../scripts/resources/roa.delta /$TMPDIR/delta.1
-        EOT
-    }
 
     provisioner "local-exec" {
         environment = local.tmp_dir_vars

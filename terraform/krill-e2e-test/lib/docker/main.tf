@@ -85,7 +85,6 @@ resource "null_resource" "setup_local" {
         command = <<-EOT
           mkdir /tmp/ka
           cp ../scripts/resources/krill.conf /tmp/ka/
-          cp ../scripts/resources/roa.delta /tmp/ka/delta.1
 EOT
     }
 }
