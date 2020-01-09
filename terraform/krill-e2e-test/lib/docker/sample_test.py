@@ -10,7 +10,7 @@ from retrying import retry
 from urllib.parse import urlparse
 
 from compose.project import Project
-from compose.service import Service, ImageType
+from compose.service import Service, ImageType, BuildAction
 from compose.cli.docker_client import docker_client
 from compose.config.environment import Environment
 from compose.config.config import ConfigFile
@@ -20,6 +20,38 @@ from compose.config.config import load
 import krill_api
 from krill_api.rest import ApiException
 from krill_api import *
+
+import multiprocessing
+import rtrlib
+
+
+def pfxrecord_to_roa_string(r):
+    return f'{r.prefix}/{r.min_len}-{r.max_len} => {r.asn}'
+
+
+def roa_to_roa_string(r):
+    return f'{r.prefix}-{r.max_length} => {r.asn}'
+
+
+def rtr_fetch_one(server):
+    result = []
+
+    host = server[0]
+    port = server[1]
+    print(f'Connecting to {host}:{port}...')
+    mgr = rtrlib.RTRManager(host, port, retry_interval=5)
+
+    mgr.start(wait=True, timeout=120)
+    ipv4 = [pfxrecord_to_roa_string(r) for r in mgr.ipv4_records()]
+    ipv6 = [pfxrecord_to_roa_string(r) for r in mgr.ipv6_records()]
+    mgr.stop()
+
+    return ipv4 + ipv6
+
+
+def rtr_fetch_all(servers):
+    with multiprocessing.Pool() as pool:
+        pool.map(rtr_fetch_one, servers)
 
 
 class KrillUnknownPublisherException(Exception):
@@ -50,7 +82,6 @@ def docker_project():
     details = ConfigDetails('.', [config])
     ready_config = load(details)
     project = Project.from_config('proj', ready_config, client)
-    project.up()
 
     yield project
 
@@ -70,6 +101,14 @@ def krill_api_config():
     configuration.cert_file = None
 
     yield configuration
+
+
+TEST_ROAS = [
+    ROA(prefix='2001:12ff::/32', max_length=48, asn=22548),
+    ROA(prefix='200.160.0.0/20', max_length=24, asn=22548),
+    ROA(prefix='189.76.96.0/19', max_length=24, asn=11752),
+    ROA(prefix='2001:12fe::/32', max_length=48, asn=11752),
+]
 
 
 KRILL_PARENT_ASNS='AS1251, AS1916, AS2715-AS2716, AS4230, AS5772, AS6125, AS6505, AS7048, AS7063, AS7162, AS7298, AS7313, AS7365, AS7465, AS7738, AS7890, AS8055, AS8141, AS8167, AS10285, AS10362, AS10412, AS10417, AS10429, AS10454, AS10495, AS10531, AS10600, AS10630, AS10670, AS10688, AS10704, AS10715, AS10733, AS10841, AS10875, AS10881, AS10897, AS10906, AS10938, AS10954, AS11097, AS11242, AS11271, AS11284, AS11295, AS11335, AS11338, AS11390, AS11415, AS11419, AS11431-AS11432, AS11497, AS11592, AS11644, AS11706, AS11751-AS11752, AS11801-AS11802, AS11835, AS11844, AS11896, AS11921, AS11993, AS12135-AS12136, AS12140, AS13353, AS13357, AS13459, AS13495, AS13522, AS13584, AS13761, AS13874, AS13878, AS13914, AS13935, AS14026, AS14030, AS14087, AS14204, AS14282, AS14346, AS14457, AS14463, AS14553, AS14571, AS14624, AS14650, AS14723, AS14840, AS14868, AS14886, AS15180, AS15201, AS15256, AS16397, AS16594, AS16685, AS16712, AS16735-AS16736, AS16885, AS16891, AS16911, AS17108, AS17208, AS17222, AS17379, AS18479, AS18547, AS18644, AS18739, AS18782, AS18836, AS18881, AS19089, AS19182, AS19200, AS19361, AS19611, AS19723, AS19763, AS19990, AS20044, AS20116, AS20121, AS20142, AS20266, AS21506, AS21571, AS21574, AS21612, AS21674, AS21741, AS21911, AS22055, AS22085, AS22092, AS22128-AS22129, AS22133, AS22148, AS22177, AS22250, AS22341, AS22356, AS22371, AS22381, AS22407, AS22431, AS22515, AS22548, AS22689, AS22706, AS22745, AS22819, AS22876, AS23002, AS23074, AS23105-AS23106, AS23128, AS23202, AS23289, AS25832, AS25933, AS26090, AS26104, AS26118, AS26162, AS26218, AS26592, AS26598-AS26599, AS26602, AS26606-AS26607, AS26609, AS26615-AS26616, AS26622, AS27652, AS27656, AS27684, AS27688, AS27693, AS27697, AS27699, AS27710, AS27712, AS27715, AS27720, AS28121-AS28122, AS28124-AS28146, AS28148-AS28154, AS28156-AS28178, AS28180-AS28184, AS28186-AS28213, AS28215-AS28216, AS28218-AS28220, AS28222-AS28258, AS28260-AS28267, AS28269-AS28280, AS28282-AS28288, AS28290-AS28301, AS28304-AS28311, AS28313, AS28315, AS28320-AS28324, AS28326-AS28353, AS28355-AS28362, AS28364, AS28366-AS28370, AS28571-AS28610, AS28612-AS28647, AS28649-AS28650, AS28652-AS28654, AS28656-AS28658, AS28660-AS28671, AS52516-AS52520, AS52522-AS52589, AS52591-AS52668, AS52670-AS52700, AS52702-AS52729, AS52731-AS52762, AS52764-AS52815, AS52817-AS52831, AS52833-AS52834, AS52836-AS52948, AS52950-AS53054, AS53057-AS53090, AS53093-AS53104, AS53106-AS53127, AS53129-AS53147, AS53149-AS53176, AS53178-AS53191, AS53193-AS53206, AS53208-AS53209, AS53211-AS53225, AS53227-AS53247, AS61568-AS61600, AS61632-AS61768, AS61770-AS61790, AS61792-AS61951, AS262268-AS262338, AS262340, AS262342-AS262409, AS262411-AS262617, AS262619-AS262625, AS262627-AS262630, AS262632-AS262657, AS262659-AS262677, AS262679-AS262696, AS262698-AS262702, AS262704-AS262717, AS262719-AS262770, AS262772-AS262787, AS262789-AS262815, AS262817-AS262848, AS262850-AS262858, AS262860-AS262911, AS262937-AS262940, AS262942-AS262943, AS262945-AS262968, AS262970, AS262972-AS262975, AS262977-AS262999, AS263002-AS263016, AS263018-AS263113, AS263116-AS263122, AS263124-AS263126, AS263128-AS263133, AS263135-AS263137, AS263139-AS263140, AS263142-AS263147, AS263151-AS263156, AS263159-AS263160, AS263162-AS263166, AS263250-AS263305, AS263307-AS263378, AS263380-AS263391, AS263393-AS263459, AS263461-AS263528, AS263530-AS263668, AS263670-AS263679, AS263837-AS263861, AS263863-AS263870, AS263872-AS264017, AS264019-AS264080, AS264082-AS264084, AS264086-AS264108, AS264110-AS264130, AS264132-AS264141, AS264143-AS264150, AS264152-AS264164, AS264166-AS264175, AS264177-AS264178, AS264180-AS264276, AS264278-AS264291, AS264293-AS264398, AS264400-AS264407, AS264409, AS264411-AS264418, AS264420-AS264430, AS264432-AS264534, AS264536-AS264571, AS264573-AS264592, AS264594-AS264604, AS264860-AS264921, AS264923-AS265109, AS265111-AS265114, AS265116-AS265119, AS265121-AS265195, AS265197-AS265315, AS265317-AS265351, AS265353-AS265443, AS265445-AS265500, AS265885-AS265899, AS265901-AS265907, AS265909-AS265920, AS265922-AS266006, AS266008-AS266224, AS266226-AS266256, AS266258-AS266584, AS266586-AS266652, AS266911-AS266912, AS266914-AS266979, AS266981-AS266993, AS266995-AS267074, AS267076-AS267098, AS267100-AS267153, AS267155-AS267643, AS267645-AS267676, AS267933-AS268723, AS268725-AS269643'
@@ -109,7 +148,8 @@ def run_command_in_container(docker_project, container_name, cmd):
     return docker_project.client.exec_inspect(exc)["ExitCode"]
 
 
-def test_up_down(docker_project, krill_api_config):
+@pytest.fixture(scope="module")
+def krill_with_roas(docker_project, krill_api_config):
     #
     # Define some retry helpers for situations where the API call to Krill
     # can succeed but Krill may not yet be in the expected state.
@@ -142,6 +182,9 @@ def test_up_down(docker_project, krill_api_config):
     # Go!
     #
 
+    # Bring up Krill, rsyncd and nginx
+    docker_project.up(service_names=['krill', 'rsyncd', 'nginx'], do_build=BuildAction.force)
+
     # Strategy: Test then add, don't add then handle failure because that will
     # cause errors to appear in the Krill server log which can be confusing
     # when investigating problems.
@@ -160,6 +203,27 @@ def test_up_down(docker_project, krill_api_config):
     # Ensure that Krill is ready for our attempts to communicate with it
     print('Wait till we can connect to Krill...')
     wait_until_ready()
+
+    #
+    # work around https://github.com/NLnetLabs/krill/issues/125
+    #
+
+    # some clients cannot handle a TAL that contain a HTTP(S) .cer URI, instead
+    # they expect an rsync .cer URI. The containers for those clients will
+    # fetch and modify the TAL so that it points to our rsync server. Our task
+    # is to install the .cer file on the rsync server where the clients expect
+    # to find it.
+    tal_url_str = get_tal_url_str()
+    tal = krill_api_client.request('GET', tal_url_str).data
+    match = re.search(r'https?://.+\.cer', tal)
+    if match:
+        print(f'Copying .cer file for TAL {tal_url_str} to the rsync repo')
+        cer_uri = urlparse(match.group(0))
+        dst_path = f'repo/rsync/current{cer_uri.path}'
+        cmd = f'sh -c "apt-get update && apt-get -y install wget && wget -4 --no-check-certificate -q -O{dst_path} {cer_uri.geturl()}"'
+        if run_command_in_container(docker_project, 'krill', cmd):
+            raise Exception("Failed to install TAL certificate")
+        print('Done')
 
     #
     # Create the desired state inside Krill
@@ -239,15 +303,7 @@ def test_up_down(docker_project, krill_api_config):
 
         print('Creating CA ROAs if not already present')
         if len(krill_roa_api.list_route_authorizations(child_handle)) == 0:
-            delta = ROADelta(
-                added=[
-                    ROA(prefix='2001:12ff::/32', max_length=48, asn=22548),
-                    ROA(prefix='200.160.0.0/20', max_length=24, asn=22548),
-                    ROA(prefix='189.76.96.0/19', max_length=24, asn=11752),
-                    ROA(prefix='2001:12fe::/32', max_length=48, asn=11752),
-                ],
-                removed=[]
-            )
+            delta = ROADelta(added=TEST_ROAS, removed=[])
 
             @retry(
                 stop_max_attempt_number=3,
@@ -259,22 +315,25 @@ def test_up_down(docker_project, krill_api_config):
 
             update_roas()
 
-    # work around https://github.com/NLnetLabs/krill/issues/125
-    # some clients cannot handle a TAL that contain a HTTP(S) .cer URI, instead
-    # they expect an rsync .cer URI. The containers for those clients will
-    # fetch and modify the TAL so that it points to our rsync server. Our task
-    # is to install the .cer file on the rsync server where the clients expect
-    # to find it.
-    tal_url_str = get_tal_url_str()
-    tal = krill_api_client.request('GET', tal_url_str).data
-    match = re.search(r'https?://.+\.cer', tal)
-    if match:
-        print(f'Copying .cer file for TAL {tal_url_str} to the rsync repo')
-        cer_uri = urlparse(match.group(0))
-        dst_path = f'repo/rsync/current{cer_uri.path}'
-        cmd = f'sh -c "apt-get update && apt-get -y install wget && wget -4 --no-check-certificate -q -O{dst_path} {cer_uri.geturl()}"'
-        if run_command_in_container(docker_project, 'krill', cmd):
-            raise Exception("Failed to install TAL certificate")
-        print('Done')
-
     print('Krill configuration complete')
+
+    yield None
+
+
+def test_routinator(krill_with_roas, docker_project):
+    print('Starting Routinator..')
+    docker_project.up(service_names=['routinator'], do_build=BuildAction.force)
+
+    print('Starting RTR client')
+    r = rtr_fetch_one(('localhost', 3323))
+
+    # r is now a list of PFXRecord
+    # see: https://python-rtrlib.readthedocs.io/en/latest/api.html#rtrlib.records.PFXRecord
+    # are each of the TEST_ROAS items in r?
+    # i.e. is the intersection of the two sets equal to that of the TEST_ROAS set?
+
+    expected_roas = set([roa_to_roa_string(r) for r in TEST_ROAS])
+    received_roas = set(r)
+    assert expected_roas == (expected_roas & received_roas)
+
+    print('Done')

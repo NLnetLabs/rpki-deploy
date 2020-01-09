@@ -39,7 +39,7 @@ locals {
         KRILL_USE_TA        = var.krill_use_ta
         KRILL_VERSION       = var.krill_version
         KRILL_AUTH_TOKEN    = var.krill_auth_token
-        SRC_TAL             = var.docker_is_local ? "https://localhost/ta/ta.tal" : var.src_tal
+        SRC_TAL             = var.src_tal
         RSYNC_BASE          = var.rsync_base
     }
     tmp_dir_vars = {
@@ -68,12 +68,21 @@ resource "null_resource" "setup_local" {
             . $VENVDIR/bin/activate
             pip3 install wheel
             pip3 install -r requirements.txt
+
+            cd $TMPDIR
+            [ -d python-binding ] && rm -R python-binding
+            git clone --depth 1 https://github.com/rtrlib/python-binding.git && \
+                cd python-binding && \
+                pip3 install -r requirements.txt && \
+                python3 setup.py build && \
+                python3 setup.py install
         EOT
     }
 
     provisioner "local-exec" {
         environment = local.tmp_dir_vars
         command = <<-EOT
+            [ -d $GENDIR] && rm -R $GENDIR
             mkdir -p $GENDIR
 
             # cp /home/ximon/src/krill/krill-master/doc/openapi.yaml $GENDIR
@@ -131,28 +140,7 @@ resource "null_resource" "run_tests" {
             #   'collections.abc' is deprecated since Python 3.3,and in 3.9 it
             #   will stop working.
             # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
-            PYTHONWARNINGS=ignore::DeprecationWarning pytest -s
+            PYTHONWARNINGS=ignore::DeprecationWarning pytest
 EOT
     }
-
-    # provisioner "local-exec" {
-    #     environment = local.env_vars
-    #     interpreter = ["/bin/bash"]
-    #     working_dir = "../scripts"
-    #     command = "./configure_krill.sh"
-    # }
-
-    # provisioner "local-exec" {
-    #     environment = local.env_vars
-    #     interpreter = ["/bin/bash"]
-    #     working_dir = "../lib/docker"
-    #     command = "../../scripts/test_krill.sh"
-    # }
-
-    # provisioner "local-exec" {
-    #     environment = local.env_vars
-    #     interpreter = ["/bin/bash"]
-    #     working_dir = "../lib/docker"
-    #     command = "../../scripts/test_python_client.sh"
-    # }
 }
