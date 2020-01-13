@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+  routinator:
+    build:
+      context: routinator
+      args: 
+        - ARIN_RPA
+    command: ["-v", "server", "--rtr=0.0.0.0:3323"]
+
+  rtrclient:
+    build: rtrclient
+    entrypoint: ["unbuffer", "rtrclient", "tcp", "-p", "routinator", "3323"]
