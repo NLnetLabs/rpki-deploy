@@ -114,6 +114,8 @@ services:
     dns: 8.8.8.8
     networks:
       - krill-net
+    ports:
+      - "323:323"
     environment:
       - KRILL_FQDN
       - SRC_TAL

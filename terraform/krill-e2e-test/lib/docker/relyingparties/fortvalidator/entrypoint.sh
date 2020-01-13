@@ -16,8 +16,11 @@ FORT_VER=$(fort -V)
 
 my_log "Launching Fort Validator version ${FORT_VER}"
 cd ${DATA_DIR}
-/opt/entrypoint.sh --tal ${TAL_DIR}/ta.tal
-
-my_log "Dumping received ROAs in the format expected by test_krill.sh"
-echo -n 'TEST OUT: { "roas": ['
-tail -n +2 output.roa | sed -e 's|^\(AS[0-9]\+\),\([^/]\+/[0-9]\+\),\([0-9]\+\)|{ "asn": "\1", "prefix": "\2", "maxLength": \3, "ta": "ta" }|' | paste -sd ',' - | sed -e 's|$|] }|'
+/usr/bin/fort \
+    --log.level info \
+    --local-repository /repo \
+    --tal /tals \
+    --tal ${TAL_DIR}/ta.tal \
+    --server.interval.refresh 5 \
+    --server.interval.retry 5 \
+    --server.interval.validation 60 # cannot be lower than this

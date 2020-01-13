@@ -86,6 +86,11 @@ my_retry() {
 }
 
 # Usage: <TAL URL> <INSTALL PATH>
+# See also:
+#   - docker-compose.yml
+#   - krill.conf
+#   - rsyncd.conf
+#   - tal_hack.sh
 install_tal_from_remote() {
     TAL_URL="$1"
     INSTALL_PATH="$2"
@@ -101,10 +106,10 @@ install_tal_from_remote() {
     # Usage:
     #   stdin  - TAL content to rewrite
     #   stdout - rewritten TAL content
-    # Where rsync://rsyncd/tal_hack/ta.cer will replace http(s)://... in the TAL
+    # Where rsync://rsyncd/repo/ta/ta.cer will replace http(s)://... in the TAL
     rewrite_https_tal_to_rsync() {
         if [[ $# -eq 1 && "$1" == "--rewrite" ]]; then
-            sed -e 's|https\?://.\+.cer|rsync://rsyncd.krill.test/tal_hack/ta.cer|'
+            sed -e 's|https\?://.\+.cer|rsync://rsyncd.krill.test/repo/ta/ta.cer|'
         else
             cat
         fi
