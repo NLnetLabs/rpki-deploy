@@ -9,16 +9,8 @@ mkdir -p ${TAL_DIR}
 export BANNER="OctoRPKI setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal --rewrite
 
 my_log "Launching OctoRPKI"
 cd / # needed by OctoRPKI to find file /private.pem
-/octorpki \
-    -mode oneoff \
-    -tal.name ta \
-    -tal.root ${TAL_DIR}/ta.tal \
-    -output.roa ${DATA_DIR}/output.json
-
-my_log "Dumping received ROAs in the format expected by test_krill.sh"
-echo -n "TEST OUT: "
-cat ${DATA_DIR}/output.json | paste -sd ' ' -
+/octorpki -tal.name ta -tal.root ${TAL_DIR}/ta.tal -refresh 5s -output.sign=false

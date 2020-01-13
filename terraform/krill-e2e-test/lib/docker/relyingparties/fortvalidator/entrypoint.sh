@@ -9,17 +9,14 @@ mkdir -p ${TAL_DIR}
 export BANNER="Fort Validator setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal --rewrite
 
 my_log "Querying Fort Validator version"
 FORT_VER=$(fort -V)
 
 my_log "Launching Fort Validator version ${FORT_VER}"
 cd ${DATA_DIR}
-/opt/entrypoint.sh \
-    --mode standalone \
-    --output.roa output.roa \
-    --tal ${TAL_DIR}/ta.tal
+/opt/entrypoint.sh --tal ${TAL_DIR}/ta.tal
 
 my_log "Dumping received ROAs in the format expected by test_krill.sh"
 echo -n 'TEST OUT: { "roas": ['

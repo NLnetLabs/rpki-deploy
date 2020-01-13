@@ -93,6 +93,19 @@ services:
     depends_on:
       - relyingpartybase
 
+  gortr:
+    image: cloudflare/gortr
+    container_name: gortr
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8083:8083"
+    command: ["-bind", ":8083", "-cache", "http://octorpki:8080/output.json", "-refresh", "5", "-verify=false"]
+    restart: on-failure
+    depends_on:
+      - octorpki
+
   fortvalidator:
     build:
       context: relyingparties/fortvalidator

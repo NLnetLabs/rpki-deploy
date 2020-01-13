@@ -307,10 +307,12 @@ def krill_with_roas(docker_project, krill_api_config):
 
 @pytest.mark.parametrize("service,port,rtr_sync_timeout", [
     ("routinator", 3323, 20),
-    ("rpkivalidator3", 8323, 240)
+    ("rpkivalidator3", 8323, 240),
+    ("fortvalidator", 323, 20),
+    ("gortr", 8083, 30), # brings up octorpki automatically as a dependency
 ])
 def test_relyingparty_vrps(krill_with_roas, docker_project, service, port, rtr_sync_timeout):
-    logging.info(f'Starting Docker service {service}..')
+    logging.info(f'Starting Docker services {service}..')
     docker_project.up(service_names=[service])
 
     try:
