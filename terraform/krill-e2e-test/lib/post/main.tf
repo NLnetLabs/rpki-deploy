@@ -157,6 +157,7 @@ resource "null_resource" "run_tests" {
                 -ra --tb=short \
                 --verbose \
                 --log-cli-level=INFO \
+                --html=/tmp/report.html --self-contained-html \
                 ../../tests
         EOT
     }
