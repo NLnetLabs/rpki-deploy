@@ -12,7 +12,6 @@ variable "ipv4_address" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
 variable "src_tal" {}
-variable "rsync_base" {}
 variable "docker_is_local" {
   type = bool
   default = false
@@ -37,7 +36,6 @@ locals {
     KRILL_FQDN          = var.krill_fqdn
     KRILL_VERSION       = local.krill_version
     SRC_TAL             = var.src_tal
-    RSYNC_BASE          = var.rsync_base
   }
 }
 
@@ -50,68 +48,56 @@ resource "dockermachine_generic" "docker_deploy" {
   generic_ssh_user   = var.ssh_user
 }
 
-resource "null_resource" "setup_remote" {
-    count = var.docker_is_local ? 0 : 1
-
-    provisioner "remote-exec" {
-        connection {
-            type        = "ssh"
-            user        = var.ssh_user
-            private_key = file(var.ssh_key_path)
-            host        = var.krill_fqdn
-        }
-        inline = [
-            "mkdir /tmp/ka"
-        ]
-    }
-
-    provisioner "file" {
-        connection {
-            type        = "ssh"
-            user        = var.ssh_user
-            private_key = file(var.ssh_key_path)
-            host        = var.krill_fqdn
-        }
-
-        source = "../scripts/resources/krill.conf"
-        destination = "/tmp/ka/"
-    }
-}
-
-resource "null_resource" "setup_local" {
-    count = var.docker_is_local ? 1 : 0
-
-    provisioner "local-exec" {
-        command = <<-EOT
-          mkdir /tmp/ka
-          cp ../scripts/resources/krill.conf /tmp/ka/
-EOT
-    }
-}
-
 resource "null_resource" "setup_docker" {
-  triggers = {
-    setup_done = "${var.docker_is_local ? null_resource.setup_local[0].id : null_resource.setup_remote[0].id}"
-  }
-
   # Normally this next provisioner will be skipped as we use a Krill Docker
   # image published to Docker Hub, but if requested this provisioner will be
   # invoked to build a Krill Docker image from local sources. The krill_build_cmd
   # value will be set to 'null' if the user didn't supply var.krill_build_path,
   # in which case this provisioner will be skipped entirely.
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     environment = local.docker_env_vars
     working_dir = var.krill_build_path
     command     = local.krill_build_cmd
   }
 
+  # Pre-create a Docker volume containing krill config files to be used by the
+  # test suite. The cat to temporary container approach works whether Docker is
+  # local or remote.
   provisioner "local-exec" {
-    when = destroy
+    interpreter = ["/bin/bash", "-c"]
+    environment = local.docker_env_vars
+    working_dir = "../resources/krill_configs"
+    command     = <<-EOT
+        docker volume create krill_configs
+        for CFG_FILE in $(ls -1); do
+            docker run --rm -v krill_configs:/krill_configs -i alpine \
+                sh -c "cat > /krill_configs/$CFG_FILE" < $CFG_FILE
+        done
+    EOT
+  }
+
+  # pre-build any images that need building, otherwise they get built on first
+  # use during the tests which is noisy and makes the tests appear to block for
+  # a long time.
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    environment = local.docker_env_vars
+    working_dir = var.docker_compose_dir
+    command     = <<-EOT
+        docker-compose pull
+        docker-compose build --parallel ${var.docker_is_local ? "" : "--compress"}
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["/bin/bash", "-c"]
     environment = merge(local.docker_env_vars, local.krill_env_vars)
     working_dir = var.docker_compose_dir
-    command = <<-EOT
-      sudo rm -R /tmp/ka
-EOT
+    command     = <<-EOT
+        docker volume rm --force krill_configs
+    EOT
   }
 }
 

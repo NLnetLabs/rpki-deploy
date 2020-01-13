@@ -1,7 +1,10 @@
 import json
+import logging
 import os
 import pytest
 import re
+import requests
+import sys
 import time
 
 from contextlib import contextmanager
@@ -34,14 +37,11 @@ def roa_to_roa_string(r):
 
 
 def rtr_fetch_one(server):
-    result = []
-
-    host = server[0]
-    port = server[1]
-    print(f'Connecting to {host}:{port}...')
+    host, port, timeout = server
+    logging.info(f'Connecting to {host}:{port} with an RTR sync timeout of {timeout} seconds...')
     mgr = rtrlib.RTRManager(host, port, retry_interval=5)
 
-    mgr.start(wait=True, timeout=120)
+    mgr.start(wait=True, timeout=timeout)
     ipv4 = [pfxrecord_to_roa_string(r) for r in mgr.ipv4_records()]
     ipv6 = [pfxrecord_to_roa_string(r) for r in mgr.ipv6_records()]
     mgr.stop()
@@ -81,7 +81,13 @@ def docker_project():
     config = ConfigFile.from_filename('docker-compose.yml')
     details = ConfigDetails('.', [config])
     ready_config = load(details)
-    project = Project.from_config('proj', ready_config, client)
+
+    # 'docker' is the COMPOSE_PROJECT_NAME. It affects the image names used and
+    # so must match the COMPOSE_PROJECT_NAME value used at image build time. As
+    # images were built by Terraform invoking the docker-compose command the
+    # project name it used, the default which is the directory name containing
+    # the docker-compose.yml file, is the one we must use.
+    project = Project.from_config('docker', ready_config, client)
 
     yield project
 
@@ -142,10 +148,9 @@ def get_tal_url_str():
     return f'https://{os.getenv("KRILL_FQDN")}/ta/ta.tal'
 
 
-def run_command_in_container(docker_project, container_name, cmd):
-    krill_container = docker_project.containers(service_names=[container_name])[0]
-    exc = docker_project.client.exec_create(krill_container.id, cmd)
-    return docker_project.client.exec_inspect(exc)["ExitCode"]
+def select_krill_config_file(docker_project, cfg_file_name):
+    options = docker_project.get_service('krill').config_dict()["options"]
+    options['command'] = ["krill", "-c", f"/krill_configs/{cfg_file_name}"]
 
 
 @pytest.fixture(scope="module")
@@ -183,7 +188,8 @@ def krill_with_roas(docker_project, krill_api_config):
     #
 
     # Bring up Krill, rsyncd and nginx
-    docker_project.up(service_names=['krill', 'rsyncd', 'nginx'], do_build=BuildAction.force)
+    select_krill_config_file(docker_project, 'krill.conf')
+    docker_project.up(service_names=['krill', 'rsyncd', 'tal_hack', 'nginx'], do_build=BuildAction.force)
 
     # Strategy: Test then add, don't add then handle failure because that will
     # cause errors to appear in the Krill server log which can be confusing
@@ -201,50 +207,29 @@ def krill_with_roas(docker_project, krill_api_config):
     child_handle = 'child'
 
     # Ensure that Krill is ready for our attempts to communicate with it
-    print('Wait till we can connect to Krill...')
+    logging.info('Wait till we can connect to Krill...')
     wait_until_ready()
-
-    #
-    # work around https://github.com/NLnetLabs/krill/issues/125
-    #
-
-    # some clients cannot handle a TAL that contain a HTTP(S) .cer URI, instead
-    # they expect an rsync .cer URI. The containers for those clients will
-    # fetch and modify the TAL so that it points to our rsync server. Our task
-    # is to install the .cer file on the rsync server where the clients expect
-    # to find it.
-    tal_url_str = get_tal_url_str()
-    tal = krill_api_client.request('GET', tal_url_str).data
-    match = re.search(r'https?://.+\.cer', tal)
-    if match:
-        print(f'Copying .cer file for TAL {tal_url_str} to the rsync repo')
-        cer_uri = urlparse(match.group(0))
-        dst_path = f'repo/rsync/current{cer_uri.path}'
-        cmd = f'sh -c "apt-get update && apt-get -y install wget && wget -4 --no-check-certificate -q -O{dst_path} {cer_uri.geturl()}"'
-        if run_command_in_container(docker_project, 'krill', cmd):
-            raise Exception("Failed to install TAL certificate")
-        print('Done')
 
     #
     # Create the desired state inside Krill
     #
 
-    print('Checking if Krill has an embedded TA')
+    logging.info('Checking if Krill has an embedded TA')
     ca_handles = [ca.handle for ca in krill_ca_api.list_cas().cas]
 
     if ta_handle in ca_handles:
-        print('Configuring Krill for use with embedded TA')
+        logging.info('Configuring Krill for use with embedded TA')
 
-        print('Adding CA if not already present')
+        logging.info('Adding CA if not already present')
         if not parent_handle in ca_handles:
-            print('No CA, adding...')
+            logging.debug('No CA, adding...')
             krill_ca_api.add_ca(AddCARequest(parent_handle))
             krill_ca_api.update_ca_repository(parent_handle, 'embedded')
-            print('Added')
+            logging.debug('Added')
 
-        print('Creating TA -> CA relationship if not already present')
+        logging.info('Creating TA -> CA relationship if not already present')
         if len(krill_ca_api.get_ca(ta_handle).children) == 0:
-            print('No children, adding...')
+            logging.debug('No children, adding...')
             req = AddCAChildRequest(
                 parent_handle,
                 Resources(
@@ -253,31 +238,31 @@ def krill_with_roas(docker_project, krill_api_config):
                     v6=KRILL_PARENT_IPV6S),
                 'embedded')
             krill_ca_api.add_child_ca(ta_handle, req)
-            print('Added')
+            logging.debug('Added')
 
-            print('Waiting for children to be registered')
+            logging.debug('Waiting for children to be registered')
             wait_until_ca_has_at_least_one(ta_handle, 'children')
 
-        print('Creating TA <- CA relationship if not already present')
+        logging.info('Creating TA <- CA relationship if not already present')
         if len(krill_ca_api.get_ca(parent_handle).parents) == 0:
-            print('No parents, adding...')
+            logging.debug('No parents, adding...')
             req = AddParentCARequest(ta_handle, 'embedded')
             krill_ca_api.add_ca_parent(parent_handle, req)
-            print('Added')
+            logging.debug('Added')
 
-            print('Waiting for parents to be registered')
+            logging.debug('Waiting for parents to be registered')
             wait_until_ca_has_at_least_one(parent_handle, 'parents')
 
-        print('Adding child CA if not already present')
+        logging.info('Adding child CA if not already present')
         if not child_handle in ca_handles:
-            print('No CA, adding...')
+            logging.debug('No CA, adding...')
             krill_ca_api.add_ca(AddCARequest(child_handle))
             krill_ca_api.update_ca_repository(child_handle, 'embedded')
-            print('Added')
+            logging.debug('Added')
 
-        print('Creating CA -> CA relationship if not already present')
+        logging.info('Creating CA -> CA relationship if not already present')
         if len(krill_ca_api.get_ca(parent_handle).children) == 0:
-            print('No children, adding...')
+            logging.debug('No children, adding...')
             req = AddCAChildRequest(
                 child_handle,
                 Resources(
@@ -286,22 +271,22 @@ def krill_with_roas(docker_project, krill_api_config):
                     v6=KRILL_CHILD_IPV6S),
                 'embedded')
             krill_ca_api.add_child_ca(parent_handle, req)
-            print('Added')
+            logging.debug('Added')
 
-            print('Waiting for children to be registered')
+            logging.debug('Waiting for children to be registered')
             wait_until_ca_has_at_least_one(parent_handle, 'children')
 
-        print('Creating CA <- CA relationship if not already present')
+        logging.info('Creating CA <- CA relationship if not already present')
         if len(krill_ca_api.get_ca(child_handle).parents) == 0:
-            print('No parents, adding...')
+            logging.debug('No parents, adding...')
             req = AddParentCARequest(parent_handle, 'embedded')
             krill_ca_api.add_ca_parent(child_handle, req)
-            print('Added')
+            logging.debug('Added')
 
-            print('Waiting for parents to be registered')
+            logging.debug('Waiting for parents to be registered')
             wait_until_ca_has_at_least_one(child_handle, 'parents')
 
-        print('Creating CA ROAs if not already present')
+        logging.info('Creating CA ROAs if not already present')
         if len(krill_roa_api.list_route_authorizations(child_handle)) == 0:
             delta = ROADelta(added=TEST_ROAS, removed=[])
 
@@ -310,30 +295,68 @@ def krill_with_roas(docker_project, krill_api_config):
                 wait_exponential_multiplier=1000,
                 wait_exponential_max=10000)
             def update_roas():
-                print('Updating ROAs...')
+                logging.debug('Updating ROAs...')
                 krill_roa_api.update_route_authorizations(child_handle, delta)
 
             update_roas()
 
-    print('Krill configuration complete')
+    logging.info('Krill configuration complete')
 
-    yield None
+    yield krill_api_client
 
 
-def test_routinator(krill_with_roas, docker_project):
-    print('Starting Routinator..')
-    docker_project.up(service_names=['routinator'], do_build=BuildAction.force)
+@pytest.mark.parametrize("service,port,rtr_sync_timeout", [
+    ("routinator", 3323, 20),
+    ("rpkivalidator3", 8323, 240)
+])
+def test_relyingparty_vrps(krill_with_roas, docker_project, service, port, rtr_sync_timeout):
+    logging.info(f'Starting Docker service {service}..')
+    docker_project.up(service_names=[service])
 
-    print('Starting RTR client')
-    r = rtr_fetch_one(('localhost', 3323))
+    try:
+        start_time = time.time()
+        logging.info(f'Connecting RTR client to localhost:{port}')
+        r = rtr_fetch_one(('localhost', port, rtr_sync_timeout))
+        elapsed_time = time.time() - start_time
 
-    # r is now a list of PFXRecord
-    # see: https://python-rtrlib.readthedocs.io/en/latest/api.html#rtrlib.records.PFXRecord
-    # are each of the TEST_ROAS items in r?
-    # i.e. is the intersection of the two sets equal to that of the TEST_ROAS set?
+        # r is now a list of PFXRecord
+        # see: https://python-rtrlib.readthedocs.io/en/latest/api.html#rtrlib.records.PFXRecord
+        logging.info(f'Received {len(r)} ROAs via RTR from {service} in {round(elapsed_time)} seconds')
 
-    expected_roas = set([roa_to_roa_string(r) for r in TEST_ROAS])
-    received_roas = set(r)
-    assert expected_roas == (expected_roas & received_roas)
+        # are each of the TEST_ROAS items in r?
+        # i.e. is the intersection of the two sets equal to that of the TEST_ROAS set?
 
-    print('Done')
+        expected_roas = set([roa_to_roa_string(r) for r in TEST_ROAS])
+        received_roas = set(r)
+        assert expected_roas == (expected_roas & received_roas)
+    except rtrlib.exceptions.SyncTimeout as e:
+        logging.error(f'Timeout (>{rtr_sync_timeout} seconds) while syncing RTR with {service} at localhost:{port}')
+        if service == 'rpkivalidator3':
+            try:
+                # Check to see if the RIPE NCC RPKI validator has processed the TAL
+                # yet.
+                # 
+                # curl -X GET --header 'Accept: application/json' 'http://localhost:8080/api/trust-anchors/1'
+                # {
+                # "data": {
+                #     "type": "trust-anchor",
+                #     "id": 1,
+                #     "name": "ta.tal",
+                #     "locations": [
+                #     "rsync://rsyncd.krill.test/tal_hack/ta.cer"
+                #     ],
+                #     "subjectPublicKeyInfo": "MIIB....AQAB",
+                #     "preconfigured": true,
+                #     "initialCertificateTreeValidationRunCompleted": true,
+                #                                                     ^^^^
+                #
+                # See: https://rpki-validator.ripe.net/swagger-ui.html#!/trust45anchor45controller/getUsingGET_3
+                v = requests.get('http://localhost:8080/api/trust-anchors/1').json()['data']['initialCertificateTreeValidationRunCompleted']
+                if not v:
+                    logging.error(f'{service} initial certificate tree validation run did not yet complete')
+            except Exception as innerE:
+                logging.error(f'Unable to interrogate {service} initial certificate tree validation run status: {innerE}')
+
+        container_log_lines = os.linesep.join([f'{service}: {s}' for s in str(docker_project.client.logs(service, timestamps=True), 'utf-8').split('\n')])
+        logging.error(f'Start service {service} container log dump:{os.linesep}{container_log_lines}')
+        raise e

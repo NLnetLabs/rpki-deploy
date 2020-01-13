@@ -85,12 +85,12 @@ my_retry() {
     done
 }
 
-# Usage: <TAL URL> <INSTALL PATH> [<RSYNC_BASE/>]
+# Usage: <TAL URL> <INSTALL PATH>
 install_tal_from_remote() {
     TAL_URL="$1"
     INSTALL_PATH="$2"
-    RSYNC_BASE=""
-    [ $# -eq 3 ] && RSYNC_BASE="$3"
+    REWRITE="--no-rewrite"
+    [ $# -eq 3 ] && REWRITE="$3"
 
     # Usage: <URL>
     # Outputs the TAL to stdout
@@ -98,36 +98,33 @@ install_tal_from_remote() {
         wget --no-check-certificate -qO- $@
     }
 
-    # Usage: <RSYNC_BASE/>
+    # Usage:
     #   stdin  - TAL content to rewrite
     #   stdout - rewritten TAL content
-    # When RYSNC_BASE will replace FQDN in http(s)://<FQDN>/... in the TAL.
-    # RSYNC_BASE *MUST* end in a /.
+    # Where rsync://rsyncd/tal_hack/ta.cer will replace http(s)://... in the TAL
     rewrite_https_tal_to_rsync() {
-        if [[ $# -eq 1 && "$1" != "" ]]; then
-            sed -e 's|https\?://\([^/]\+\)/\(.\+\)|rsync://'$1'\2|'
+        if [[ $# -eq 1 && "$1" == "--rewrite" ]]; then
+            sed -e 's|https\?://.\+.cer|rsync://rsyncd.krill.test/tal_hack/ta.cer|'
         else
             cat
         fi
     }
 
     fetch_and_rewrite() {
-        fetch $1 | rewrite_https_tal_to_rsync ${RSYNC_BASE} > $2
+        fetch $1 | rewrite_https_tal_to_rsync $3 > $2
     }
 
     my_log "Installing remote TAL ${TAL_URL} to ${INSTALL_PATH}"
-    my_retry 12 5 fetch_and_rewrite ${TAL_URL} ${INSTALL_PATH}
+    my_retry 12 5 fetch_and_rewrite ${TAL_URL} ${INSTALL_PATH} ${REWRITE}
 }
 
-# Usage: <SRC.TAL> </PATH/TO/DST.TAL> [<RSYNC_BASE/>]
+# Usage: <SRC.TAL> </PATH/TO/DST.TAL> --rewrite
 # Where: <SRC_TAL> is either a TAL filename or a remote URI
-#        <RSYNC_BASE/> will replace <FQDN>/ in http(s)://<FQDN>/...
-#        RSYNC_BASE must be / terminated.
 install_tal() {
     if [[ "$1" == http* ]]; then
-        RSYNC_BASE=
-        [ $# -eq 3 ] && RSYNC_BASE="$3"
-        install_tal_from_remote $1 $2 ${RSYNC_BASE} 
+        REWRITE=""
+        [ $# -eq 3 ] && REWRITE=$3
+        install_tal_from_remote $1 $2 $REWRITE
     else
         my_log "Installing local TAL /opt/$1 in $2"
         cp /opt/$1 $2

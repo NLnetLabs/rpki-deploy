@@ -18,16 +18,15 @@ data "tls_public_key" "ssh_key" {
 }
 
 locals {
-  hostname   = var.hostname != "" ? var.hostname : "ke2et${random_string.hostname.result}"
+  hostname = var.hostname != "" ? var.hostname : "ke2et${random_string.hostname.result}"
 }
 
 locals {
-  fqdn       = var.domain != "" ? join(".", [local.hostname, var.domain]) : local.hostname
+  fqdn     = var.domain != "" ? join(".", [local.hostname, var.domain]) : local.hostname
 }
 
 locals {
-  src_tal    = replace(var.src_tal, "<FQDN>", local.fqdn)
-  rsync_base = join("/", [local.fqdn, "/repo"])
+  src_tal  = replace(var.src_tal, "<FQDN>", local.fqdn)
 }
 
 output "tls_public_key" {
@@ -60,8 +59,4 @@ output "ingress_tcp_ports" {
     8080, # RIPE NCC RPKI validator 3 (HTTP)
     9556  # Routinator prometheus exportor (HTTP)
   ]
-}
-
-output "rsync_base" {
-  value = local.rsync_base
 }

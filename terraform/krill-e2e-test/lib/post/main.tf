@@ -12,7 +12,6 @@ variable "krill_build_path" {}
 variable "krill_fqdn" {}
 variable "krill_use_ta" {}
 variable "src_tal" {}
-variable "rsync_base" {}
 variable "run_tests" {
     type = bool
 }
@@ -40,7 +39,6 @@ locals {
         KRILL_VERSION       = var.krill_version
         KRILL_AUTH_TOKEN    = var.krill_auth_token
         SRC_TAL             = var.src_tal
-        RSYNC_BASE          = var.rsync_base
     }
     tmp_dir_vars = {
         VENVDIR             = "${random_id.tmp_dir.hex}/venv"
@@ -49,25 +47,21 @@ locals {
     }
 }
 
-resource "null_resource" "setup_remote" {
-    count = var.docker_is_local ? 0 : 1
-
+resource "null_resource" "setup" {
     triggers = {
         docker_ready = "${var.docker_ready}"
     }
-}
-
-resource "null_resource" "setup_local" {
-    count = var.docker_is_local ? 1 : 0
 
     provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
         environment = local.tmp_dir_vars
         working_dir = var.docker_compose_dir
         command = <<-EOT
+            set -eu
             python3 -m venv $VENVDIR
             . $VENVDIR/bin/activate
             pip3 install wheel
-            pip3 install -r requirements.txt
+            pip3 install -r ../../tests/requirements.txt
 
             cd $TMPDIR
             [ -d python-binding ] && rm -R python-binding
@@ -80,9 +74,11 @@ resource "null_resource" "setup_local" {
     }
 
     provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
         environment = local.tmp_dir_vars
         command = <<-EOT
-            [ -d $GENDIR] && rm -R $GENDIR
+            set -eu
+            [ -d $GENDIR ] && rm -R $GENDIR
             mkdir -p $GENDIR
 
             # cp /home/ximon/src/krill/krill-master/doc/openapi.yaml $GENDIR
@@ -92,7 +88,7 @@ resource "null_resource" "setup_local" {
                 wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi.yaml
             fi
 
-            docker run --rm -v $GENDIR:/local \
+            docker run --name openapi-generator --rm -v $GENDIR:/local \
                 openapitools/openapi-generator-cli generate \
                 -i /local/openapi.yaml \
                 -g python \
@@ -109,12 +105,20 @@ resource "null_resource" "setup_local" {
 
     provisioner "local-exec" {
         when = destroy
+        interpreter = ["/bin/bash", "-c"]
         environment = local.tmp_dir_vars
+        working_dir = var.docker_compose_dir
         command = <<-EOT
-            echo "Cleaning up"
+            set -eu
+
+            docker-compose kill
+            docker-compose down -v
+
+            echo "Cleaning up $TMPDIR"
             if [ -d $TMPDIR ]; then
-                rm -R $TMPDIR
+                sudo rm -R $TMPDIR
             fi
+
             echo "Finished"
         EOT
     }
@@ -124,23 +128,36 @@ resource "null_resource" "run_tests" {
     count = var.run_tests ? 1 : 0
 
     triggers = {
-        docker_ready = "${var.docker_ready}"
-        setup_done = "${var.docker_is_local ? null_resource.setup_local[0].id : null_resource.setup_remote[0].id}"
+        setup_done = "${null_resource.setup.id}"
     }
 
     provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
         environment = merge(local.docker_env_vars, local.app_vars, local.tmp_dir_vars)
         working_dir = var.docker_compose_dir
-        command = <<-EOT
-            . $VENVDIR/bin/activate
 
-            # Disable DeprecationWarning due to:
-            #   python3.7/site-packages/yaml/constructor.py:126: DeprecationWarning:
-            #   Using or importing the ABCs from 'collections' instead of from#
-            #   'collections.abc' is deprecated since Python 3.3,and in 3.9 it
-            #   will stop working.
-            # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
-            PYTHONWARNINGS=ignore::DeprecationWarning pytest
-EOT
+        # Invoke PyTest to run the Krill test suites.
+        # 
+        # Disable DeprecationWarning due to:
+        #   python3.7/site-packages/yaml/constructor.py:126: DeprecationWarning:
+        #   Using or importing the ABCs from 'collections' instead of from#
+        #   'collections.abc' is deprecated since Python 3.3,and in 3.9 it
+        #   will stop working.
+        # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
+        #
+        # PyTest arguments used:
+        #   -ra       - report at the end all tests that did not pass
+        #   --tb      - use shorter tracebacks than the default
+        #   --verbose - enable pytest-progress plugin printing of the test
+        #               being executed.
+        command = <<-EOT
+            set -eu
+            . $VENVDIR/bin/activate
+            PYTHONWARNINGS=ignore::DeprecationWarning pytest \
+                -ra --tb=short \
+                --verbose \
+                --log-cli-level=INFO \
+                ../../tests
+        EOT
     }
 }

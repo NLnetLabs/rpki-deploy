@@ -22,7 +22,6 @@ module "docker_deploy" {
   ssh_key_path       = ""
   ssh_user           = ""
   src_tal            = "https://nginx.krill.test/ta/ta.tal"
-  rsync_base         = "rsyncd.krill.test/repo/"
   docker_is_local    = true
 }
 
@@ -42,7 +41,6 @@ module "post" {
   run_tests          = var.run_tests
   ssh_key_path       = ""
   ssh_user           = ""
-  rsync_base         = "rsyncd.krill.test/repo/"
   docker_is_local    = true
   docker_ready       = module.docker_deploy.ready
 }

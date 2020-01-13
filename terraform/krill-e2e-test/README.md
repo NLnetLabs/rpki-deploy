@@ -266,6 +266,19 @@ This framework requires:
 - The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
+- RTRLib (tested with 0.6.3 and 0.7.0), preferably built with NDEBUG defined to disable noisy log output.
+
+### Prepare (optional)
+
+To install RTRLib with noisy log output disabled:
+
+```bash
+$ git clone --depth=1 https://github.com/rtrlib/rtrlib.git
+$ cd rtrlib
+$ cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No
+$ make
+$ sudo make install
+```
 
 ### Prepare
 

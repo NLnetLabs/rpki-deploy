@@ -1,3 +1,5 @@
 docker-compose
 pytest
+pytest-progress
+requests
 retrying
