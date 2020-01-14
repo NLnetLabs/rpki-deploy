@@ -1,3 +1,4 @@
+ansi2html
 docker-compose
 pytest
 pytest-html
