@@ -210,11 +210,12 @@ class TestKrillWithRelyingParties:
     @pytest.mark.parametrize("service,port,rtr_sync_timeout", [
         ("routinator", 3323, 20),
         ("fortvalidator", 323, 20),
-        ("octorpki", 8083, 30),  # brings up gortr automatically as a dependency
-        ("rcynic", 8084, 30),    # brings up gortr automatically as a dependency
+        ("octorpki", 8083, 30),
+        ("rcynic", 8084, 30),
+        ("rpkiclient", 8085, 30),
         ("rpkivalidator3", 8323, 240),
     ])
-    def test_vrps_via_rtr_with_one_relyingparty(self, request, docker_project, function_service_manager, service, port, rtr_sync_timeout):
+    def test_rtr(self, request, docker_project, function_service_manager, service, port, rtr_sync_timeout):
         function_service_manager.start_services_with_dependencies(docker_project, service)
 
         try:

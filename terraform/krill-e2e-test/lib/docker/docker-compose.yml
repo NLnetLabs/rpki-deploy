@@ -183,6 +183,18 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-rpkiclient
+
+  gortr-rpkiclient:
+    image: cloudflare/gortr
+    container_name: gortr-rpkiclient
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8085:8085"
+    command: ["-bind", ":8085", "-cache", "http://rpkiclient/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
+    restart: on-failure
 
   relyingpartybase:
     image: relyingpartybase
