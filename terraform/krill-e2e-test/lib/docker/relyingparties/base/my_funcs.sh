@@ -12,7 +12,7 @@ DEF_OKAY_STR="${COLOUR_GREEN}OKAY${COLOUR_DEFAULT}"
 
 # Usage: <LOG MESSAGE>...
 my_log() {
-    OPTS="${BANNER:-}"
+    OPTS="${BANNER:-}: "
     [[ $# -ge 2 && "$1" == "--no-eol" ]] && OPTS="-n $OPTS" && shift 1
     [[ $# -ge 2 && "$1" == "--cont" ]] && OPTS="" && shift 1
     echo -e ${OPTS} "$@" >&2
