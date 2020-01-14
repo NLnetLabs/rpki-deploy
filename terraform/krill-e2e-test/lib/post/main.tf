@@ -146,19 +146,20 @@ resource "null_resource" "run_tests" {
         # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
         #
         # PyTest arguments used:
-        #   -ra       - report at the end all tests that did not pass
-        #   --tb      - use shorter tracebacks than the default
-        #   --verbose - enable pytest-progress plugin printing of the test
-        #               being executed.
+        #   -ra          - report at the end all tests that did not pass
+        #   --tb         - use shorter tracebacks than the default
+        #   --verbose    - enable pytest-progress plugin printing of the test
+        #                  being executed.
         #   --log-cli-level=INFO - get real time Python INFO log level output
-        #               from the tests and frameworks rather than waiting until
-        #               all tests have finished to see anything.
-        #   --html    - produce a nice HTML report to read at a glance instead
-        #               of wading through console/log output.
-        #   --color   - make it easier to read console/log output.
-        #               note: install ansi2html otherwise colour codes don't
-        #               render correctly in the html report.
-        #   -vv       - ensure that pytest assert diffs are logged in full.
+        #                  from the tests and frameworks rather than waiting until
+        #                  all tests have finished to see anything.
+        #   --html       - produce a nice HTML report to read at a glance instead
+        #                  of wading through console/log output.
+        #   --color      - make it easier to read console/log output.
+        #                  note: install ansi2html otherwise colour codes don't
+        #                  render correctly in the html report.
+        #   --log-format - drop the source code location from the log format.
+        #   -vv          - ensure that pytest assert diffs are logged in full.
         command = <<-EOT
             set -eu
             . $VENVDIR/bin/activate
@@ -168,6 +169,7 @@ resource "null_resource" "run_tests" {
                 --log-cli-level=INFO \
                 --html=/tmp/report.html --self-contained-html \
                 --color=yes \
+                --log-format="%(levelname)-8s %(message)s" \
                 -vv \
                 ../../tests
         EOT
