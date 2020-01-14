@@ -1,6 +1,7 @@
 import logging
 import os
 import pytest
+import rtrlib
 
 from retrying import retry
 from time import time
