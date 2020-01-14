@@ -9,7 +9,6 @@ mkdir -p ${TAL_DIR}
 export BANNER="Routinator setup for Krill"
 source /opt/my_funcs.sh
 
-set -x
 install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
 
 my_log "Launching Routinator"
