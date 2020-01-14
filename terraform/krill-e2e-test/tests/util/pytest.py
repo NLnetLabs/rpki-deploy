@@ -7,7 +7,6 @@ import pprint
 #   - https://github.com/pytest-dev/pytest/blob/a176ff77bc679db0305abc360434c2ca15e12165/doc/en/example/simple.rst#making-test-result-information-available-in-fixtures
 # Requires pytest_runtest_makereport() function in conftest.py to create rep_call.
 def isfailed(request):
-
     key = (request.node.nodeid, 'call')
     reports = request.node.module._test_reports
-    return reports[key].outcome if key in reports else False
+    return reports[key].outcome == 'failed' if key in reports else False
