@@ -3,9 +3,9 @@ FROM ximoneighteen/rcynic
 # Install packages
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    lighttpd \
-    sqlite3 \
-    wget
+        lighttpd \
+        sqlite3 \
+        wget
 
 # Prepare Docker environment
 COPY --from=relyingpartybase /opt/* /opt/
