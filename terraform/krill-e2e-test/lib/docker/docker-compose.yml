@@ -92,10 +92,11 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-octorpki
 
-  gortr:
+  gortr-octorpki:
     image: cloudflare/gortr
-    container_name: gortr
+    container_name: gortr-octorpki
     dns: 8.8.8.8
     networks:
       - krill-net
@@ -103,8 +104,6 @@ services:
       - "8083:8083"
     command: ["-bind", ":8083", "-cache", "http://octorpki:8080/output.json", "-refresh", "5", "-verify=false"]
     restart: on-failure
-    depends_on:
-      - octorpki
 
   fortvalidator:
     build:
@@ -157,6 +156,18 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-rcynic
+
+  gortr-rcynic:
+    image: cloudflare/gortr
+    container_name: gortr-rcynic
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8084:8084"
+    command: ["-bind", ":8084", "-cache", "http://rcynic/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
+    restart: on-failure
 
   rpkiclient:
     build:
