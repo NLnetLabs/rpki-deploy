@@ -16,13 +16,14 @@ provider "digitalocean" {
 }
 
 resource "digitalocean_droplet" "krilldemo" {
-  name     = var.hostname
-  image    = "ubuntu-16-04-x64"
-  region   = var.region
-  size     = var.size
-  ipv6     = true
-  ssh_keys = [var.key_fingerprint]
-  tags     = var.tags
+  name       = var.hostname
+  image      = "ubuntu-16-04-x64"
+  region     = var.region
+  size       = var.size
+  ipv6       = true
+  ssh_keys   = [var.key_fingerprint]
+  tags       = var.tags
+  monitoring = true
 }
 
 # Create a DNS A record in Digital Ocean for the new Droplet.
