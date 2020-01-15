@@ -56,7 +56,10 @@ resource "null_resource" "setup_docker" {
     interpreter = ["/bin/bash", "-c"]
     environment = local.docker_env_vars
     working_dir = var.krill_build_path
-    command     = local.krill_build_cmd
+    command = <<-EOT
+        set -eu
+        ${local.krill_build_cmd}
+    EOT
   }
 
   # Pre-create a Docker volume containing krill config files to be used by the
@@ -67,6 +70,7 @@ resource "null_resource" "setup_docker" {
     environment = local.docker_env_vars
     working_dir = "../resources/krill_configs"
     command     = <<-EOT
+        set -eu
         docker volume create krill_configs
         for CFG_FILE in $(ls -1); do
             docker run --rm -v krill_configs:/krill_configs -i alpine \
@@ -83,7 +87,8 @@ resource "null_resource" "setup_docker" {
     environment = local.docker_env_vars
     working_dir = var.docker_compose_dir
     command     = <<-EOT
-        docker-compose pull
+        set -eu
+        docker-compose pull --ignore-pull-failures
         docker-compose build --parallel ${var.docker_is_local ? "" : "--compress"}
     EOT
   }
@@ -94,6 +99,7 @@ resource "null_resource" "setup_docker" {
     environment = merge(local.docker_env_vars, local.krill_env_vars)
     working_dir = var.docker_compose_dir
     command     = <<-EOT
+        set -eu
         docker volume rm --force krill_configs
     EOT
   }
