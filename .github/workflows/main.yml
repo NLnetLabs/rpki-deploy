@@ -44,7 +44,8 @@ jobs:
       working-directory: ../rpki-deploy/terraform/krill-e2e-test
       run: |
         mkdir $HOME/secrets/
-        echo $SSH_KEY > $HOME/secrets/ssh_key
+        echo "$SSH_KEY" > $HOME/secrets/ssh_key
+        head -n 2 $HOME/secrets/ssh_key
         chmod 400 $HOME/secrets/ssh_key
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
