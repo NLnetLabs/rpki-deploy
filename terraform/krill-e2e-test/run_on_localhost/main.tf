@@ -17,7 +17,6 @@ module "docker_deploy" {
   krill_version      = var.krill_version
   krill_use_ta       = var.krill_use_ta
   krill_fqdn         = "nginx.krill.test"
-  use_staging_cert   = true
   ipv4_address       = "127.0.0.1"
   ssh_key_path       = ""
   ssh_user           = ""

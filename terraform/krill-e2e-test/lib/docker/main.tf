@@ -6,7 +6,6 @@ variable "krill_build_path" {}
 variable "krill_log_level" {}
 variable "krill_use_ta" {}
 variable "krill_fqdn" {}
-variable "use_staging_cert" {}
 variable "docker_compose_dir" {}
 variable "ipv4_address" {}
 variable "ssh_key_path" {}
@@ -29,7 +28,6 @@ locals {
   }
 
   krill_env_vars = {
-    KRILL_STAGING_CERT  = var.use_staging_cert
     KRILL_AUTH_TOKEN    = var.krill_auth_token
     KRILL_LOG_LEVEL     = var.krill_log_level
     KRILL_USE_TA        = var.krill_use_ta

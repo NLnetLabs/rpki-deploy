@@ -62,12 +62,6 @@ variable "krill_log_level" {
   description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: info."
 }
 
-variable "use_staging_cert" {
-  type        = bool
-  default     = false
-  description = "Whether or not the HTTPS Lets Encrypt certificate is requested to be staging or production. If false, Routinator will refuse to fetch the Krill TAL file. Default: true (staging)."
-}
-
 variable "krill_build_path" {
   type        = string
   default     = ""
