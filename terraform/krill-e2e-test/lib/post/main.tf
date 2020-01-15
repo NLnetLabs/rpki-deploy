@@ -29,7 +29,7 @@ resource "random_id" "tmp_dir" {
 locals {
     docker_env_vars = {
         DOCKER_TLS_VERIFY   = var.docker_is_local ? null : "1"
-        DOCKER_HOST         = var.docker_is_local ? null : var.hostname
+        DOCKER_HOST         = var.docker_is_local ? null : var.docker_url
         DOCKER_CERT_PATH    = var.docker_is_local ? null : var.docker_cert_path
         DOCKER_MACHINE_NAME = var.docker_is_local ? null : var.hostname
     }
@@ -163,6 +163,9 @@ resource "null_resource" "run_tests" {
         command = <<-EOT
             set -eu
             . $VENVDIR/bin/activate
+
+            env | sort
+
             PYTHONWARNINGS=ignore::DeprecationWarning pytest \
                 -ra --tb=short \
                 --verbose \

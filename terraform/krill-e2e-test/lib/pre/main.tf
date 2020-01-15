@@ -30,7 +30,7 @@ locals {
 }
 
 output "tls_public_key" {
-  value = data.tls_public_key.ssh_key
+  value = var.hostname != "localhost" ? data.tls_public_key.ssh_key[0] : null
 }
 
 output "hostname" {
@@ -46,17 +46,23 @@ output "src_tal" {
 }
 
 output "ssh_key_path" {
-  value = var.ssh_key_path != "" ? pathexpand(var.ssh_key_path) : ""
+  value = var.ssh_key_path != "" ? pathexpand(var.ssh_key_path) : null
 }
 
 output "ingress_tcp_ports" {
   value = [
     22,   # SSH
     80,   # NGINX redirect to HTTPS
+    323,  # FORT validator RTR
     443,  # NGINX proxy to Krill
     873,  # Rsync
+    3323, # Routinator RTR
     2376, # Docker daemon
     8080, # RIPE NCC RPKI validator 3 (HTTP)
+    8083, # OctoRPKI RTR
+    8084, # RCynic RTR
+    8085, # rpki-client RTR
+    8323, # RIPE NCC RPKI Validator 3 RTR
     9556  # Routinator prometheus exportor (HTTP)
   ]
 }

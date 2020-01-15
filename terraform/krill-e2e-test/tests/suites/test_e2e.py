@@ -17,7 +17,7 @@ from tests.data.data import *
 import tests.util.rpkivalidator3
 from tests.util import krill
 from tests.util.docker import class_service_manager, function_service_manager
-from tests.util.krill import krill_api_config
+from tests.util.krill import krill_api_config, krill_fqdn
 from tests.util.rtr import rtr_fetch_one, roa_to_roa_string
 
 
@@ -215,13 +215,13 @@ class TestKrillWithRelyingParties:
         ("rpkiclient", 8085, 30),
         ("rpkivalidator3", 8323, 240),
     ])
-    def test_rtr(self, request, docker_project, function_service_manager, service, port, rtr_sync_timeout):
+    def test_rtr(self, request, krill_fqdn, docker_project, function_service_manager, service, port, rtr_sync_timeout):
         function_service_manager.start_services_with_dependencies(docker_project, service)
 
         try:
             rtr_start_time = int(time())
-            logging.info(f'Connecting RTR client to localhost:{port}')
-            received_roas = set(rtr_fetch_one('localhost', port, rtr_sync_timeout))
+            logging.info(f'Connecting RTR client to {krill_fqdn}:{port}')
+            received_roas = set(rtr_fetch_one(krill_fqdn, port, rtr_sync_timeout))
             rtr_elapsed_time = int(time()) - rtr_start_time
 
             # r is now a list of PFXRecord
@@ -235,10 +235,10 @@ class TestKrillWithRelyingParties:
             expected_roas = set([roa_to_roa_string(r) for r in TEST_ROAS])
             assert received_roas == expected_roas
         except rtrlib.exceptions.SyncTimeout as e:
-            logging.error(f'Timeout (>{rtr_sync_timeout} seconds) while syncing RTR with {service} at localhost:{port}')
+            logging.error(f'Timeout (>{rtr_sync_timeout} seconds) while syncing RTR with {service} at {krill_fqdn}:{port}')
             if service == 'rpkivalidator3':
                 try:
-                    if not tests.util.rpkivalidator3.did_trust_anchor_validation_run_complete('localhost', 8080, 1):
+                    if not tests.util.rpkivalidator3.did_trust_anchor_validation_run_complete(krill_fqdn, 8080, 1):
                         logging.error(f'{service} initial certificate tree validation run did not yet complete')
                 except Exception as innerE:
                     logging.error(f'Unable to interrogate {service} initial certificate tree validation run status: {innerE}')
