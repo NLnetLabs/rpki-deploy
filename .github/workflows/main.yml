@@ -52,7 +52,7 @@ jobs:
 
     - name: Install Python 3 venv package
       run: |
-        apt-get install -y python3-venv
+        sudo apt-get install -y python3-venv
 
     - name: Print application versions
       run: |
