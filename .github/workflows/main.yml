@@ -28,8 +28,6 @@ jobs:
     # to leverage an existing Cargo cache and thus speed up deployment.
     - name: Install modified Dockerfile into Krill checkout
       run: |
-        echo ${GITHUB_WORKSPACE}
-        ls -la
         cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/krill-e2e-test/lib/docker/krill/Dockerfile ${GITHUB_WORKSPACE}/krill/Dockerfile
 
     - name: Install Terraform
