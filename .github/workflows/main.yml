@@ -47,11 +47,12 @@ jobs:
         cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No .
         make
         sudo make install
+        ldconfig -p | fgrep librtr
+        sudo ldconfig
+        ldconfig -p | fgrep librtr
   
     - name: Debug
       run: |
-        sudo ldconfig -v 2>/dev/null | grep -F rtrlib
-        sudo ldconfig -v
         exit 1
 
     - name: Install Terraform
@@ -68,6 +69,7 @@ jobs:
       run: |
         docker --version
         docker-compose --version
+        python3 --version
         terraform --version
 
     - name: Decrypt SSH key
