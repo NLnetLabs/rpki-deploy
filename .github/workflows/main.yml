@@ -108,6 +108,12 @@ jobs:
         TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
         TF_VAR_run_tests: true
 
+    - name: Upload HTML test report
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-report
+        path: /tmp/report.html
+
     - name: Dump diagnostics on failure
       if: failure()
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
