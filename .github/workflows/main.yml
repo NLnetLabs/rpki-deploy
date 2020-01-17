@@ -44,10 +44,11 @@ jobs:
     - name: Install RTRLIB with NDEBUG
       working-directory: ./rtrlib
       run: |
+        set -x
         cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No .
         make
         sudo make install
-        ldconfig -p | fgrep librtr
+        ldconfig -p | fgrep librtr || true
         sudo ldconfig
         ldconfig -p | fgrep librtr
   
