@@ -77,7 +77,7 @@ jobs:
       timeout-minutes: 30
       run: |
         terraform init
-        terraform apply -parallelism=1 -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
+        terraform apply -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
@@ -86,7 +86,7 @@ jobs:
 
     - name: Run tests
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: terraform apply -parallelism=1 -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
+      run: terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
