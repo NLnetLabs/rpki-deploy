@@ -35,10 +35,12 @@ jobs:
     # to leverage an existing Cargo cache and thus speed up deployment.
     - name: Install modified Dockerfile into Krill checkout
       run: |
+        set -x
         cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/krill-e2e-test/lib/docker/krill/Dockerfile ${GITHUB_WORKSPACE}/krill/Dockerfile
 
     - name: Install Python 3 venv package
       run: |
+        set -x
         sudo apt-get install -y python3-venv
 
     - name: Install RTRLIB with NDEBUG
@@ -48,14 +50,8 @@ jobs:
         cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No .
         make
         sudo make install
-        ldconfig -p | fgrep librtr || true
         sudo ldconfig
-        ldconfig -p | fgrep librtr
   
-    - name: Debug
-      run: |
-        exit 1
-
     - name: Install Terraform
       uses: marocchino/setup-terraform@v1
       with:
@@ -63,11 +59,13 @@ jobs:
 
     - name: Install Terraform plugins
       run: |
+        set -x
         mkdir -p $HOME/.terraform.d/plugins/
         cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
 
     - name: Print application versions
       run: |
+        set -x
         docker --version
         docker-compose --version
         python3 --version
@@ -90,6 +88,7 @@ jobs:
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       timeout-minutes: 30
       run: |
+        set -x
         terraform init
         terraform apply -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
@@ -100,7 +99,9 @@ jobs:
 
     - name: Run tests
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
+      run: |
+        set -x
+        terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
@@ -111,6 +112,7 @@ jobs:
       if: failure()
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       run: |
+        set -x
         terraform output docker_env_vars
         eval $(terraform output docker_env_vars)
         pushd ../lib/docker
@@ -123,7 +125,9 @@ jobs:
     - name: Undeploy
       if: always()
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
+      run: |
+        set -x
+        terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
