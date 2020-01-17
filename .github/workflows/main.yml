@@ -43,7 +43,7 @@ jobs:
         cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
 
     - name: Decrypt SSH key
-      working-directory: ../rpki-deploy/terraform/krill-e2e-test
+      working-directory: ./rpki-deploy/terraform/krill-e2e-test
       run: |
         mkdir $HOME/secrets/
         echo "$SSH_KEY" > $HOME/secrets/ssh_key
@@ -55,7 +55,7 @@ jobs:
     # Don't lock the state file, otherwise if the user cancels the build via the
     # GitHub Actions UI the terraform destroy cleanup step will fail.
     - name: Deploy
-      working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
+      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       timeout-minutes: 30
       run: |
         terraform init
@@ -67,7 +67,7 @@ jobs:
         TF_VAR_run_tests: false
 
     - name: Run tests
-      working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
+      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       run: terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
@@ -77,7 +77,7 @@ jobs:
 
     - name: Dump diagnostics on failure
       if: failure()
-      working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
+      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       run: |
         terraform output docker_env_vars
         eval $(terraform output docker_env_vars)
@@ -90,7 +90,7 @@ jobs:
 
     - name: Undeploy
       if: always()
-      working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
+      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       run: terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
