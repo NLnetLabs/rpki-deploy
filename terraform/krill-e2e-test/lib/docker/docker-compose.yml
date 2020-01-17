@@ -46,6 +46,7 @@ services:
       - rsync_data:/share
     depends_on:
       - krill
+      - relyingpartybase
 
   rsyncd:
     build:
