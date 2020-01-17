@@ -14,15 +14,12 @@ jobs:
     steps:
     - name: checkout the E2E test framework on the pushed branch
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
 
     - name: checkout Krill
       uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
         ref: master
-        fetch-depth: 1
 
     # Use a modified Dockerfile which builds off a partially built base image
     # to leverage an existing Cargo cache and thus speed up deployment.
