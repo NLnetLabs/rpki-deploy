@@ -50,6 +50,12 @@ jobs:
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
 
+    - name: print application versions
+      run: |
+        docker --version
+        docker-compose --version
+        terraform --version
+
     # Don't lock the state file, otherwise if the user cancels the build via the
     # GitHub Actions UI the terraform destroy cleanup step will fail.
     # Disable parallelism in Terraform to make logs more readable.
