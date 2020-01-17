@@ -14,12 +14,15 @@ jobs:
     steps:
     - name: checkout the E2E test framework on the pushed branch
       uses: actions/checkout@v2
+      with:
+        path: rpki-deploy
 
     - name: checkout Krill
       uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
         ref: master
+        path: krill
 
     # Use a modified Dockerfile which builds off a partially built base image
     # to leverage an existing Cargo cache and thus speed up deployment.
@@ -27,7 +30,7 @@ jobs:
       run: |
         echo ${GITHUB_WORKSPACE}
         ls -la
-        cp ${GITHUB_WORKSPACE}/../rpki-deploy/terraform/krill-e2e-test/lib/docker/krill/Dockerfile ${GITHUB_WORKSPACE}/../krill/Dockerfile
+        cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/krill-e2e-test/lib/docker/krill/Dockerfile ${GITHUB_WORKSPACE}/krill/Dockerfile
 
     - name: Install Terraform
       uses: marocchino/setup-terraform@v1
@@ -37,7 +40,7 @@ jobs:
     - name: Install Terraform plugins
       run: |
         mkdir -p $HOME/.terraform.d/plugins/
-        cp ${GITHUB_WORKSPACE}/../rpki-deploy/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
+        cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
 
     - name: Decrypt SSH key
       working-directory: ../rpki-deploy/terraform/krill-e2e-test
@@ -56,7 +59,7 @@ jobs:
       timeout-minutes: 30
       run: |
         terraform init
-        terraform apply -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/../krill"
+        terraform apply -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
@@ -65,7 +68,7 @@ jobs:
 
     - name: Run tests
       working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/../krill"
+      run: terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
@@ -88,7 +91,7 @@ jobs:
     - name: Undeploy
       if: always()
       working-directory: ../rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/../krill"
+      run: terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.
