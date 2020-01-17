@@ -89,7 +89,7 @@ resource "null_resource" "setup_docker" {
     command     = <<-EOT
         set -eu
         docker-compose pull --ignore-pull-failures
-        docker-compose build --parallel ${var.docker_is_local ? "" : "--compress"}
+        docker-compose build ${var.docker_is_local ? "" : "--compress"}
     EOT
   }
 
