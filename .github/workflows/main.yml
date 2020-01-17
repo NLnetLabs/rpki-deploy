@@ -50,6 +50,10 @@ jobs:
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
 
+    - name: Install Python 3 venv package
+      run: |
+        apt-get install -y python3-venv
+
     - name: Print application versions
       run: |
         docker --version
