@@ -12,13 +12,13 @@ jobs:
     name: deploy_and_test
     runs-on: ubuntu-18.04
     steps:
-    - name: checkout the E2E test framework
-      uses: actions/checkout@v1
+    - name: checkout the E2E test framework on the pushed branch
+      uses: actions/checkout@v2
       with:
         fetch-depth: 1
 
     - name: checkout Krill
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
         ref: master
