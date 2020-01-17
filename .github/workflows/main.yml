@@ -60,6 +60,15 @@ jobs:
         docker-compose --version
         terraform --version
 
+    - name: Install rtrlib with NDEBUG
+      working-directory: ../
+      run: |
+        git clone --depth=1 --branch=0.7.0 https://github.com/rtrlib/rtrlib.git
+        cd rtrlib
+        cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No
+        make
+        sudo make install
+
     # Don't lock the state file, otherwise if the user cancels the build via the
     # GitHub Actions UI the terraform destroy cleanup step will fail.
     # Disable parallelism in Terraform to make logs more readable.
