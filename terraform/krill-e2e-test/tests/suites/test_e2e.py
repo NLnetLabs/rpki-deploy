@@ -16,7 +16,7 @@ from tests.data.data import *
 
 import tests.util.rpkivalidator3
 from tests.util import krill
-from tests.util.docker import class_service_manager, function_service_manager
+from tests.util.docker import class_service_manager, function_service_manager, run_command
 from tests.util.krill import krill_api_config, krill_fqdn
 from tests.util.rtr import rtr_fetch_one, roa_to_roa_string
 
@@ -199,6 +199,17 @@ def krill_with_roas(docker_project, krill_api_config, class_service_manager):
     yield krill_api_client
 
 
+class ServiceDetails:
+    def __init__(self, service_name, details):
+        self.service_name = service_name
+        self.details = details
+
+    @staticmethod
+    def id_generator(val):
+        if isinstance(val, ServiceDetails):
+            return val.service_name
+
+
 @pytest.mark.usefixtures("krill_with_roas")
 class TestKrillWithRelyingParties:
     def test_setup(self):
@@ -207,26 +218,35 @@ class TestKrillWithRelyingParties:
         # includes the work and output of creating the fixtures.
         pass
 
-    @pytest.mark.parametrize("service,port,rtr_sync_timeout", [
-        ("routinator", 3323, 20),
-        ("fortvalidator", 323, 20),
-        ("octorpki", 8083, 30),
-        ("rcynic", 8084, 30),
-        ("rpkiclient", 8085, 30),
-        ("rpkivalidator3", 8323, 240),
-    ])
-    def test_rtr(self, request, krill_fqdn, docker_project, function_service_manager, service, port, rtr_sync_timeout):
-        function_service_manager.start_services_with_dependencies(docker_project, service)
+    @pytest.mark.parametrize("service", [
+        ServiceDetails("routinator", (3323, 20, "routinator --version")),
+        ServiceDetails("fortvalidator", (323, 20, "fort --version")),
+        ServiceDetails("octorpki", (8083, 30, "/octorpki -version")),
+        ServiceDetails("rcynic", (8084, 30, "echo 'Believed to be buildbot-1.0.1544679302'")),
+        ServiceDetails("rpkiclient", (8085, 30, "cat /opt/version.txt")),
+        ServiceDetails("rpkivalidator3", (8323, 240, "cat /opt/version.txt")),
+    ], ids=ServiceDetails.id_generator)
+    def test_rtr(self, request, krill_fqdn, docker_project, function_service_manager, service, metadata):
+        (rtr_port, timeout, version_cmd) = service.details
+
+        function_service_manager.start_services_with_dependencies(docker_project, service.service_name)
+
+        if version_cmd:
+            logging.info(f"Running command '{version_cmd}'' in container for service {service.service_name}..")
+            (exit_code, output) = run_command(docker_project, service.service_name, version_cmd)
+            output = output.decode('utf-8').strip()
+            logging.info(f"Command exit code={exit_code}, output={output}")
+            metadata[f"{service.service_name} version"] = output
 
         try:
             rtr_start_time = int(time())
-            logging.info(f'Connecting RTR client to {krill_fqdn}:{port}')
-            received_roas = set(rtr_fetch_one(krill_fqdn, port, rtr_sync_timeout))
+            logging.info(f'Connecting RTR client to {krill_fqdn}:{rtr_port}')
+            received_roas = set(rtr_fetch_one(krill_fqdn, rtr_port, timeout))
             rtr_elapsed_time = int(time()) - rtr_start_time
 
             # r is now a list of PFXRecord
             # see: https://python-rtrlib.readthedocs.io/en/latest/api.html#rtrlib.records.PFXRecord
-            logging.info(f'Received {len(received_roas)} ROAs via RTR from {service} in {rtr_elapsed_time} seconds')
+            logging.info(f'Received {len(received_roas)} ROAs via RTR from {service.service_name} in {rtr_elapsed_time} seconds')
 
             # are each of the TEST_ROAS items in r?
             # i.e. is the intersection of the two sets equal to that of the TEST_ROAS set?
@@ -235,12 +255,12 @@ class TestKrillWithRelyingParties:
             expected_roas = set([roa_to_roa_string(r) for r in TEST_ROAS])
             assert received_roas == expected_roas
         except rtrlib.exceptions.SyncTimeout as e:
-            logging.error(f'Timeout (>{rtr_sync_timeout} seconds) while syncing RTR with {service} at {krill_fqdn}:{port}')
-            if service == 'rpkivalidator3':
+            logging.error(f'Timeout (>{timeout} seconds) while syncing RTR with {service.service_name} at {krill_fqdn}:{rtr_port}')
+            if service.service_name == 'rpkivalidator3':
                 try:
                     if not tests.util.rpkivalidator3.did_trust_anchor_validation_run_complete(krill_fqdn, 8080, 1):
-                        logging.error(f'{service} initial certificate tree validation run did not yet complete')
+                        logging.error(f'{service.service_name} initial certificate tree validation run did not yet complete')
                 except Exception as innerE:
-                    logging.error(f'Unable to interrogate {service} initial certificate tree validation run status: {innerE}')
+                    logging.error(f'Unable to interrogate {service.service_name} initial certificate tree validation run status: {innerE}')
 
             raise e

@@ -22,6 +22,13 @@ def get_container_logs(docker_project, service_name, prefix=True,
     return log_lines
 
 
+def run_command(docker_project, service_name, cmd):
+    exec_id = docker_project.client.exec_create(service_name, cmd)['Id']
+    output = docker_project.client.exec_start(exec_id)
+    exit_code = docker_project.client.exec_inspect(exec_id).get("ExitCode")
+    return (exit_code, output)
+
+
 class ServiceManager:
     def __init__(self, request):
         self.start_time = int(time())
