@@ -24,7 +24,7 @@ jobs:
     - name: Deploy
       uses: docker://ximoneighteen/run-tests-action:latest
       with:
-        ssh_key_path: ${GITHUB_WORKSPACE}/ssh_key
+        ssh_key_path: ssh_key
         do_token: ${{ secrets.DO_TOKEN }}
         mode: deploy
 
@@ -45,6 +45,6 @@ jobs:
       if: always()
       uses: docker://ximoneighteen/run-tests-action:latest
       with:
-        ssh_key_path: ${GITHUB_WORKSPACE}/ssh_key
+        ssh_key_path: ssh_key
         do_token: ${{ secrets.DO_TOKEN }}
         mode: undeploy
