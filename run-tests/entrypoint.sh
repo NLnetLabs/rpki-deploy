@@ -11,6 +11,8 @@ MODE="${INPUT_MODE}"
 
 echo "::add-mask::${TF_VAR_do_token}"
 
+cd "${TF_DIR}"
+
 case $MODE in
     deploy)
         export TF_VAR_run_tests="false"
