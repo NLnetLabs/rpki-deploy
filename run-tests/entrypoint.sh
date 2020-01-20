@@ -9,6 +9,9 @@ fi
 export TF_VAR_krill_build_path="${GITHUB_WORKSPACE}/krill"
 export TF_VAR_ssh_key_path="$1"
 export TF_VAR_do_token="$2"
+export TF_VAR_size='s-4vcpu-8gb'
+export TF_VAR_domain='krill.cloud'
+export TF_VAR_tags='["rpki-deploy"]'
 MODE="$3"
 
 echo "::add-mask::${TF_VAR_do_token}"
