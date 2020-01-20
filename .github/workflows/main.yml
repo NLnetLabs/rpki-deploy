@@ -14,8 +14,13 @@ jobs:
         ref: master
         path: krill
 
+    - name: Debug
+      run: |
+        set -x
+        echo ${GITHUB_WORKSPACE}
+        ls -la ${GITHUB_WORKSPACE}
+
     - name: Decrypt SSH key
-      working-directory: ./rpki-deploy/terraform/krill-e2e-test
       run: |
         echo "$SSH_KEY" > ${GITHUB_WORKSPACE}/ssh_key
         chmod 400 ${GITHUB_WORKSPACE}/ssh_key
