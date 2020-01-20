@@ -4,19 +4,9 @@ on: push
 
 jobs:
   krill_e2e_test_test:
-    env:
-      TF_VAR_size: 's-4vcpu-8gb'
-      TF_VAR_domain: 'krill.cloud'
-      TF_VAR_tags: '["rpki-deploy"]'
-
     name: deploy_and_test
     runs-on: ubuntu-18.04
     steps:
-    - name: Checkout E2E test framework (pushed branch)
-      uses: actions/checkout@v2
-      with:
-        path: rpki-deploy
-
     - name: Checkout Krill (master branch)
       uses: actions/checkout@v2
       with:
@@ -24,107 +14,40 @@ jobs:
         ref: master
         path: krill
 
-    - name: Checkout RTRLIB (v0.7.0 tag)
-      uses: actions/checkout@v2
-      with:
-        repository: rtrlib/rtrlib
-        ref: v0.7.0
-        path: rtrlib
-
-    - name: Install Python 3 venv package
-      run: |
-        set -x
-        sudo apt-get install -y python3-venv
-
-    - name: Install RTRLIB with NDEBUG
-      working-directory: ./rtrlib
-      run: |
-        set -x
-        cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No .
-        make
-        sudo make install
-        sudo ldconfig
-  
-    - name: Install Terraform
-      uses: marocchino/setup-terraform@v1
-      with:
-        version: "0.12.19"
-
-    - name: Install Terraform plugins
-      run: |
-        set -x
-        mkdir -p $HOME/.terraform.d/plugins/
-        cp ${GITHUB_WORKSPACE}/rpki-deploy/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
-
-    - name: Print application versions
-      run: |
-        set -x
-        docker --version
-        docker-compose --version
-        python3 --version
-        terraform --version
-
     - name: Decrypt SSH key
       working-directory: ./rpki-deploy/terraform/krill-e2e-test
       run: |
-        mkdir $HOME/secrets/
-        echo "$SSH_KEY" > $HOME/secrets/ssh_key
-        head -n 2 $HOME/secrets/ssh_key
-        chmod 400 $HOME/secrets/ssh_key
+        mkdir ${GITHUB_WORKSPACE}/secrets/
+        echo "$SSH_KEY" > ${GITHUB_WORKSPACE}/secrets/ssh_key
+        head -n 2 ${GITHUB_WORKSPACE}/secrets/ssh_key
+        chmod 400 ${GITHUB_WORKSPACE}/secrets/ssh_key
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
 
-    # Don't lock the state file, otherwise if the user cancels the build via the
-    # GitHub Actions UI the terraform destroy cleanup step will fail.
-    # Disable parallelism in Terraform to make logs more readable.
     - name: Deploy
-      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      timeout-minutes: 30
-      run: |
-        set -x
-        terraform init
-        terraform apply -lock=false -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
-      env:
-        # Don't embed env var references in env var definitions here, instead
-        # pass those using -var on the command line.
-        TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
-        TF_VAR_run_tests: false
+      uses: nlnetlabs/rpki-deploy/run-tests@master
+      with:
+        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        do-token: ${{ secrets.DO_TOKEN }}
+        mode: deploy
 
     - name: Run tests
-      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: |
-        set -x
-        terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
-      env:
-        # Don't embed env var references in env var definitions here, instead
-        # pass those using -var on the command line.
-        TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
-        TF_VAR_run_tests: true
+      uses: nlnetlabs/rpki-deploy/run-tests@master
+      with:
+        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        do-token: ${{ secrets.DO_TOKEN }}
+        mode: run-tests
 
     - name: Upload HTML test report
       uses: actions/upload-artifact@v1
       with:
         name: test-report
-        path: /tmp/report.html
-
-    - name: Dump diagnostics on failure
-      if: failure()
-      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: |
-        set -x
-        terraform output docker_env_vars
-        eval $(terraform output docker_env_vars)
-        pushd ../lib/docker
-        docker system info
-        docker system events --since 60m --until 1s
+        path: ${GITHUB_WORKSPACE}/report.html
 
     - name: Undeploy
       if: always()
-      working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
-      run: |
-        set -x
-        terraform destroy -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
-      env:
-        # Don't embed env var references in env var definitions here, instead
-        # pass those using -var on the command line.
-        TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+      uses: nlnetlabs/rpki-deploy/run-tests@master
+      with:
+        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        do-token: ${{ secrets.DO_TOKEN }}
+        mode: undeploy
