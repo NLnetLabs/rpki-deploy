@@ -7,6 +7,7 @@ RUN apt-get update && \
         cmake \
         curl \
         git \
+        python3-venv \
         software-properties-common \
         unzip
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
@@ -25,10 +26,21 @@ RUN curl -fsSLo- 'https://github.com/rtrlib/rtrlib/archive/v0.7.0.tar.gz' | tar 
 WORKDIR /tmp/build/terraform
 RUN curl -fsSLo terraform.zip 'https://releases.hashicorp.com/terraform/0.12.19/terraform_0.12.19_linux_amd64.zip' && \
     unzip terraform.zip && \
-    mv terraform /opt/
-WORKDIR $HOME/.terraform.d/plugins/
-ADD https://github.com/NLnetLabs/rpki-deploy/raw/master/terraform/plugins/terraform-provider-dockermachine ./
+    cp terraform /opt/
+RUN git clone --depth 1 --branch master https://github.com/nlnetlabs/rpki-deploy/ /opt/run-tests/
+RUN mkdir -p $HOME/.terraform.d/plugins/ && \
+    mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
+RUN rm -Rf /tmp/build
+RUN apt-get purge -y \
+        apt-transport-https \
+        build-essential \
+        ca-certificates \
+        cmake \
+        curl \
+        git \
+        software-properties-common \
+        unzip && \
+    apt-get autoremove -y
 WORKDIR /opt/run-tests
-RUN git clone --depth 1 --branch master https://github.com/nlnetlabs/rpki-deploy/
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
