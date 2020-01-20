@@ -34,7 +34,6 @@ RUN rm -Rf /tmp/build
 RUN apt-get purge -y \
         apt-transport-https \
         build-essential \
-        ca-certificates \
         cmake \
         curl \
         git \
