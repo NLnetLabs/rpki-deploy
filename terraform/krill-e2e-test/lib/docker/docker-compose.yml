@@ -124,9 +124,7 @@ services:
       - relyingpartybase
 
   rpkivalidator3:
-    build:
-      context: relyingparties/rpkivalidator3
-      network: host
+    image: ximoneighteen/rpkivalidator3:latest
     container_name: rpkivalidator3
     dns: 8.8.8.8
     networks:
