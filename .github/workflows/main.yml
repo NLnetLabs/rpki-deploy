@@ -14,12 +14,6 @@ jobs:
         ref: master
         path: krill
 
-    - name: Debug
-      run: |
-        set -x
-        echo ${GITHUB_WORKSPACE}
-        ls -la ${GITHUB_WORKSPACE}
-
     - name: Decrypt SSH key
       run: |
         echo "$SSH_KEY" > ${GITHUB_WORKSPACE}/ssh_key
