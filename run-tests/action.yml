@@ -2,10 +2,10 @@
 name: 'Run Tests'
 description: 'Run NLnet Labs Krill E2E tests'
 inputs:
-  ssh-key-path:
+  ssh_key_path:
     description: 'Path to a SSH private key file'
     required: true
-  do-token:
+  do_token:
     description: 'Your Digital Ocean API token'
     required: true
   mode:
