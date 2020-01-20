@@ -1,11 +1,6 @@
 #!/bin/bash
 set -euxo pipefail
 
-if [ $# -lt 3 ]; then
-    echo "::error::Insufficient inputs."
-    exit 1
-fi
-
 export TF_VAR_krill_build_path="${GITHUB_WORKSPACE}/krill"
 export TF_VAR_ssh_key_path="${INPUT_SSH-KEY-PATH}"
 export TF_VAR_do_token="${INPUT_DO-TOKEN}"
