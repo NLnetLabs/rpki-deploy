@@ -5,7 +5,7 @@ TF_STATE_PATH=${GITHUB_WORKSPACE}/tf.state
 REPORT_PATH=/tmp/report.html
 
 export TF_VAR_krill_build_path="${GITHUB_WORKSPACE}/krill"
-export TF_VAR_ssh_key_path="${INPUT_SSH-KEY-PATH}"
+export TF_VAR_ssh_key_path="${GITHUB_WORKSPACE}/${INPUT_SSH-KEY-PATH}"
 export TF_VAR_do_token="${INPUT_DO-TOKEN}"
 export TF_VAR_size='s-4vcpu-8gb'
 export TF_VAR_domain='krill.cloud'

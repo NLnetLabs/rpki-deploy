@@ -31,7 +31,7 @@ jobs:
     - name: Run tests
       uses: docker://ximoneighteen/run-tests-action:latest
       with:
-        ssh-key-path: ${GITHUB_WORKSPACE}/ssh_key
+        ssh-key-path: ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
         mode: run-tests
 
