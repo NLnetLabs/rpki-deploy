@@ -25,7 +25,7 @@ jobs:
         SSH_KEY: ${{ secrets.SSH_KEY }}
 
     - name: Deploy
-      uses: nlnetlabs/rpki-deploy/run-tests@master
+      uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
         ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
