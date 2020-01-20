@@ -17,24 +17,22 @@ jobs:
     - name: Decrypt SSH key
       working-directory: ./rpki-deploy/terraform/krill-e2e-test
       run: |
-        mkdir ${GITHUB_WORKSPACE}/secrets/
-        echo "$SSH_KEY" > ${GITHUB_WORKSPACE}/secrets/ssh_key
-        head -n 2 ${GITHUB_WORKSPACE}/secrets/ssh_key
-        chmod 400 ${GITHUB_WORKSPACE}/secrets/ssh_key
+        echo "$SSH_KEY" > ${GITHUB_WORKSPACE}/ssh_key
+        chmod 400 ${GITHUB_WORKSPACE}/ssh_key
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
 
     - name: Deploy
       uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
-        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        ssh-key-path: ${GITHUB_WORKSPACE}/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
         mode: deploy
 
     - name: Run tests
       uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
-        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        ssh-key-path: ${GITHUB_WORKSPACE}/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
         mode: run-tests
 
@@ -48,6 +46,6 @@ jobs:
       if: always()
       uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
-        ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
+        ssh-key-path: ${GITHUB_WORKSPACE}/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
         mode: undeploy
