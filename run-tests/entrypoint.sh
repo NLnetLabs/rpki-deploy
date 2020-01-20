@@ -16,7 +16,9 @@ MODE="$3"
 
 echo "::add-mask::${TF_VAR_do_token}"
 
-case $MODE)
+cd /opt/run-tests
+
+case $MODE in
     deploy)
         export TF_VAR_run_tests="false"
         terraform init

@@ -4,6 +4,7 @@ RUN apt-get update && \
         apt-transport-https \
         ca-certificates \
         curl \
+        git \
         software-properties-common \
         unzip
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && \
@@ -25,5 +26,7 @@ RUN curl -fsSLo terraform.zip 'https://releases.hashicorp.com/terraform/0.12.19/
     mv terraform /opt/
 WORKDIR $HOME/.terraform.d/plugins/
 ADD https://github.com/nlnetlabs/rpki-deploy/master/terraform/plugins/terraform-provider-dockermachine ./
+WORKDIR /opt/run-tests
+RUN git clone --depth 1 --branch master https://github.com/nlnetlabs/rpki-deploy/
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
