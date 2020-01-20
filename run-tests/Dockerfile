@@ -28,8 +28,6 @@ RUN curl -fsSLo terraform.zip 'https://releases.hashicorp.com/terraform/0.12.19/
     unzip terraform.zip && \
     cp terraform /opt/
 RUN git clone --depth 1 --branch master https://github.com/nlnetlabs/rpki-deploy/ /opt/run-tests/
-RUN mkdir -p $HOME/.terraform.d/plugins/ && \
-    mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
 RUN rm -Rf /tmp/build
 RUN apt-get purge -y \
         apt-transport-https \
