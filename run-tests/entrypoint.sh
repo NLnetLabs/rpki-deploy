@@ -11,7 +11,7 @@ MODE="${INPUT_MODE}"
 
 echo "::add-mask::${TF_VAR_do_token}"
 
-cd /opt/run-tests
+cd /opt/run-tests/terraform/krill-e2e-test/run_on_do
 
 case $MODE in
     deploy)
