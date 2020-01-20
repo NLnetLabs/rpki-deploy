@@ -32,14 +32,14 @@ jobs:
         mode: deploy
 
     - name: Run tests
-      uses: nlnetlabs/rpki-deploy/run-tests@master
+      uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
         ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
         mode: run-tests
 
     - name: Upload HTML test report
-      uses: actions/upload-artifact@v1
+      uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
         name: test-report
         path: ${GITHUB_WORKSPACE}/report.html
