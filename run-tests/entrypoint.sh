@@ -23,7 +23,6 @@ case ${INPUT_MODE} in
         ;&
 
     deploy)
-        terraform init
         terraform apply -state ${TF_STATE_PATH} -lock=false -auto-approve
         [ -f ${REPORT_PATH} ] && mv ${REPORT_PATH} ${GITHUB_WORKSPACE}/
         ;;

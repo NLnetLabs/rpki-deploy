@@ -43,4 +43,6 @@ RUN apt-get purge -y \
 COPY entrypoint.sh /entrypoint.sh
 ENV PATH /opt:$PATH
 ENV TF_DIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
+WORKDIR $TF_DIR
+RUN terraform init -lock=false
 ENTRYPOINT ["/entrypoint.sh"]
