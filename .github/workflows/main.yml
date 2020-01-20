@@ -39,14 +39,14 @@ jobs:
         mode: run-tests
 
     - name: Upload HTML test report
-      uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
+      uses: actions/upload-artifact@v1
       with:
         name: test-report
         path: ${GITHUB_WORKSPACE}/report.html
 
     - name: Undeploy
       if: always()
-      uses: nlnetlabs/rpki-deploy/run-tests@master
+      uses: nlnetlabs/rpki-deploy/run-tests@gh-docker-action
       with:
         ssh-key-path: ${GITHUB_WORKSPACE}/secrets/ssh_key
         do-token: ${{ secrets.DO_TOKEN }}
