@@ -52,20 +52,14 @@ variable "tags" {
 
 variable "krill_auth_token" {
   type        = string
-  default     = "None"
+  default     = "61d81ea4-8a89-42c1-bb23-3e7eb79eaa60"
   description = "The authentication token Krill should restrict access to. Default: Random."
 }
 
 variable "krill_log_level" {
   type        = string
-  default     = "info"
+  default     = "debug"
   description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: info."
-}
-
-variable "use_staging_cert" {
-  type        = bool
-  default     = false
-  description = "Whether or not the HTTPS Lets Encrypt certificate is requested to be staging or production. If false, Routinator will refuse to fetch the Krill TAL file. Default: true (staging)."
 }
 
 variable "krill_build_path" {
@@ -76,8 +70,8 @@ variable "krill_build_path" {
 
 variable "krill_version" {
   type        = string
-  default     = "v0.4.1"
-  description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.4.1. Ignored if krill_build_path is set."
+  default     = "v0.4.2"
+  description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.4.2. Ignored if krill_build_path is set."
 }
 
 variable "docker_compose_dir" {

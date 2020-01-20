@@ -1,0 +1,7 @@
+ansi2html
+docker-compose
+pytest
+pytest-html
+pytest-progress
+requests
+retrying

@@ -14,10 +14,9 @@ output "docker_env_vars" {
     export DOCKER_HOST="${module.docker_deploy.docker_url}"
     export DOCKER_CERT_PATH="${module.docker_deploy.cert_path}"
     export KRILL_VERSION="${module.docker_deploy.krill_version}"
-    export KRILL_STAGING_CERT="${var.use_staging_cert}"
     export KRILL_AUTH_TOKEN="${var.krill_auth_token}"
     export KRILL_LOG_LEVEL="${var.krill_log_level}"
-    export KRILL_FQDN="${join(".", [var.hostname, var.domain])}"
+    export KRILL_FQDN="${module.pre.fqdn}"
     export KRILL_USE_TA="${var.krill_use_ta}"
     export SRC_TAL="${replace(var.src_tal, "<KRILL_FQDN>", join(".", [var.hostname, var.domain]))}"
     EOF

@@ -1,6 +1,9 @@
-FROM linuxserver/letsencrypt:0.40.1-ls75
-COPY default /config/nginx/site-confs/
-COPY krill.subdomain.conf /config/nginx/proxy-confs/
-
+FROM nginx
+COPY krill.conf /etc/nginx/conf.d/default.conf
+WORKDIR /etc/ssl/certs
+COPY certbundle.pem .
+WORKDIR /etc/ssl/keys
+COPY krill.key .
+WORKDIR /root
 EXPOSE 80/tcp
 EXPOSE 443/tcp

@@ -10,18 +10,12 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Amsterdam
-      - VALIDATION=http
       - URL=$KRILL_FQDN  # the FQDN of the DNS record of the host (used by Lets Encrypt)
-      - STAGING=$KRILL_STAGING_CERT # true if the LetsEncrypt cert should be for testing
-      - DHLEVEL=1024 # speed up deployment, perhaps use an alternate NGINX container to avoid this delay?
     ports:
       - "443:443"
       - "80:80"
-    volumes:
-      - krill_letsencrypt_certs:/config/etc/letsencrypt
+    networks:
+      - krill-net
     restart: unless-stopped
     depends_on:
       - krill
@@ -30,21 +24,29 @@ services:
     image: nlnetlabs/krill:$KRILL_VERSION
     container_name: krill
     environment:
-      # Comment out the next line if using your own krill.conf file.
-      # Also see the comment in the 'volumes' section below.
-      - KRILL_LOG_LEVEL=debug
-      - KRILL_USE_TA
       - KRILL_AUTH_TOKEN
-      - KRILL_FQDN
-      - KRILL_REPO_ENABLED=true
     volumes:
-      - krill_data:/var/kill/data
       - rsync_data:/var/krill/data/repo/rsync/
-      - /tmp/ka:/tmp/ka
-      # Uncomment the next line to use your own krill.conf file.
-      # Remember to replace /local/path/to/your/ with the correct path.
-      # - /local/path/to/your/krill.conf:/var/krill/data/krill.conf
+      - krill_configs:/krill_configs/
+    networks:
+      - krill-net
     restart: unless-stopped
+  
+  tal_hack:
+    build:
+      context: tal_hack
+      network: host
+    container_name: tal_hack
+    networks:
+      - krill-net
+    environment:
+      - KRILL_FQDN
+      - SRC_TAL
+    volumes:
+      - rsync_data:/share
+    depends_on:
+      - krill
+      - relyingpartybase
 
   rsyncd:
     build:
@@ -53,6 +55,8 @@ services:
     container_name: rsyncd
     ports:
       - "873:873"
+    networks:
+      - krill-net
     volumes:
       - rsync_data:/share:ro
     restart: unless-stopped
@@ -63,6 +67,8 @@ services:
       network: host
     container_name: routinator
     dns: 8.8.8.8
+    networks:
+      - krill-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
@@ -79,12 +85,26 @@ services:
       network: host
     container_name: octorpki
     dns: 8.8.8.8
+    networks:
+      - krill-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-octorpki
+
+  gortr-octorpki:
+    image: cloudflare/gortr
+    container_name: gortr-octorpki
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8083:8083"
+    command: ["-bind", ":8083", "-cache", "http://octorpki:8080/output.json", "-refresh", "5", "-verify=false"]
+    restart: on-failure
 
   fortvalidator:
     build:
@@ -92,6 +112,10 @@ services:
       network: host
     container_name: fortvalidator
     dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "323:323"
     environment:
       - KRILL_FQDN
       - SRC_TAL
@@ -105,11 +129,14 @@ services:
       network: host
     container_name: rpkivalidator3
     dns: 8.8.8.8
+    networks:
+      - krill-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
     ports:
       - "8080:8080"
+      - "8323:8323"
     restart: on-failure
     depends_on:
       - relyingpartybase
@@ -121,6 +148,8 @@ services:
       network: host
     container_name: rcynic
     dns: 8.8.8.8
+    networks:
+      - krill-net
     environment:
       - KRILL_FQDN
       - KRILL_USE_TA
@@ -128,6 +157,18 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-rcynic
+
+  gortr-rcynic:
+    image: cloudflare/gortr
+    container_name: gortr-rcynic
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8084:8084"
+    command: ["-bind", ":8084", "-cache", "http://rcynic/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
+    restart: on-failure
 
   rpkiclient:
     build:
@@ -135,12 +176,26 @@ services:
       network: host
     container_name: rpkiclient
     dns: 8.8.8.8
+    networks:
+      - krill-net
     environment:
       - KRILL_FQDN
       - SRC_TAL
     restart: on-failure
     depends_on:
       - relyingpartybase
+      - gortr-rpkiclient
+
+  gortr-rpkiclient:
+    image: cloudflare/gortr
+    container_name: gortr-rpkiclient
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    ports:
+      - "8085:8085"
+    command: ["-bind", ":8085", "-cache", "http://rpkiclient/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
+    restart: on-failure
 
   relyingpartybase:
     image: relyingpartybase
@@ -150,26 +205,11 @@ services:
     container_name: relyingpartybase
 
 volumes:
-  krill_data:
-
-  # Volume for storing Lets Encrypt certificate details.
-  # Before you can use this compose file for the first time you will need to
-  # create this volume using the command:
-  #
-  #   docker volume create krill_letsencrypt_certs
-  #
-  # Why? If you destroy and recreate the nginx container the cert data is
-  # preserved. Without this the certificate will be re-requested from Lets
-  # Encrypt every time the container runs and you risk Lets Encrypt blocking
-  # you for a _week_! The limits are low enough that if you are iterating on
-  # the Docker setup and forget to use Lets Encrypt staging mode (which has
-  # higher rate limits) you can easily hit the limits and get blocked. Thus
-  # it's a good idea to use an externally managed volume to store this data.
-  #
-  # See: https://letsencrypt.org/docs/rate-limits/
-  krill_letsencrypt_certs:
-    external: true
-  
   rsync_data:
 
-  tals:
+  krill_configs:
+    external: true
+
+networks:
+  krill-net:
+    name: krill.test

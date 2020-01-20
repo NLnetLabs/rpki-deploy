@@ -12,7 +12,7 @@ DEF_OKAY_STR="${COLOUR_GREEN}OKAY${COLOUR_DEFAULT}"
 
 # Usage: <LOG MESSAGE>...
 my_log() {
-    OPTS="${BANNER:-}"
+    OPTS="${BANNER:-}: "
     [[ $# -ge 2 && "$1" == "--no-eol" ]] && OPTS="-n $OPTS" && shift 1
     [[ $# -ge 2 && "$1" == "--cont" ]] && OPTS="" && shift 1
     echo -e ${OPTS} "$@" >&2
@@ -85,11 +85,17 @@ my_retry() {
     done
 }
 
-# Usage: [--no-rewrite] <TAL URL> <INSTALL PATH>
+# Usage: <TAL URL> <INSTALL PATH>
+# See also:
+#   - docker-compose.yml
+#   - krill.conf
+#   - rsyncd.conf
+#   - tal_hack.sh
 install_tal_from_remote() {
-    REWRITE=1; [ "$1" == "--no-rewrite" ] && REWRITE=0 && shift
     TAL_URL="$1"
     INSTALL_PATH="$2"
+    REWRITE="--no-rewrite"
+    [ $# -eq 3 ] && REWRITE="$3"
 
     # Usage: <URL>
     # Outputs the TAL to stdout
@@ -97,34 +103,33 @@ install_tal_from_remote() {
         wget --no-check-certificate -qO- $@
     }
 
-    # Usage: <REWRITE=0|1>
+    # Usage:
     #   stdin  - TAL content to rewrite
     #   stdout - rewritten TAL content
-    # When REWRITE is 1 the http(s):// URI will be rewritten to rsync://
+    # Where rsync://rsyncd/repo/ta/ta.cer will replace http(s)://... in the TAL
     rewrite_https_tal_to_rsync() {
-        if [ $1 -eq 1 ]; then
-            sed -e 's|https\?://\([^/]\+\)/\(.\+\)|rsync://\1/repo/\2|'
+        if [[ $# -eq 1 && "$1" == "--rewrite" ]]; then
+            sed -e 's|https\?://.\+.cer|rsync://rsyncd.krill.test/repo/ta/ta.cer|'
         else
             cat
         fi
     }
 
     fetch_and_rewrite() {
-        fetch $1 | rewrite_https_tal_to_rsync ${REWRITE} > $2
+        fetch $1 | rewrite_https_tal_to_rsync $3 > $2
     }
 
     my_log "Installing remote TAL ${TAL_URL} to ${INSTALL_PATH}"
-    my_retry 12 5 fetch_and_rewrite ${TAL_URL} ${INSTALL_PATH}
+    my_retry 12 5 fetch_and_rewrite ${TAL_URL} ${INSTALL_PATH} ${REWRITE}
 }
 
-# Usage: <SRC.TAL> </PATH/TO/DST.TAL> [--no-rewrite]
+# Usage: <SRC.TAL> </PATH/TO/DST.TAL> --rewrite
 # Where: <SRC_TAL> is either a TAL filename or a remote URI
-#        --no-rewrite prevents rewriting of a HTTP(S) URI in the TAL as RSYNC
 install_tal() {
     if [[ "$1" == http* ]]; then
-        NO_REWRITE=
-        [[ $# -eq 3 && "$3" == "--no-rewrite" ]] && NO_REWRITE="$3"
-        install_tal_from_remote $NO_REWRITE $1 $2
+        REWRITE=""
+        [ $# -eq 3 ] && REWRITE=$3
+        install_tal_from_remote $1 $2 $REWRITE
     else
         my_log "Installing local TAL /opt/$1 in $2"
         cp /opt/$1 $2

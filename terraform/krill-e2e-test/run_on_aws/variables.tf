@@ -57,12 +57,6 @@ variable "krill_log_level" {
   default     = "info"
 }
 
-variable "use_staging_cert" {
-  type        = bool
-  description = "Whether or not the HTTPS Lets Encrypt certificate is requested to be staging or production. If false, Routinator will refuse to fetch the Krill TAL file. Default: true (staging)."
-  default     = false
-}
-
 variable "krill_build_path" {
   type        = string
   description = "Path to a Git clone of https://github.com/NLnetLabs/krill.git which will be built on the Droplet. Default: None."
@@ -71,8 +65,8 @@ variable "krill_build_path" {
 
 variable "krill_version" {
   type        = string
-  description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.4.1. Ignored if krill_build_path is set."
-  default     = "v0.4.1"
+  description = "The Docker image version identifier, i.e. nlnetlabs/krill:<version>. Default: v0.4.2. Ignored if krill_build_path is set."
+  default     = "v0.4.2"
 }
 
 variable "docker_compose_dir" {

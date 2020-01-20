@@ -209,29 +209,29 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 ```
 +-DO Droplet------------------------------------------------------------------------+
 | Ubuntu 16.04 LTS                                                                  |
-|                       +-V-------------+   +-V-----+  +-V---------------+          |
-|                       | certificates  |   | krill |  |    rsync data   |          |
-|                       +------|m|------+   +---|m|-+  +-|m|---------|m|-+          |
-|                              |o|              |o|      |o|         |o|            |
-|    +-S:172.18.0.0/16---------|u|--------------|u|------|u|---------|u|-------+    |
-|    |                         |n|              |n|      |n|         |n|       |    |
-|    |    +-C--+ +----+    +-C-|t|---+      +-C-|t|------|t|-+   +-C-|t|--+    |    |
+|                                           +-V-----+  +-V---------------+          |
+|                                           | krill |  |    rsync data   |          |
+|                                           +---|m|-+  +-|m|---------|m|-+          |
+|                                               |o|      |o|         |o|            |
+|    +-S:172.18.0.0/16--------------------------|u|------|u|---------|u|-------+    |
+|    |                                          |n|      |n|         |n|       |    |
+|    |    +-C--+ +-C--+    +-C-------+      +-C-|t|------|t|-+   +-C-|t|--+    |    |
 |    |    | RP | | RP |    |  nginx  |--+   |      krill     |   | rsyncd |    |    |
-|    |    +----+ +----+    +--|---|--+  |   +--------|-------+   +---|----+    |    |
-|    |                        |   |     +----------> O 3000          |         |    |
-|    +------------------------|---|----------------------------------|---------+    |
-+---------+                   |   |                                  |              |
-| dockerd |                   |   |                                  |              |
-+----|------------------------|---|----------------------------------|--------------+
-     |                        |   |                                  |
-2376 O                     80 O   O 443                              O 873
+|    |    +----+ +-|--+    +--|---|--+  |   +--------|-------+   +---|----+    |    |
+|    |             |          |   |     +----------> O 3000          |         |    |
+|    +-------------|----------|---|----------------------------------|---------+    |
++---------+        |          |   |                                  |              |
+| dockerd |        |          |   |                                  |              |
++----|-------------|----------|---|----------------------------------|--------------+
+     |             |          |   |                                  |
+2376 O        NNNN O    80 O   O 443                              O 873
      
-     ^ Docker/TLS        HTTP ^   ^ HTTPS/RRDP                       ^ RSYNC
-     |                        |   |                                  |
-     |                        |   +----------------+-----------------+
-     |                        |                    |
- Terraform               Lets Encrypt         Krill clients
-    CLI                   Challenge          e.g. the RPs
+     ^ Docker/TLS  ^ RTR          ^ HTTPS/RRDP                       ^ RSYNC
+     |             |              |                                  |
+     +-----------+ +              +----------------+-----------------+
+     |           | |                               |
+ Terraform    Python Test                    Krill clients
+    CLI         Suite                        e.g. the RPs
 ```
 
 **Key:**
@@ -266,15 +266,29 @@ This framework requires:
 - The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
+- RTRLib (tested with 0.6.3 and 0.7.0), preferably built with NDEBUG defined to disable noisy log output.
+
+### Prepare (optional)
+
+To install RTRLib with noisy log output disabled:
+
+```bash
+$ git clone --depth=1 https://github.com/rtrlib/rtrlib.git
+$ cd rtrlib
+$ cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No
+$ make
+$ sudo make install
+```
 
 ### Prepare
 
 To run the framework you will need the required tools, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
 
 > _**Note:** `some.domain` should already be managed by Digital Ocean or AWS._
+> _**Note:** The SSH key public half should already be registered with Digital Ocean._
 
 ```bash
-$ ssh-keygen -m PEM -t rsa -f /tmp/demo-ssh-key -N ""
+$ ssh-keygen -m PEM -t rsa -E md5 -f /tmp/demo-ssh-key -N ""
 $ git clone https://github.com/nlnetlabs/rpki-deploy.git
 $ export TF_VAR_ssh_key_path=/tmp/demo-ssh-key
 $ export TF_VAR_hostname=somehostname
@@ -284,6 +298,11 @@ $ export TF_VAR_domain=some.domain
 If you want to change any of the default values in `variables.tf`, e.g. deployment region, droplet size, tags, [read this page](https://learn.hashicorp.com/terraform/getting-started/variables.html) to learn how to override them.
 
 > _**Note:** In the case of Krill @ GitHub the GHA workflow performs a shallow Git clone of this entire repository to obtain a copy of these files and uses a GitHub Secret to decrypt the `ssh_key.gpg` file stored in this directory, and a second GitHub Secret stores the required DO API token. The [Marrocchino Terraform GitHub v2 Action](https://github.com/marocchino/setup-terraform) action is used to install the Terraform CLI. The [official Terraform GitHub v2 Action](https://github.com/hashicorp/terraform-github-actions) is NOT used because it does not support `terraform destroy`._
+
+Possible errors and resolutions:
+- `Error: Unsupported attribute` `public_key_fingerprint_md5`: recreate the SSH key using `-E md5`.
+- `Error: failed to decode PEM block containing private key of type "OPENSSH PRIVATE KEY"`: recreate the SSH key using `-m PEM -t rsa`.
+- `Error: Error creating droplet: POST https://api.digitalocean.com/v2/droplets: 422 xx:xx:...:xx:xx are invalid key identifiers for Droplet creation.`: paste the SSH public key into the Digital Ocean Account -> Security -> SSH keys page.
 
 #### Prepare for Digital Ocean
 
