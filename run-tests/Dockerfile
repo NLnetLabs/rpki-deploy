@@ -41,7 +41,8 @@ RUN apt-get purge -y \
         software-properties-common \
         unzip && \
     apt-get autoremove -y
-WORKDIR /opt/run-tests
+WORKDIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
+RUN /opt/terraform init
 COPY entrypoint.sh /entrypoint.sh
-ENV PATH /opt:$PATH 
+ENV PATH /opt:$PATH
 ENTRYPOINT ["/entrypoint.sh"]

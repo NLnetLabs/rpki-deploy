@@ -11,12 +11,9 @@ MODE="${INPUT_MODE}"
 
 echo "::add-mask::${TF_VAR_do_token}"
 
-cd /opt/run-tests/terraform/krill-e2e-test/run_on_do
-
 case $MODE in
     deploy)
         export TF_VAR_run_tests="false"
-        terraform init
         terraform apply -lock=false -auto-approve
         ;;
 
