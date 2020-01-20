@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 if [ $# -lt 3 ]; then
     echo "::error::Insufficient inputs."
