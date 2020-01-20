@@ -7,7 +7,7 @@ export TF_VAR_do_token="${INPUT_DO-TOKEN}"
 export TF_VAR_size='s-4vcpu-8gb'
 export TF_VAR_domain='krill.cloud'
 export TF_VAR_tags='["rpki-deploy"]'
-MODE="${INPUT_MODE}}"
+MODE="${INPUT_MODE}"
 
 echo "::add-mask::${TF_VAR_do_token}"
 
