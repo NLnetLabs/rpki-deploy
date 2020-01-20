@@ -236,6 +236,9 @@ class TestKrillWithRelyingParties:
             (exit_code, output) = run_command(docker_project, service.service_name, version_cmd)
             output = output.decode('utf-8').strip()
             logging.info(f"Command exit code={exit_code}, output={output}")
+
+            # Add a row to the pytest-html metadata table at the top of the
+            # report showing the version string for this relying party.
             metadata[f"{service.service_name} version"] = output
 
         try:
