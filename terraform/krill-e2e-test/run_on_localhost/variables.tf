@@ -12,7 +12,7 @@ variable "krill_log_level" {
 
 variable "krill_build_path" {
   type        = string
-  default     = "/home/ximon/src/krill/krill-master"
+  default     = ""
   description = "Path to a Git clone of https://github.com/NLnetLabs/krill.git which will be built on the Droplet. Default: None."
 }
 
