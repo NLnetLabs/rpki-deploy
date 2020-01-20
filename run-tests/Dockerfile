@@ -1,0 +1,29 @@
+FROM ubuntu:18.04
+RUN apt-get update && \
+    apt-get install -y \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        software-properties-common \
+        unzip
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && \
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" && \
+    apt-get update && \
+    apt-cache policy docker-ce && \
+    apt-get install -y docker-ce
+RUN curl -L https://github.com/docker/compose/releases/download/1.25.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose
+WORKDIR /tmp/build/rtrlib
+RUN curl -fsSLo- 'https://github.com/rtrlib/rtrlib/archive/v0.7.0.tar.gz' | tar zx --strip-components 1 && \
+    cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No && \
+    make && \
+    make install && \
+    ldconfig
+WORKDIR /tmp/build/terraform
+RUN curl -fsSLo terraform.zip 'https://releases.hashicorp.com/terraform/0.12.19/terraform_0.12.19_linux_amd64.zip' && \
+    unzip terraform.zip && \
+    mv terraform /opt/
+WORKDIR $HOME/.terraform.d/plugins/
+ADD https://github.com/nlnetlabs/rpki-deploy/master/terraform/plugins/terraform-provider-dockermachine ./
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
