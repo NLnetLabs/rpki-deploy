@@ -43,4 +43,5 @@ RUN apt-get purge -y \
     apt-get autoremove -y
 WORKDIR /opt/run-tests
 COPY entrypoint.sh /entrypoint.sh
+ENV PATH /opt:$PATH 
 ENTRYPOINT ["/entrypoint.sh"]
