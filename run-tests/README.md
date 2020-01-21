@@ -4,11 +4,11 @@ This action runs NLnet Labs Krill E2E tests.
 
 ## Inputs
 
-### `ssh-key-path`
+### `ssh_key_path`
 
 **Required** The relative path to the SSH private key file inside $GITHUB_WORKSPACE for accessing the deployed Drpolet.
 
-### `do-token`
+### `do_token`
 
 **Required** A Digital Ocean API token for creating Digital Ocean resources.
 
@@ -24,6 +24,6 @@ None.
 
 uses: nlnetlabs/rpki-deploy/run-tests@master
 with:
-  ssh-key-path: my_ssh_key
-  do-token: e54ea...fc55
+  ssh_key_path: my_ssh_key
+  do_token: e54ea...fc55
   mode: deploy

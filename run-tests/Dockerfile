@@ -41,4 +41,8 @@ RUN apt-get purge -y \
 COPY entrypoint.sh /opt/entrypoint.sh
 ENV PATH /opt:$PATH
 ENV TF_DIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
+ENV TF_PLUGIN_DIR /opt/tf.plugins/
+WORKDIR ${TF_PLUGIN_DIR}
+RUN mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine ${TF_PLUGIN_DIR}
+RUN terraform init -lock=false -plugin-dir=${TF_PLUGIN_DIR}
 ENTRYPOINT ["/opt/entrypoint.sh"]
