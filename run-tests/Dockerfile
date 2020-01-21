@@ -15,7 +15,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     apt-get update && \
     apt-cache policy docker-ce && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce
-RUN curl -L https://github.com/docker/compose/releases/download/1.25.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+RUN curl -L https://github.com/docker/compose/releases/download/v1.25.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
     chmod +x /usr/local/bin/docker-compose
 WORKDIR /tmp/build/rtrlib
 RUN curl -fsSLo- 'https://github.com/rtrlib/rtrlib/archive/v0.7.0.tar.gz' | tar zx --strip-components 1 && \
