@@ -97,3 +97,8 @@ variable "run_tests" {
   default     = true
   description = "Whether or not to run the post deployment tests."
 }
+
+variable "test_suite_path" {
+  type        = string
+  description = "The absolute path to the directory containing the Python tests to run."
+}

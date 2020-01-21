@@ -58,11 +58,6 @@ def krill_api_config():
     return configuration
 
 
-@pytest.fixture()
-def krill_fqdn():
-    return os.getenv('KRILL_FQDN')
-
-
 def get_tal_url_str():
     return f'https://{os.getenv("KRILL_FQDN")}/ta/ta.tal'
 

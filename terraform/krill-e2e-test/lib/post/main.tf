@@ -19,6 +19,7 @@ variable "docker_is_local" {
     type = bool
     default = false
 }
+variable "test_suite_path" {}
 
 
 resource "random_id" "tmp_dir" {
@@ -129,6 +130,21 @@ resource "null_resource" "run_tests" {
 
     triggers = {
         setup_done = "${null_resource.setup.id}"
+    }
+
+    provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
+        working_dir = "${var.docker_compose_dir}/../../tests"
+
+        # Copy external tests into our tests package so that the pytest
+        # conftest.py works properly for tests defined in the external files.
+        # There's probably a better way to do this...
+        command = <<-EOT
+            set -eu
+            if [ "${var.test_suite_path}" != "" ]; then
+                cp -a ${var.test_suite_path} .
+            fi
+        EOT
     }
 
     provisioner "local-exec" {

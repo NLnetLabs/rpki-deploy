@@ -3,6 +3,10 @@ import os
 import pytest
 
 from time import time
+from compose.project import Project
+from compose.cli.docker_client import docker_client
+from compose.config import config
+
 from tests.util.collections import isiterable
 from tests.util.pytest import isfailed
 
@@ -64,6 +68,37 @@ class ServiceManager:
         logging.info(f'Killing and removing services: {all_service_names}')
         self.docker_project.kill(service_names=all_service_names)
         self.docker_project.remove_stopped()
+
+
+def get_docker_host_fqdn():
+    return os.getenv('KRILL_FQDN')
+
+
+@pytest.fixture()
+def docker_host_fqdn():
+    return get_docker_host_fqdn()
+
+
+@pytest.fixture(scope="module")
+def docker_project():
+    client = docker_client(config.Environment(os.environ))
+
+    config_file = config.ConfigFile.from_filename('docker-compose.yml')
+    details = config.ConfigDetails('.', [config_file])
+    ready_config = config.load(details)
+
+    # 'docker' is the COMPOSE_PROJECT_NAME. It affects the image names used and
+    # so must match the COMPOSE_PROJECT_NAME value used at image build time. As
+    # images were built by Terraform invoking the docker-compose command the
+    # docker_project name it used, the default which is the directory name containing
+    # the docker-compose.yml file, is the one we must use.
+    docker_project = Project.from_config('docker', ready_config, client)
+
+    yield docker_project
+
+    docker_project.kill()
+    docker_project.down(ImageType.none, True)
+    docker_project.remove_stopped()
 
 
 @pytest.fixture(scope="class")
