@@ -40,14 +40,8 @@ RUN apt-get purge -y \
     apt-get autoremove -y
 ENV PATH /opt:$PATH
 ENV TF_DIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
-ENV TF_PLUGIN_DIR /opt/tf.plugins/
-WORKDIR ${TF_PLUGIN_DIR}
 WORKDIR ${TF_DIR}
 RUN mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine . && \
-    terraform init -lock=false && \
-    mv .terraform/plugins/linux_amd64/* ${TF_PLUGIN_DIR} && \
-    mv terraform-provider-dockermachine ${TF_PLUGIN_DIR} && \
-    rm -R .terraform && \
-    terraform init -lock=false -plugin-dir=${TF_PLUGIN_DIR}
+    terraform init -lock=false
 COPY entrypoint.sh /opt/entrypoint.sh
 ENTRYPOINT ["/opt/entrypoint.sh"]
