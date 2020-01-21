@@ -27,7 +27,6 @@ WORKDIR /tmp/build/terraform
 RUN curl -fsSLo terraform.zip 'https://releases.hashicorp.com/terraform/0.12.19/terraform_0.12.19_linux_amd64.zip' && \
     unzip terraform.zip && \
     cp terraform /opt/
-RUN git clone --depth 1 --branch master https://github.com/nlnetlabs/rpki-deploy/ /opt/run-tests/
 RUN rm -Rf /tmp/build
 RUN apt-get purge -y \
         apt-transport-https \
@@ -38,11 +37,12 @@ RUN apt-get purge -y \
         software-properties-common \
         unzip && \
     apt-get autoremove -y
+RUN mkdir /tf.data
+COPY terraform /opt/run-tests/
+COPY run-tests/entrypoint.sh /opt/entrypoint.sh
 ENV PATH /opt:$PATH
-ENV TF_DIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
-WORKDIR /tf.data
+ENV TF_DIR /opt/run-tests/krill-e2e-test/run_on_do
 WORKDIR ${TF_DIR}
-RUN mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine . && \
+RUN mv /opt/run-tests/plugins/terraform-provider-dockermachine . && \
     TF_DATA_DIR=/tf.data terraform init -lock=false
-COPY entrypoint.sh /opt/entrypoint.sh
 ENTRYPOINT ["/opt/entrypoint.sh"]
