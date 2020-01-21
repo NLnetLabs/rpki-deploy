@@ -32,7 +32,6 @@ RUN apt-get purge -y \
         apt-transport-https \
         build-essential \
         cmake \
-        curl \
         git \
         software-properties-common \
         unzip && \

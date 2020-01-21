@@ -55,22 +55,12 @@ resource "null_resource" "setup" {
     provisioner "local-exec" {
         interpreter = ["/bin/bash", "-c"]
         environment = local.tmp_dir_vars
-        working_dir = var.docker_compose_dir
+        working_dir = "${var.docker_compose_dir}/../../tests/"
         command = <<-EOT
             set -eu
-            python3 -m venv $VENVDIR
+            python3 -m venv --system-site-packages $VENVDIR
             . $VENVDIR/bin/activate
-            pip3 install wheel
-            pip3 install -r ../../tests/requirements.txt
-
-            cd $TMPDIR
-            [ -d python-binding ] && rm -R python-binding
-            mkdir python-binding && \
-                cd python-binding && \
-                curl -fsSLo- 'https://github.com/rtrlib/python-binding/archive/0.1.tar.gz' | tar zx --strip-components 1 && \
-                pip3 install -r requirements.txt && \
-                python3 setup.py build && \
-                python3 setup.py install
+            ./install-deps.sh ./requirements.txt $TMPDIR
         EOT
     }
 
@@ -82,11 +72,10 @@ resource "null_resource" "setup" {
             [ -d $GENDIR ] && rm -R $GENDIR
             mkdir -p $GENDIR
 
-            # cp /home/ximon/src/krill/krill-master/doc/openapi.yaml $GENDIR
             if [ "${var.krill_build_path}" != "" ]; then
                 cp ${var.krill_build_path}/doc/openapi.yaml $GENDIR/
             else
-                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi.yaml
+                curl -fsSLo $GENDIR/openapi.yaml 'https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi.yaml'
             fi
 
             docker run --name openapi-generator --rm -v $GENDIR:/local \
