@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
-        ref: master
+        ref: move-e2e-tests-to-krill-repo
         path: krill
 
     - name: Checkout RTRLIB (v0.7.0 tag)
