@@ -46,7 +46,8 @@ WORKDIR ${TF_DIR}
 RUN mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine . && \
     terraform init -lock=false && \
     mv .terraform/plugins/linux_amd64/* ${TF_PLUGIN_DIR} && \
-    rm -R .terraform
-RUN terraform init -lock=false -plugin-dir=${TF_PLUGIN_DIR}
+    mv terraform-provider-dockermachine ${TF_PLUGIN_DIR} && \
+    rm -R .terraform && \
+    terraform init -lock=false -plugin-dir=${TF_PLUGIN_DIR}
 COPY entrypoint.sh /opt/entrypoint.sh
 ENTRYPOINT ["/opt/entrypoint.sh"]
