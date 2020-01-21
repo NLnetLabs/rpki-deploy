@@ -17,10 +17,6 @@ export TF_DATA_DIR=${TF_DATA_PATH}
 echo "::add-mask::${TF_VAR_do_token}"
 
 cd "${TF_DIR}"
-echo "Current dir:"
-ls -la
-echo "Plugin dir:"
-ls -la ${TF_PLUGIN_DIR}
 
 case ${INPUT_MODE} in
     run-tests)
