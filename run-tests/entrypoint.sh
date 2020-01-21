@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euxo pipefail
 
-TF_STATE_PATH=${HOME}/tf.state
-TF_DATA_PATH=${HOME}/tf.data
 REPORT_PATH=/tmp/report.html
+TF_STATE_PATH=${HOME}/tf.state
 
+export TF_DATA_DIR=${HOME}/tf.data
 export TF_VAR_krill_build_path="${GITHUB_WORKSPACE}/krill"
 export TF_VAR_ssh_key_path="${GITHUB_WORKSPACE}/${INPUT_SSH_KEY_PATH}"
 export TF_VAR_do_token="${INPUT_DO_TOKEN}"
@@ -12,9 +12,10 @@ export TF_VAR_size='s-4vcpu-8gb'
 export TF_VAR_domain='krill.cloud'
 export TF_VAR_tags='["rpki-deploy"]'
 export TF_VAR_run_tests="false"
-export TF_DATA_DIR=${TF_DATA_PATH}
 
 echo "::add-mask::${TF_VAR_do_token}"
+
+[ ! -d ${TF_DATA_DIR} ] && cp -a /tf.data ${TF_DATA_DIR}
 
 cd "${TF_DIR}"
 
