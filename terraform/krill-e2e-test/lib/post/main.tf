@@ -65,8 +65,9 @@ resource "null_resource" "setup" {
 
             cd $TMPDIR
             [ -d python-binding ] && rm -R python-binding
-            git clone --depth 1 https://github.com/rtrlib/python-binding.git && \
+            mkdir python-binding && \
                 cd python-binding && \
+                curl -fsSLo- 'https://github.com/rtrlib/python-binding/archive/0.1.tar.gz' | tar zx --strip-components 1 && \
                 pip3 install -r requirements.txt && \
                 python3 setup.py build && \
                 python3 setup.py install
