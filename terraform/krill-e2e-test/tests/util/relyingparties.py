@@ -24,6 +24,9 @@ class RelyingParty:
         # commands in the RP Docker containers.
         self.version_cmd = version_cmd
 
+    def __str__(self):
+        return self.name
+
     def is_ready(self):
         raise NotImplementedError("RP {self.name} does not have an is_ready() implementation")
 
