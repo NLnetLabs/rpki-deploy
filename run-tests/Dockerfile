@@ -41,6 +41,7 @@ RUN apt-get purge -y \
 ENV PATH /opt:$PATH
 ENV TF_DIR /opt/run-tests/terraform/krill-e2e-test/run_on_do
 ENV TF_PLUGIN_DIR /opt/tf.plugins/
+WORKDIR ${TF_PLUGIN_DIR}
 WORKDIR ${TF_DIR}
 RUN mv /opt/run-tests/terraform/plugins/terraform-provider-dockermachine . && \
     terraform init -lock=false && \
