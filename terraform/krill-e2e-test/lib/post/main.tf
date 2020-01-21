@@ -148,6 +148,20 @@ resource "null_resource" "run_tests" {
     }
 
     provisioner "local-exec" {
+        when = destroy
+        interpreter = ["/bin/bash", "-c"]
+        working_dir = "${var.docker_compose_dir}/../../tests"
+        command = <<-EOT
+            set -eu
+            if [ "${var.test_suite_path}" != "" ]; then
+                if [ -d "${var.test_suite_path}" ]; then
+                    rm -R ${var.test_suite_path}
+                fi
+            fi
+        EOT
+    }
+
+    provisioner "local-exec" {
         interpreter = ["/bin/bash", "-c"]
         environment = merge(local.docker_env_vars, local.app_vars, local.tmp_dir_vars)
         working_dir = var.docker_compose_dir
@@ -160,6 +174,10 @@ resource "null_resource" "run_tests" {
         #   'collections.abc' is deprecated since Python 3.3,and in 3.9 it
         #   will stop working.
         # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
+        #
+        # PYTHONDONTWRITEBYTECODE=1 disables creation of __pycache__
+        # directories which make no sense for our use case (single run then
+        # destroy everything).
         #
         # PyTest arguments used:
         #   -ra          - report at the end all tests that did not pass
@@ -182,7 +200,9 @@ resource "null_resource" "run_tests" {
 
             env | sort
 
-            PYTHONWARNINGS=ignore::DeprecationWarning pytest \
+            PYTHONWARNINGS=ignore::DeprecationWarning \
+            PYTHONDONTWRITEBYTECODE=1 \
+            pytest \
                 -ra --tb=short \
                 --verbose \
                 --log-cli-level=INFO \
