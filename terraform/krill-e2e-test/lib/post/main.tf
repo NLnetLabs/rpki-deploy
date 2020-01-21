@@ -142,6 +142,10 @@ resource "null_resource" "run_tests" {
         command = <<-EOT
             set -eu
             if [ "${var.test_suite_path}" != "" ]; then
+                local_dir=$(basename ${var.test_suite_path})
+                if [ -d $local_dir ]; then
+                    rm -R $local_dir
+                fi
                 cp -a ${var.test_suite_path} .
             fi
         EOT
@@ -154,8 +158,9 @@ resource "null_resource" "run_tests" {
         command = <<-EOT
             set -eu
             if [ "${var.test_suite_path}" != "" ]; then
-                if [ -d "${var.test_suite_path}" ]; then
-                    rm -R ${var.test_suite_path}
+                local_dir=$(basename ${var.test_suite_path})
+                if [ -d $local_dir ]; then
+                    rm -R $local_dir
                 fi
             fi
         EOT
