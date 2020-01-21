@@ -17,6 +17,7 @@ export TF_DATA_DIR=${TF_DATA_PATH}
 echo "::add-mask::${TF_VAR_do_token}"
 
 cd "${TF_DIR}"
+ls -la
 
 case ${INPUT_MODE} in
     run-tests)
@@ -25,7 +26,6 @@ case ${INPUT_MODE} in
         ;&
 
     deploy)
-        mkdir -p $HOME/.terraform.d/plugins/
         terraform apply -state ${TF_STATE_PATH} -lock=false -auto-approve
         [ -f ${REPORT_PATH} ] && mv ${REPORT_PATH} ${GITHUB_WORKSPACE}/
         ;;
