@@ -4,6 +4,7 @@ import pytest
 
 from time import time
 from compose.project import Project
+from compose.service import ImageType
 from compose.cli.docker_client import docker_client
 from compose.config import config
 
