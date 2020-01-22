@@ -67,7 +67,7 @@ resource "null_resource" "setup" {
             cd $TMPDIR
             [ -d python-binding ] && rm -R python-binding
             git clone --branch master https://github.com/rtrlib/python-binding.git && 
-            git checkout 2ade90e \
+            git checkout 2ade90ed \
                 cd python-binding && \
                 pip3 install -r requirements.txt && \
                 python3 setup.py build && \
