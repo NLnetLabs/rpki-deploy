@@ -61,12 +61,12 @@ resource "null_resource" "setup" {
             set -eu
             python3 -m venv $VENVDIR
             . $VENVDIR/bin/activate
-            pip3 install wheel
+            pip3 install "wheel==0.33.6"
             pip3 install -r ../../tests/requirements.txt
 
             cd $TMPDIR
             [ -d python-binding ] && rm -R python-binding
-            git clone --depth 1 https://github.com/rtrlib/python-binding.git && \
+            git clone --depth 1 --branch 0.1 https://github.com/rtrlib/python-binding.git && \
                 cd python-binding && \
                 pip3 install -r requirements.txt && \
                 python3 setup.py build && \
