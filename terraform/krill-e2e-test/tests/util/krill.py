@@ -5,6 +5,10 @@ import pytest
 
 from contextlib import contextmanager
 from krill_api.rest import ApiException
+from tests.util.docker import register_version_cmd
+
+
+register_version_cmd('krill', 'krill --version')
 
 
 class KrillUnknownPublisherException(Exception):
