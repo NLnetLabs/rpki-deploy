@@ -48,7 +48,7 @@ module "post" {
   krill_build_path    = var.krill_build_path
   krill_fqdn          = module.pre.fqdn
   krill_use_ta        = var.krill_use_ta
-  krill_version       = var.krill_version
+  krill_version       = module.docker_deploy.krill_version
   krill_auth_token    = var.krill_auth_token
   ssh_key_path        = module.pre.ssh_key_path
   ssh_user            = module.create_infra.ssh_user
