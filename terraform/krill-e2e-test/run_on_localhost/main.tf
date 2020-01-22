@@ -42,4 +42,5 @@ module "post" {
   ssh_user           = ""
   docker_is_local    = true
   docker_ready       = module.docker_deploy.ready
+  test_suite_path    = var.test_suite_path
 }

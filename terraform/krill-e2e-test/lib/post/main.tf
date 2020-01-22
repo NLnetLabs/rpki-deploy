@@ -19,6 +19,7 @@ variable "docker_is_local" {
     type = bool
     default = false
 }
+variable "test_suite_path" {}
 
 
 resource "random_id" "tmp_dir" {
@@ -133,6 +134,40 @@ resource "null_resource" "run_tests" {
 
     provisioner "local-exec" {
         interpreter = ["/bin/bash", "-c"]
+        working_dir = "${var.docker_compose_dir}/../../tests"
+
+        # Copy external tests into our tests package so that the pytest
+        # conftest.py works properly for tests defined in the external files.
+        # There's probably a better way to do this...
+        command = <<-EOT
+            set -eu
+            if [ "${var.test_suite_path}" != "" ]; then
+                local_dir=$(basename ${var.test_suite_path})
+                if [ -d $local_dir ]; then
+                    rm -R $local_dir
+                fi
+                cp -a ${var.test_suite_path} .
+            fi
+        EOT
+    }
+
+    provisioner "local-exec" {
+        when = destroy
+        interpreter = ["/bin/bash", "-c"]
+        working_dir = "${var.docker_compose_dir}/../../tests"
+        command = <<-EOT
+            set -eu
+            if [ "${var.test_suite_path}" != "" ]; then
+                local_dir=$(basename ${var.test_suite_path})
+                if [ -d $local_dir ]; then
+                    rm -R $local_dir
+                fi
+            fi
+        EOT
+    }
+
+    provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
         environment = merge(local.docker_env_vars, local.app_vars, local.tmp_dir_vars)
         working_dir = var.docker_compose_dir
 
@@ -144,6 +179,10 @@ resource "null_resource" "run_tests" {
         #   'collections.abc' is deprecated since Python 3.3,and in 3.9 it
         #   will stop working.
         # PyYaml 5.2 fixes this but Docker-Compose requires PyYaml < 5.
+        #
+        # PYTHONDONTWRITEBYTECODE=1 disables creation of __pycache__
+        # directories which make no sense for our use case (single run then
+        # destroy everything).
         #
         # PyTest arguments used:
         #   -ra          - report at the end all tests that did not pass
@@ -166,7 +205,9 @@ resource "null_resource" "run_tests" {
 
             env | sort
 
-            PYTHONWARNINGS=ignore::DeprecationWarning pytest \
+            PYTHONWARNINGS=ignore::DeprecationWarning \
+            PYTHONDONTWRITEBYTECODE=1 \
+            pytest \
                 -ra --tb=short \
                 --verbose \
                 --log-cli-level=INFO \

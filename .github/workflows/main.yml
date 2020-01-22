@@ -12,17 +12,28 @@ jobs:
     name: deploy_and_test
     runs-on: ubuntu-18.04
     steps:
-    - name: Checkout E2E test framework (pushed branch)
+    - name: Determine Krill branch to use
+      id: pick_e2e_branch
+      shell: bash
+      run: |
+        BRANCH=${GITHUB_REF#refs/heads/}
+        if git ls-remote --exit-code --heads https://github.com/NLnetLabs/krill ${BRANCH}; then
+          echo "::set-output name=branch::${BRANCH}"
+        else
+          echo "::set-output name=success::master"
+        fi
+
+    - name: Checkout E2E test framework
       uses: actions/checkout@v2
       with:
         path: rpki-deploy
 
-    - name: Checkout Krill (master branch)
+    - name: Checkout Krill
       uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
-        ref: master
         path: krill
+        ref: ${{ steps.pick_e2e_branch.outputs.branch }}
 
     - name: Checkout RTRLIB (v0.7.0 tag)
       uses: actions/checkout@v2
@@ -94,7 +105,10 @@ jobs:
       working-directory: ./rpki-deploy/terraform/krill-e2e-test/run_on_do
       run: |
         set -x
-        terraform apply -auto-approve -var "ssh_key_path=$HOME/secrets/ssh_key" -var "krill_build_path=${GITHUB_WORKSPACE}/krill"
+        terraform apply -auto-approve \
+          -var "ssh_key_path=$HOME/secrets/ssh_key" \
+          -var "krill_build_path=${GITHUB_WORKSPACE}/krill" \
+          -var "test_suite_path=${GITHUB_WORKSPACE}/krill/tests/e2e"
       env:
         # Don't embed env var references in env var definitions here, instead
         # pass those using -var on the command line.

@@ -17,8 +17,6 @@ services:
     networks:
       - krill-net
     restart: unless-stopped
-    depends_on:
-      - krill
 
   krill:
     image: nlnetlabs/krill:$KRILL_VERSION
@@ -31,6 +29,13 @@ services:
     networks:
       - krill-net
     restart: unless-stopped
+    # Reverse dependencies: Krill doesn't depend on these, but Krill is only
+    # usable with RPs and from outside if all of these dependences are also
+    # started.
+    depends_on:
+      - nginx
+      - tal_hack
+      - rsyncd
   
   tal_hack:
     build:
@@ -45,7 +50,6 @@ services:
     volumes:
       - rsync_data:/share
     depends_on:
-      - krill
       - relyingpartybase
 
   rsyncd:
@@ -138,7 +142,6 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
-      - nginx
 
   rcynic:
     build:

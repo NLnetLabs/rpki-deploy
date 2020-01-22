@@ -39,21 +39,22 @@ module "docker_deploy" {
 }
 
 module "post" {
-  source             = "../lib/post"
-  domain             = var.domain
-  hostname           = module.pre.hostname
-  docker_url         = module.docker_deploy.docker_url
-  docker_cert_path   = module.docker_deploy.cert_path
-  docker_compose_dir = var.docker_compose_dir
-  krill_build_path   = var.krill_build_path
-  krill_fqdn         = module.pre.fqdn
-  krill_use_ta       = var.krill_use_ta
-  krill_version      = var.krill_version
-  krill_auth_token   = var.krill_auth_token
-  ssh_key_path       = module.pre.ssh_key_path
-  ssh_user           = module.create_infra.ssh_user
-  src_tal            = module.pre.src_tal
-  run_tests          = var.run_tests
-  docker_is_local    = false
-  docker_ready       = module.docker_deploy.ready
+  source              = "../lib/post"
+  domain              = var.domain
+  hostname            = module.pre.hostname
+  docker_url          = module.docker_deploy.docker_url
+  docker_cert_path    = module.docker_deploy.cert_path
+  docker_compose_dir  = var.docker_compose_dir
+  krill_build_path    = var.krill_build_path
+  krill_fqdn          = module.pre.fqdn
+  krill_use_ta        = var.krill_use_ta
+  krill_version       = var.krill_version
+  krill_auth_token    = var.krill_auth_token
+  ssh_key_path        = module.pre.ssh_key_path
+  ssh_user            = module.create_infra.ssh_user
+  src_tal             = module.pre.src_tal
+  run_tests           = var.run_tests
+  docker_is_local     = false
+  docker_ready        = module.docker_deploy.ready
+  test_suite_path     = var.test_suite_path
 }
