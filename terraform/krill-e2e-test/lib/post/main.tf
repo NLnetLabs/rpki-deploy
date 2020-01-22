@@ -90,7 +90,7 @@ resource "null_resource" "setup" {
             fi
 
             docker run --name openapi-generator --rm -v $GENDIR:/local \
-                openapitools/openapi-generator-cli generate \
+                openapitools/openapi-generator-cli:v4.2.2 generate \
                 -i /local/openapi.yaml \
                 -g python \
                 -o /local/out \
