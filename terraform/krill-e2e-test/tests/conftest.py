@@ -20,3 +20,12 @@ def pytest_runtest_makereport(item, call):
     _test_reports = getattr(item.module, '_test_reports', {})
     _test_reports[(item.nodeid, rep.when)] = rep
     item.module._test_reports = _test_reports
+
+
+# Ensure that parametrized tests are named to our liking, e.g. a RelyingParty
+# object as a value for a parametrized argument called 'service' would cause
+# the test name to end with service0, service1, etc. By using repr() and
+# implementing __str__() on RelyingParty the class can control its name when
+# used in such cases.
+def pytest_make_parametrize_id(config, val):
+    return str(val)
