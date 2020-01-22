@@ -12,17 +12,28 @@ jobs:
     name: deploy_and_test
     runs-on: ubuntu-18.04
     steps:
-    - name: Checkout E2E test framework (pushed branch)
+    - name: Determine Krill branch to use
+      id: pick_e2e_branch
+      shell: bash
+      run: |
+        BRANCH=${GITHUB_REF#refs/heads/}
+        if git ls-remote --exit-code --heads https://github.com/NLnetLabs/krill ${BRANCH}; then
+          echo "::set-output name=branch::${BRANCH}"
+        else
+          echo "::set-output name=success::master"
+        fi
+
+    - name: Checkout E2E test framework
       uses: actions/checkout@v2
       with:
         path: rpki-deploy
 
-    - name: Checkout Krill (master branch)
+    - name: Checkout Krill
       uses: actions/checkout@v2
       with:
         repository: nlnetlabs/krill
-        ref: move-e2e-tests-to-krill-repo
         path: krill
+        ref: ${{ steps.pick_e2e_branch.outputs.branch }}
 
     - name: Checkout RTRLIB (v0.7.0 tag)
       uses: actions/checkout@v2
