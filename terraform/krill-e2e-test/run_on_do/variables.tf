@@ -100,5 +100,6 @@ variable "run_tests" {
 
 variable "test_suite_path" {
   type        = string
+  default     = ""
   description = "The absolute path to the directory containing the Python tests to run."
 }
