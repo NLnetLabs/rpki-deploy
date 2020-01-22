@@ -76,7 +76,7 @@ class ServiceManager:
         version_cmd = version_cmds_by_service_name[service_name]
 
         # Obtain the service version if not already obtained and if obtainable:
-        logging.info(f"Detecting version of service '{service_name}'' using command '{version_cmd}'..")
+        logging.info(f"Detecting version of service '{service_name}' using command '{version_cmd}'..")
         (exit_code, output) = run_command(self.docker_project, service_name, version_cmd)
         output = output.decode('utf-8').strip()
         logging.info(f"Command exit code={exit_code}, output={output}")
