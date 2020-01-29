@@ -57,4 +57,5 @@ module "post" {
   docker_is_local     = false
   docker_ready        = module.docker_deploy.ready
   test_suite_path     = var.test_suite_path
+  tmp_dir            = var.tmp_dir
 }

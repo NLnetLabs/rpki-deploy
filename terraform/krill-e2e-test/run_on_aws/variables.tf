@@ -92,3 +92,8 @@ variable "run_tests" {
   default     = true
   description = "Whether or not to run the post deployment tests."
 }
+
+variable "tmp_dir" {
+  type        = string
+  default     = null
+}

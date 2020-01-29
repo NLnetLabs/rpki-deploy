@@ -20,12 +20,17 @@ variable "docker_is_local" {
     default = false
 }
 variable "test_suite_path" {}
+variable "tmp_dir" {}
 
 
 resource "random_id" "tmp_dir" {
     prefix      = "/tmp/krill-"
     byte_length = 4
 }
+
+# locals {
+#     tmp_dir = var.tmp_dir == null ? random_id.tmp_dir.hex : var.tmp_dir
+# }
 
 locals {
     docker_env_vars = {
@@ -41,10 +46,14 @@ locals {
         KRILL_AUTH_TOKEN    = var.krill_auth_token
         SRC_TAL             = var.src_tal
     }
+    tmp_dir = var.tmp_dir == null ? random_id.tmp_dir.hex : var.tmp_dir
     tmp_dir_vars = {
-        VENVDIR             = "${random_id.tmp_dir.hex}/venv"
-        GENDIR              = "${random_id.tmp_dir.hex}/gen"
-        TMPDIR              = "${random_id.tmp_dir.hex}/"
+        # VENVDIR             = "${random_id.tmp_dir.hex}/venv"
+        # GENDIR              = "${random_id.tmp_dir.hex}/gen"
+        # TMPDIR              = "${random_id.tmp_dir.hex}/"
+        VENVDIR             = "${local.tmp_dir}/venv"
+        GENDIR              = "${local.tmp_dir}/gen"
+        TMPDIR              = "${local.tmp_dir}/"
     }
 }
 

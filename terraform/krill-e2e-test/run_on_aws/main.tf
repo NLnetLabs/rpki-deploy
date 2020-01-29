@@ -50,4 +50,5 @@ module "post" {
   ssh_user         = module.create_infra.ssh_user
   src_tal          = module.pre.src_tal
   run_tests        = var.run_tests
+  tmp_dir          = var.tmp_dir
 }
