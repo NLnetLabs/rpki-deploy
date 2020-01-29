@@ -1,6 +1,6 @@
 import requests
 
-from tests.util.docker import get_docker_host_fqdn
+from tests.util.docker import get_docker_host_fqdn, register_version_cmd
 
 
 class RelyingParty:
@@ -22,7 +22,7 @@ class RelyingParty:
         # Routinator and RPKI Validator 3 expose HTTP APIs and only Routinator
         # makes it easy to get the version via that API. So instead issue
         # commands in the RP Docker containers.
-        self.version_cmd = version_cmd
+        register_version_cmd(self.name, version_cmd)
 
     def __str__(self):
         return self.name
@@ -34,7 +34,6 @@ class RelyingParty:
 class RPKIValidator3(RelyingParty):
     def __init__(self, name, rtr_port, rtr_timeout_seconds, version_cmd):
         super().__init__(name, rtr_port, rtr_timeout_seconds, version_cmd)
-
 
     def is_ready(self):
         # Check to see if the RIPE NCC RPKI validator has processed the TAL yet.

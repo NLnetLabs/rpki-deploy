@@ -1,4 +1,4 @@
-FROM nginx
+FROM nginx:1.17.8
 COPY krill.conf /etc/nginx/conf.d/default.conf
 WORKDIR /etc/ssl/certs
 COPY certbundle.pem .

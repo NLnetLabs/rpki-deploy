@@ -29,3 +29,11 @@ def pytest_runtest_makereport(item, call):
 # used in such cases.
 def pytest_make_parametrize_id(config, val):
     return str(val)
+
+
+@pytest.mark.optionalhook
+def pytest_metadata(metadata):
+    # Remove JAVA_HOME information automatically added by pytest-metadata to
+    # the HTML report "Environment" section as it is irrelevant and confusing
+    # for the Krill E2E test.
+    metadata.pop("JAVA_HOME", None)

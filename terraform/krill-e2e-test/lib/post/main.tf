@@ -61,13 +61,14 @@ resource "null_resource" "setup" {
             set -eu
             python3 -m venv $VENVDIR
             . $VENVDIR/bin/activate
-            pip3 install wheel
+            pip3 install "wheel==0.33.6"
             pip3 install -r ../../tests/requirements.txt
 
             cd $TMPDIR
             [ -d python-binding ] && rm -R python-binding
-            git clone --depth 1 https://github.com/rtrlib/python-binding.git && \
+            git clone --branch master https://github.com/rtrlib/python-binding && \
                 cd python-binding && \
+                git checkout 2ade90ed && \
                 pip3 install -r requirements.txt && \
                 python3 setup.py build && \
                 python3 setup.py install
@@ -90,7 +91,7 @@ resource "null_resource" "setup" {
             fi
 
             docker run --name openapi-generator --rm -v $GENDIR:/local \
-                openapitools/openapi-generator-cli generate \
+                openapitools/openapi-generator-cli:v4.2.2 generate \
                 -i /local/openapi.yaml \
                 -g python \
                 -o /local/out \
