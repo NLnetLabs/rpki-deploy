@@ -55,6 +55,7 @@ locals {
         GENDIR              = "${local.tmp_dir}/gen"
         TMPDIR              = "${local.tmp_dir}/"
     }
+    test_suite_path         = var.test_suite_path != "" ? var.test_suite_path : join("/", [var.krill_build_path, "tests"])
 }
 
 resource "null_resource" "setup" {
@@ -151,12 +152,12 @@ resource "null_resource" "run_tests" {
         # There's probably a better way to do this...
         command = <<-EOT
             set -eu
-            if [ "${var.test_suite_path}" != "" ]; then
-                local_dir=$(basename ${var.test_suite_path})
+            if [ "${local.test_suite_path}" != "" ]; then
+                local_dir=$(basename ${local.test_suite_path})
                 if [ -d $local_dir ]; then
                     rm -R $local_dir
                 fi
-                cp -a ${var.test_suite_path} .
+                cp -a ${local.test_suite_path} .
             fi
         EOT
     }
@@ -167,8 +168,8 @@ resource "null_resource" "run_tests" {
         working_dir = "${var.docker_compose_dir}/../../tests"
         command = <<-EOT
             set -eu
-            if [ "${var.test_suite_path}" != "" ]; then
-                local_dir=$(basename ${var.test_suite_path})
+            if [ "${local.test_suite_path}" != "" ]; then
+                local_dir=$(basename ${local.test_suite_path})
                 if [ -d $local_dir ]; then
                     rm -R $local_dir
                 fi
