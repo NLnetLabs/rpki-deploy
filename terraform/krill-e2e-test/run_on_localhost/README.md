@@ -6,15 +6,14 @@ _(assumes that you have the Terraform CLI and Docker CLI installed)_
 
 ```
 git clone https://github.com/NLnetLabs/rpki-deploy.git
-cd rpki-deploy
-cd terraform
+cd rpki-deploy/terraform/krill-e2e-test/run_on_localhost
 terraform init
 ```
 
 At this point Terraform will complain that it cannot find at least one plugin as you need to install them locally like so:
 
 ```
-cp plugins/* ~/.terraform.d/plugins
+cp ../../plugins/* ~/.terraform.d/plugins
 terraform init
 ```
 
