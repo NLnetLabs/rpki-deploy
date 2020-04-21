@@ -278,6 +278,7 @@ $ cd rtrlib
 $ cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No
 $ make
 $ sudo make install
+$ sudo ldconfig
 ```
 
 ### Prepare
