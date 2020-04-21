@@ -1,4 +1,4 @@
-FROM nlnetlabs/routinator:native-tls
+FROM ximoneighteen/routinator:v0.6.4-native-tls
 COPY entrypoint.sh /opt/
 COPY --from=relyingpartybase /opt/* /opt/
 USER root
