@@ -1,6 +1,6 @@
 # To run Krill E2E tests locally
 
-_(assumes that you have the Terraform CLI and Docker CLI installed)_
+_(assumes that you have the necessary [pre-requisites installed](https://github.com/NLnetLabs/rpki-deploy/tree/master/terraform/krill-e2e-test#requirements))_
 
 ## One-time setup
 
