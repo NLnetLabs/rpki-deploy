@@ -15,6 +15,5 @@ my_log "Launching Routinator"
 cd ${DATA_DIR}
 routinator \
     -vvv \
-    --rrdp-root-cert=/usr/local/share/ca-certificates/rootCA.crt \
     server \
     --rtr 0.0.0.0:3323 --http 0.0.0.0:9556

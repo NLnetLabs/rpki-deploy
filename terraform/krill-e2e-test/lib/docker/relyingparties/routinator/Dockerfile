@@ -1,4 +1,5 @@
-FROM nlnetlabs/routinator:latest
+FROM nlnetlabs/routinator:native-tls
+COPY entrypoint.sh /opt/
 COPY --from=relyingpartybase /opt/* /opt/
 USER root
 RUN apk add bash jq ca-certificates
