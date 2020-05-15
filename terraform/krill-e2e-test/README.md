@@ -273,8 +273,9 @@ This framework requires:
 To install RTRLib with noisy log output disabled:
 
 ```bash
-$ git clone --depth=1 https://github.com/rtrlib/rtrlib.git
+$ git clone https://github.com/rtrlib/rtrlib.git
 $ cd rtrlib
+$ git checkout v0.7.0
 $ cmake -D CMAKE_C_FLAGS='-DNDEBUG' -D CMAKE_BUILD_TYPE=Release -D RTRLIB_TRANSPORT_SSH=No .
 $ make
 $ sudo make install
