@@ -49,7 +49,7 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).
 
 This directory contains a prototype framework for testing [Krill](https://www.nlnetlabs.nl/projects/rpki/krill/) (a free, open source Resource Public Key Infrastructure (RPKI) daemon by [NLnet Labs](https://nlnetlabs.nl/)) end-to-end (E2E) in combination with various [Relying Party implementations](https://rpki.readthedocs.io/en/latest/tools.html#relying-party-software).
 
-This framework uses off-the-shelf containers from Docker Hub deployed in the cloud to:
+This framework uses off-the-shelf containers from Docker Hub deployed locally or in the cloud to:
 
 * Deploy Krill behind an industry standard HTTP proxy (nginx) as advised by the [official Krill documentation](https://rpki.readthedocs.io/en/latest/krill/running.html#proxy-and-https).
 * Integrate with a co-deployed [rsync server](https://hub.docker.com/r/vimagick/rsyncd) for clients that do not support the RRDP protocol.
@@ -61,7 +61,7 @@ This framework prototype began life as a deployment demo of various NLnet Labs a
 
 ----
 
-_**WARNING!** This framework creates resources in the [Digital Ocean](https://www.digitalocean.com/) or [Amazon Web Services](https://aws.amazon.com/) public cloud. These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your cloud account owner to incur costs on the account before using this framework!_
+_**WARNING!** This framework may create resources in the [Digital Ocean](https://www.digitalocean.com/) or [Amazon Web Services](https://aws.amazon.com/) public cloud. These resources are **NOT free**, they will incur a small cost. Please ensure that you have **permission** from your cloud account owner to incur costs on the account before using this framework!_
 
 ----
 
@@ -87,17 +87,15 @@ For details on which RPs are tested against Krill see the [RP details](#rp-detai
 
 ### Why is it based on Docker in the cloud?
 
-The combination of [Terraform](https://www.terraform.io/), [Docker Machine](https://docs.docker.com/machine/overview/), [Docker Compose](https://docs.docker.com/compose/) and Docker supports many different deployment targets while minimizing the maintenance effort per component. The templates have been deliberately structured such that the cloud and Docker parts are separated. Deployment can be done with Docker alone or with Docker in the cloud, potentially also to targets such as the [GitHub Actions with Docker Compose](https://github.blog/2019-08-08-github-actions-now-supports-ci-cd/#fast-ci-cd-for-any-os-any-language-and-any-cloud) or Kubernetes (e.g. on [Digital Ocean](https://www.digitalocean.com/products/kubernetes/) or [AWS](https://aws.amazon.com/kubernetes/)). Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
+The combination of [Terraform](https://www.terraform.io/), [Docker Machine](https://docs.docker.com/machine/overview/), [Docker Compose](https://docs.docker.com/compose/) and [Docker](https://www.docker.com/) supports many different deployment targets while minimizing the maintenance effort per component. The templates have been deliberately structured such that the cloud and Docker parts are separated. Deployment can be done with Docker locally or with Docker in the cloud, potentially also to targets such as [GitHub Actions with Docker Compose](https://github.blog/2019-08-08-github-actions-now-supports-ci-cd/#fast-ci-cd-for-any-os-any-language-and-any-cloud) or Kubernetes (e.g. on [Digital Ocean](https://www.digitalocean.com/products/kubernetes/) or [AWS](https://aws.amazon.com/kubernetes/)). Only the infrastructure parts such as the VM, DNS and cloud firewall, are cloud specific, the Docker core can run anywhere. With this structure it should be relatively easily to add support for other Terraform providers too.
 
 The beauty of Terraform is the huge number of deployment targets that it supports, its declarative plain text templates which can be version controlled and easily diffed, the "one click" deployment and the readable preview of what will be deployed.
  
 The beauty of Docker is the ability to use the same core to run on those many different deployment targets, the flexibility it gives you to compose the deployment such that containers share a host or have their own hosts or something in the middle and the collection of applications that are already available as Docker containers (e.g. nginx, rsyncd, Routinator, RPKI Validator 3, etc).
 
-By using a VM with a public IP address and associated DNS A/AAAA records the framework is able to obtain a Lets Encrypt HTTPS certificate for NGINX such that Krill clients can trust the HTTPS certificate presented to them, while using NGINX to shield Krill from the Internet. A VM also offers the potential to scale beyond the capabilities of a CI only platform such as GitHub Actions (where for example the deployment environment is currently limited to [2-core with 7 GiB RAM](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/virtual-environments-for-github-hosted-runners#supported-runners-and-hardware-resources)) which could be useful given that some RP tools require a lot of memory (e.g. [RIPE NCC RPKI Validator 3](https://github.com/RIPE-NCC/rpki-validator-3) requires a minimum of 1 GiB RAM by default just for itself, and larger numbers of certificate authorities and ROAs will increase the resources required by Krill).
+To avoid the need for a public IP address and associated DNS A/AAAA records in order to obtain a real HTTPS certificate (e.g. from Lets Encrypt) for NGINX such that Krill clients can trust the HTTPS certificate presented to them, we instead use our own Certificate Authority to issue a TLS certificate and install the CA root cert in the certificate trust store of each Docker container.  We can optionally run in a cloud VM thereby supporting the potential to scale beyond the capabilities of a CI only platform such as GitHub Actions (where for example the deployment environment is currently limited to [2-core with 7 GiB RAM](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/virtual-environments-for-github-hosted-runners#supported-runners-and-hardware-resources)) which could be useful given that some RP tools require a lot of memory (e.g. [RIPE NCC RPKI Validator 3](https://github.com/RIPE-NCC/rpki-validator-3) requires a minimum of 1 GiB RAM by default just for itself, and larger numbers of certificate authorities and ROAs will increase the resources required by Krill).
 
 Currently all clients are deployed as containers on the same host VM as Krill itself but the architecture supports splitting the containers out across multiple hosts. However some changes would be required to actually deploy using Docker Swarm or Kubernetes (for example) for such a scenario.
-
-Conversely, except for the real HTTPS certificate requiring routing from the Internet to NGINX by registered name, it should in theory be possible to omit the public cloud layer and use the Docker Compose layer directly with GitHub Actions, however this has not been tested.
 
 ## Integration with Krill @ GitHub
 
@@ -141,6 +139,7 @@ $ tree -d                                    Type
     │   │   └── pre                          Terraform module
     │   ├── run_on_aws                       Terraform module
     │   ├── run_on_do                        Terraform module
+    │   ├── run_on_localhost                 Terraform module
     │   └── scripts                          Bash scripts
     └── plugins                              Terraform plugins
 ```
@@ -155,6 +154,7 @@ Platform specific artifacts:
 | `krill-e2e-test/run_on_aws/`        | AWS      | Starting point for deploying on AWS. |
 | `krill-e2e-test/run_on_do/`         | DO       | Starting point for deploying on DO. |
 | `krill-e2e-test/lib/infra/aws/`     | AWS      | Terraform module for AWS infrastructure deployment. |
+| `krill-e2e-test/lib/infra/do/ `     | DO       | Terraform module for DO infrastructure deployment. |
 | `krill-e2e-test/lib/infra/do/ `     | DO       | Terraform module for DO infrastructure deployment. |
 
 Platform independent artifacts:
@@ -171,6 +171,8 @@ Platform independent artifacts:
 The diagram below describes the Digital Ocean topology and how Terraform creates it:
 
 In the case of Amazon Web Services the Droplet is an EC2 Compute Instance and the DO DNS is AWS Route53.
+
+When running locally only the Host block is required.
 
 ```
 +- Digital Ocean Public Cloud ----------------------------------+
@@ -250,6 +252,7 @@ In the diagram below we "zoom in" to the DO Droplet in the diagram above:
 - The nginx container image is extended via a `Dockerfile` with a config file directing nginx to proxy HTTPS connections via the internal Docker private network to port 3000 on the krill container.
 - The rsyncd container image is extended via a `Dockerfile` with a config file telling rsyncd how to share the files mounted into the container from the krill rsync data Docker volume.
 - The Krill and rsyncd containers both mount the same Docker volume with Krill writing to it and rsyncd reading from it.
+- The custom CA root certificate is added into the operating system certificate trust store of each RP container.
 
 ### Docker images for 3rd party RP tools
 
@@ -260,13 +263,15 @@ Not all 3rd party RP tools offer Docker images. For those that don't I have pack
 ### Requirements
 
 This framework requires:
-- A Digital Ocean or Amazon Web Services account.
-- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
-- A DNS domain managed by Digital Ocean or Amazon Web Services.
 - The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
 - RTRLib (tested with 0.6.3 and 0.7.0), preferably built with NDEBUG defined to disable noisy log output.
+
+When running in the cloud you also need:
+- A Digital Ocean or Amazon Web Services account.
+- A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
+- A DNS domain managed by Digital Ocean or Amazon Web Services.
 
 ### Prepare (optional)
 
@@ -282,7 +287,9 @@ $ sudo make install
 $ sudo ldconfig
 ```
 
-### Prepare
+### Prepare to run in the cloud
+
+_**Tip:** This step can be skipped if running locally._
 
 To run the framework you will need the required tools, a copy of the templates and scripts, an existing parent DNS domain that you have control of, and an SSH key pair.
 
@@ -323,25 +330,44 @@ $ export AWS_ACCESS_KEY=xxx
 $ export AWS_SECRET_ACCESS_KEY=xxx
 ```
 
+### Fetch the test suite
+
+The actual tests to run are not defined in the framework repository but instead live in the Krill repository so that they can be updated in sync with changes to Krill. Before running the tests you must first fetch them from Git:
+
+```bash
+$ cd /tmp
+$ git clone https://github.com/nlnetlabs/krill.git
+```
+
 ### Deploy
 
 `init` installs any Terraform plugins required by the templates.
 `apply` explains what will be created then, if you approve, executes the template.
 
 ```bash
-$ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. do or aws)
+$ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. aws, do or localhost)
 $ terraform init
-$ terraform apply
+$ terraform apply -var test_suite_path=/tmp/krill/tests/e2e
 ```
 
+**Optional:** You may also pass one (not both) of the following:
+  - `-var krill_build_path=/tmp/krill` - this will build Krill from sources
+  - `-var krill_version=vX.Y.Z` - this will install a specific Krill Docker image
+
 Terraform will:
-1. Create a Digital Ocean droplet or AWS EC2 instance.
-2. Create A and AAAA DNS records pointing to the droplet/instance.
-3. Install Docker on the droplet and secure the Docker daemon with TLS authentication.
+1. _(if not run_on_localhost)_ Create a Digital Ocean droplet or AWS E2C2 instance.
+2. _(if not run_on_localhost)_ Create A and AAAA DNS records pointing to the droplet/instance.
+3. _(if not run_on_localhost)_ Install Docker on the droplet and secure the Docker daemon with TLS authentication.
 4. Create "external" persistent volumes for Lets Encrypt certificates and for Krill RSYNC data.
-5. Invoke Docker Compose to build images, and deploy the private network and containers on the droplet.
-6. Configure Krill.
-7. Run the Krill E2E tests.
+5. Invoke Docker Compose to build images, and deploy the private network and containers locally or on the droplet.
+6. Setup a Python virtual environment, install `rtrlib/python-binding` into it and any Krill E2E test Python dependencies (see `requirements.txt`).
+7. Downloads `doc/openapi.yaml` from GitHub for the Krill version under test and invoke the OpenAPI generator to generate a Python client library in the Python venv.
+8. Copies the Krill `tests/e2e` test suite directory into `krill-e2e-test/tests/e2e`.
+9. Runs [pytest](https://docs.pytest.org/en/latest/) in the `krill-e2e-test/tests` directory.
+
+> _**Tip:** If you see `WARNING  Host is already in use by another container` in the output it may mean that something is already bound to port 443. The test currently always tries to bind to the host interface, even when running locally even though it is not needed locally. If you have something else running on port 443, try stopping it and re-running apply._
+
+> _**Tip:** If you see unexpected errors it might be worth re-running apply while running `tail -F /var/log/syslog | grep -i docker` in another terminal. For example the above port 443 issue shows up in the Docker syslog entries as `Failed to allocate and map port 443-443: Error starting userland proxy: listen tcp 0.0.0.0:443: bind: address already in use`._
 
 > _**Note:** Even though off-the-shelf Docker images are used for the RPs, images still need to be built for them because some tooling is installed to fetch, process and install the TAL and to parse and convert the ROA output into a "standard" format expected by the test suite. Additionally the Krill image has to be built and preferably without having to build the entire Rust application and dependencies from scratch. Currently a "hack" is used to accelerate the Krill image build whereby a not-too-old copy of the Krill Docker image `builder` stage is used as the base for the new image, thereby leveraging the Cargo build cache that already exists in the (very large) image._
 
@@ -350,19 +376,13 @@ Terraform will:
 What are the containers doing? The descriptions below are based on publication via RRDP. Alternatively Krill can also [publish via rsync](https://rpki.readthedocs.io/en/latest/rpki/using-rpki-data.html?highlight=rsync#fetching-and-verifying).
 
 ```
-Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encrypt
+Operator    Docker    Docker Hub    NGINX    Krill    Relying Party
    |
    |---Up---->|
    |          |---Pull--->|
    |          |<--Image---|
    |          |
    |          |---Create & run------->|------->|--------->|
-   |                                  |
-   |                                  |---Request certificate------------>|
-   |                                  |<--Perform HTTP challenge----------|
-   |                                  |                                   |
-   |                                  |---Respond to HTTP challenge------>|
-   |                                  |<--Issue certificate---------------|
    |                                  |
    |                                  |        | Make TA
    |                                  |        |
@@ -375,16 +395,14 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
    .                                  .        .          .
    .                                  .        .          .
    .                                  .        .          .
-   |--Create ROAs using krillc------->|        |          |
+   |---Run test suite---------------->|        |          |
    |                                  | Proxy->|          |
    |                                           | Publish  |
    |                                           |          |
    |                                           |<--Fetch--|
    |                                           |-via RRDP>| Parse & Verify
-   |                                                      |
-   |<---------------------Read ROAs-----------------------| Output ROAs to standard out / Docker console
-   |
-   | Compare ROAs to Krills ROAs
+   |                                                      
+   | ... (fetch ROAs from the RPs via RTR and compare them to those fetched from Krill)
    ```
 
 1. Docker:
@@ -393,10 +411,7 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
    c. Creates the containers.
 
 2. On the Nginx container:
-   a. Request a certificate from Lets Encrypt.
-   b. Answer the challenge from Lets Encrypt to Nginx at http://some.domain/.
-   c. Receive and install the new certificate from Lets Encrypt.
-   d. Proxy requests to port 443 via the private network to port 3000 of the Krill container.
+   a. Proxy requests to port 443 via the private network to port 3000 of the Krill container.
 
 3. On the Krill container:
    a. `use_ta=true` causes Krill to setup a test Trust Anchor.
@@ -408,19 +423,17 @@ Operator    Docker    Docker Hub    NGINX    Krill    Relying Party   Lets Encry
    d. The RP tool (periodically) queries the Krill RRDP server at https://some.domain/rrdp/notification.xml and follows links contained in the response.
    e. The RP tool outputs, or a helper script queries, the ROAs from the RP and outputs them to standard out / the Docker logs.
 
-5. Terraform runs the configure Krill script which creates [ROAs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html#route-origin-authorisations) in Krill.
+5. Terraform runs the test suite.
 
-6. Krill publishes the ROAs.
-
-7. RPs detect the ROAs via RRDP, validate and serve/output them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity). In a real deployment these VRPs would be consumed by Routers connected to the RPs.
+6. If the test suite creates ROAs in Krill, the RPs detect them via RRDP or Rsync, validate and serve them as [VRPs](https://rpki.readthedocs.io/en/latest/rpki/securing-bgp.html?highlight=vrp#route-announcement-validity) via the RTR protocol. In a real deployment these VRPs would be consumed by Routers connected to the RPs. The test suite is able to run an RTR client to consume the VRPs and compare them to the ROAs created in Krill.
 
 ### Post deployment
 
-> Terraform does these steps automatically via the configure Krill script.
+Terraform executes the Python based end-to-end test suite.
 
-We can use the `krillc` binary installed in the `krill` container to create a CA that is a child of the embedded TA and then create ROAs in the child.
+### Inspect
 
-#### Prepare to use Krillc
+#### Prepare to use Docker and Docker Compose
 
 Before you can use docker and docker-compose commands you must first tell docker and   docker-compose to connect to the Docker daemon running on the Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:_
 
@@ -430,6 +443,8 @@ Before you can use docker and docker-compose commands you must first tell docker
 | Unset the env vars | `eval $(terraform output unset_docker_env_vars)` |
 
 > _**Note:** To execute `docker-compose` commands you must be in the `docker/` subdirectory so that the Docker Compose template can be found._
+
+#### Prepare to use Krillc
 
 ```bash
 $ eval $(terraform output docker_env_vars)
@@ -442,31 +457,6 @@ $ alias krillc="docker exec \
 ```
 
 You are now ready to issue `krillc` commands.
-
-#### Create a CA as a child of the embedded TA
-
-```bash
-$ krillc add --ca child
-$ krillc children add --embedded --ca ta --child child --ipv4 "10.0.0.0/16"
-$ krillc parents add --embedded --ca child --parent ta
-```
-
-#### Create some fake ROAs
-
-For the next step the `krillc` command takes a file as input and the demo mounts `/tmp/ka` in the container from the same location in the host. However, the filesystem is that of the remote droplet, nor our host filesystem. So we have to copy the file to the droplet before we can import it into Krill:
-
-```bash
-$ cat <<EOF >/tmp/delta.1
-A: 10.0.0.0/24 => 64496
-A: 10.0.1.0/24 => 64496
-EOF
-$ scp -i ${TF_VAR_ssh_key_path} /tmp/delta.1 root@somehostname.some.domain:/tmp/ka/
-$ krillc roas update --ca child --delta /tmp/ka/delta.1
-```
-
-> When [issue #129](https://github.com/NLnetLabs/krill/issues/129) is resolved this will no longer require a file upload but will instead be possible via STDIN.
-
-### Inspect
 
 #### Display container logs
 
@@ -494,39 +484,15 @@ $ terraform destroy
 
 ## Testing
 
-### Querying the RPs
-
-Each RP has its own external interfaces (logging, writing to a file, serving a HTTP endpoint), run mode (daemon or one shot or both) and format in which the data is exposed.
-
-Rather than have the test script know about and deal with each of these differences, instead each RP Docker image is extended to extract the ROA data and log it in a "standard" format that the test script can extract using the `docker logs` command:
-
-```
-TEST OUT: { "roas": [ <ROA>, <ROA>, ... ] }
-```
-
-Where the content after `TEST OUT: ` is JSON and is all on one line, and where `<ROA>` is of the form:
-
-```
-{ "asn": "AS64496", "prefix": "10.0.1.0/24", "maxLength": 24, "ta": "ta" }
-```
-
-The test script uses [./jq](https://stedolan.github.io/jq/) to parse the JSON output and then uses `sort` and `diff` to compare the output to expected output in the same format, but based on the output of Krill.
-
 ### Results
 
 ```
-module.post.null_resource.run_tests[0] (local-exec): test_krill.sh: Try 1/12: test_compare_krill_roas_to_logs <RP NAME>:
-module.post.null_resource.run_tests[0] (local-exec): OKAY
-module.post.null_resource.run_tests[0] (local-exec): test_krill.sh: Try 1/12: test_compare_krill_roas_to_logs <RP NAME>:
-module.post.null_resource.run_tests[0] (local-exec): OKAY
-...
-module.post.null_resource.run_tests[0] (local-exec): TEST REPORT: M/N tests passed with O expected failures.
-module.post.null_resource.run_tests[0] (local-exec): TEST END
+module.post.null_resource.run_tests[0] (local-exec): ----------------- generated html file: file:///tmp/report.html -----------------
 ```
 
 ## RP details
 
-This section details which Relying Party tools are tested against Krill. The information below is correct at the time of wriitng.
+This section details which Relying Party tools are configured for testing with Krill. The information below is correct at the time of writing.
 
 ### FORT Validator
 
@@ -537,7 +503,13 @@ This section details which Relying Party tools are tested against Krill. The inf
 | Image    | [`ximoneigteen/fortvalidator`](https://hub.docker.com/r/ximoneighteen/fortvalidator) |
 
 Notes:
-- Invoked with `--mode standalone --output.roa`
+- Invoked with `--log.level info
+    --local-repository /repo
+    --tal /tals
+    --tal ${TAL_DIR}/ta.tal
+    --server.interval.refresh 5
+    --server.interval.retry 5
+    --server.interval.validation 60`
 
 ### OctoRPKI
 
@@ -548,7 +520,7 @@ Notes:
 | Image    | [`cloudflare/octorpki`](https://hub.docker.com/r/cloudflare/octorpki) |
 
 Notes:
-- Invoked with `-mode oneoff -output.roa`
+- Invoked with `-tal.name ta -tal.root ${TAL_DIR}/ta.tal -refresh 5s -output.sign=false`
 
 ### Routinator
 
@@ -559,7 +531,9 @@ Notes:
 | Image    | [`nlnetlabs/routinator`](https://hub.docker.com/r/nlnetlabs/routinator) |
 
 Notes:
-- Invoked with `vrps -o -f json --complete`
+- Invoked with `-vvv
+    server
+    --rtr 0.0.0.0:3323 --http 0.0.0.0:9556`
 
 ### Rcynic
 
@@ -570,11 +544,16 @@ Notes:
 | Image    | [`ximoneighteen/rcynic`](https://hub.docker.com/r/ximoneighteen/rcynic) |
 
 Notes:
-- Invoked with `rcynic --config --xml-file --no-prefer-rsync`.
+- Invoked with `--config /opt/rcynic.conf
+    --unauthenticated ${DATA_DIR}/unauthenticated
+    --xml-file ${DATA_DIR}/validator.log.xml
+    --tals ${TAL_DIR}
+    --no-prefer-rsync`.
 - Configured to log at debug level to stderr and to use sqlite3 as the db engine.
 - Binary DER ROA objects are retrieved via SQLite query from DB table `rcynicdb_rpkiobject`.
 - When not using the Krill embedded TA, ROA objects who `uri` field is `LIKE` the FQDN in the TAL are excluded.
 - `SELECT writefiled(id, der)` output is converted to text using `print_roa`.
+- The text is converted to [GoRTR](https://github.com/cloudflare/gortr) compatible JSON and served from [lighttpd](https://www.lighttpd.net/) for GoRTR to fetch.
 
 ### rpki-client
 
@@ -585,10 +564,10 @@ Notes:
 | Image    | [`ximoneighteen/rpki-client:latest`](https://hub.docker.com/r/ximoneighteen/rpki-client) |
 
 Notes:
-- Invoked with `-e /usr/bin/rsync`.
+- Invoked with `-e /usr/bin/rsync -t ${TAL_DIR}/*.tal ${DATA_DIR}`.
 - The v0.2.0 release (Jun 16 2019) is not used because it causes error `tal.c:109: tal_parse_stream: Assertion ``line[linelen - 1] == '\n'' failed`.
 - The `kristapsdz` version is used (as opposed to the OpenBSD version) because it supports Linux and OpenBSD cannot run inside a Docker container.
-
+- The text is converted to [GoRTR](https://github.com/cloudflare/gortr) compatible JSON and served from [lighttpd](https://www.lighttpd.net/) for GoRTR to fetch.
 
 ### RPKI Validator 3
 
@@ -601,3 +580,7 @@ Notes:
 Notes:
 - JVM min/max memory permitted is reduced from the default 1-1.5 GiB to 256-512 MiB.
 - ROAs are retrieved by `test_krill.sh` from the container at `:8080/api/export.json`.
+
+### GoRTR
+
+Several GoRTR instances are configured for making VRPs from OctoRPKI, rcynic and rpki-client available to the test suite via the RTR protocol.
