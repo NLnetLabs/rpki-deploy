@@ -568,8 +568,7 @@ Notes:
 | Image    | [`ripencc/rpki-validator-3-docker:alpine`](https://hub.docker.com/r/ripencc/rpki-validator-3-docker) |
 
 Notes:
-- JVM min/max memory permitted is reduced from the default 1-1.5 GiB to 256-512 MiB.
-- ROAs are retrieved by `test_krill.sh` from the container at `:8080/api/export.json`.
+- Strict validation mode is enabled.
 
 ### GoRTR
 
