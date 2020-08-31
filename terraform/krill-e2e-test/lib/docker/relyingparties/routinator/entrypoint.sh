@@ -15,5 +15,6 @@ my_log "Launching Routinator"
 cd ${DATA_DIR}
 routinator \
     -vvv \
+    --strict \
     server \
     --rtr 0.0.0.0:3323 --http 0.0.0.0:9556
