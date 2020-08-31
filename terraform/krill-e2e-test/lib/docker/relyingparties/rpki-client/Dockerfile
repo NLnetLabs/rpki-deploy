@@ -1,8 +1,7 @@
-# Use 'latest' because with 0.2.0 we get error
-# "tal.c:109: tal_parse_stream: Assertion `line[linelen - 1] == '\n'' failed."
-FROM ximoneighteen/rpki-client:latest
+FROM ximoneighteen/rpki-client
 
 # Install packages
+USER root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         lighttpd \

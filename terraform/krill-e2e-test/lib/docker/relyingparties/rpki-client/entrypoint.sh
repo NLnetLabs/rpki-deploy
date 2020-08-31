@@ -8,7 +8,7 @@ GORTR_OUTPUT_JSON_PATH=/var/www/html/output.json
 
 mkdir -p ${DATA_DIR}
 mkdir -p ${TAL_DIR}
-chown nobody. ${DATA_DIR}
+chown _rpki-client. ${DATA_DIR}
 
 export BANNER="rpki-client setup for Krill"
 source /opt/my_funcs.sh
