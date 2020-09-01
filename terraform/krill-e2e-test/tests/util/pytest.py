@@ -11,4 +11,9 @@ def isfailed(request):
     # failed so we assume that this indicates failure.
     key = (request.node.nodeid, 'call')
     reports = request.node.module._test_reports
-    return reports[key].outcome == 'failed' if key in reports else True
+    if key in reports:
+        return reports[key].outcome == 'failed'
+    else:
+        # Don't fail when invoked for something that wasn't called but also
+        # wasn't setup (so there was nothing that could have failed).
+        return (request.node.nodeid, 'setup') in reports
