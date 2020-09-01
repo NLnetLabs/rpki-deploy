@@ -1,0 +1,5 @@
+WARNING!!
+
+rootCA.crt MUST be the same file as ../../nginx/rootCA.crt.
+
+We can't sym link to that file as the Dockerfile COPY directive will not follow a sym link outside the build context directory.
