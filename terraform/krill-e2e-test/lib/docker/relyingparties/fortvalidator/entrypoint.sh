@@ -19,7 +19,10 @@ FORT_VER=$(fort -V)
 my_log "Launching Fort Validator version ${FORT_VER}"
 cd ${DATA_DIR}
 /usr/local/bin/fort \
+    --configuration-file /opt/fort.conf \
     --log.level info \
+    --validation-log.enabled \
+    --validation-log.level info \
     --local-repository ${REPO_DIR} \
     --tal ${TAL_DIR}/ta.tal \
     --server.interval.refresh 5 \
