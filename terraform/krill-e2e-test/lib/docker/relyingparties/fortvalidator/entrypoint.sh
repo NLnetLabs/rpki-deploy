@@ -11,7 +11,7 @@ mkdir -p ${REPO_DIR}
 export BANNER="Fort Validator setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal --rewrite
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
 
 my_log "Querying Fort Validator version"
 FORT_VER=$(fort -V)
