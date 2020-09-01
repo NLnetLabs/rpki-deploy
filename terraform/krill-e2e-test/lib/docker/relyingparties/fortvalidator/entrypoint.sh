@@ -3,8 +3,10 @@ set -e -u -o pipefail
 
 DATA_DIR=/tmp/fortvalidator
 TAL_DIR=${DATA_DIR}/tals
+REPO_DIR=${DATA_DIR}/repo
 mkdir -p ${DATA_DIR}
 mkdir -p ${TAL_DIR}
+mkdir -p ${REPO_DIR}
 
 export BANNER="Fort Validator setup for Krill"
 source /opt/my_funcs.sh
@@ -16,10 +18,9 @@ FORT_VER=$(fort -V)
 
 my_log "Launching Fort Validator version ${FORT_VER}"
 cd ${DATA_DIR}
-/usr/bin/fort \
+/usr/local/bin/fort \
     --log.level info \
-    --local-repository /repo \
-    --tal /tals \
+    --local-repository ${REPO_DIR} \
     --tal ${TAL_DIR}/ta.tal \
     --server.interval.refresh 5 \
     --server.interval.retry 5 \

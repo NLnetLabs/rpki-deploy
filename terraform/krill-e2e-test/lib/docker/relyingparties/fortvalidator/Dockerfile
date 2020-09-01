@@ -1,8 +1,7 @@
 FROM ximoneighteen/fortvalidator
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y install wget
+RUN apk add bash ca-certificates wget
 COPY --from=relyingpartybase /opt/* /opt/
+COPY entrypoint.sh /opt/
 RUN mv /opt/rootCA.crt /usr/local/share/ca-certificates/
-COPY entrypoint.sh /opt/krill-entrypoint.sh
-RUN update-ca-certificates
-ENTRYPOINT ["/tini", "-g", "--", "/opt/krill-entrypoint.sh"]
+RUN update-ca-certificates || true
+ENTRYPOINT ["tini", "-g", "--", "/opt/entrypoint.sh"]
