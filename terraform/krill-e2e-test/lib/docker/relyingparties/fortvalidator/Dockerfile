@@ -1,4 +1,4 @@
-FROM ximoneighteen/fortvalidator
+FROM nicmx/fort-validator
 RUN apk add bash ca-certificates wget
 COPY --from=relyingpartybase /opt/* /opt/
 COPY entrypoint.sh /opt/
