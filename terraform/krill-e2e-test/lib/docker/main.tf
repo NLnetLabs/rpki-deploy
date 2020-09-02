@@ -88,7 +88,7 @@ resource "null_resource" "setup_docker" {
     working_dir = var.docker_compose_dir
     command     = <<-EOT
         set -eu
-        docker-compose pull --ignore-pull-failures
+        docker-compose pull --ignore-pull-failures --quiet
         docker-compose build ${var.docker_is_local ? "" : "--compress"}
     EOT
   }
