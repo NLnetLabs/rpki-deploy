@@ -1,4 +1,4 @@
-FROM nlnetlabs/routinator:unstable
+FROM nlnetlabs/routinator
 COPY entrypoint.sh /opt/
 COPY --from=relyingpartybase /opt/* /opt/
 USER root
