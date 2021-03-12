@@ -99,9 +99,7 @@ class ServiceManager:
                 container_logs = os.linesep.join(
                     get_container_logs(
                         self.docker_project,
-                        service_name,
-                        since=self.start_time,
-                        until=self.end_time))
+                        service_name))
                 logging.warn(f'Test failed, dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
 
         logging.info(f'Killing and removing services: {all_service_names}')
