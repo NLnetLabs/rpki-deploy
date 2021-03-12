@@ -110,7 +110,7 @@ class ServiceManager:
 
 
 def get_docker_host_fqdn():
-    return os.getenv('KRILL_FQDN')
+    return os.getenv('KRILL_FQDN_FOR_TEST')
 
 
 @pytest.fixture()
