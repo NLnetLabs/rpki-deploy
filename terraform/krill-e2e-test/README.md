@@ -30,6 +30,7 @@
     - [Fetch the test suite](#fetch-the-test-suite)
     - [Deploy](#deploy)
       - [Container startup sequence](#container-startup-sequence)
+  - [Diagnosing issues](#diagnosing-issues)
 
 <!-- /code_chunk_output -->
 
@@ -573,3 +574,20 @@ Notes:
 ### GoRTR
 
 Several GoRTR instances are configured for making VRPs from OctoRPKI, rcynic and rpki-client available to the test suite via the RTR protocol.
+
+# Diagnosing issues
+
+- Increase the Krill log level via Terraform command line argument `-var krill_log_level=trace`.
+- During the test inspect the deployed Docker containers and their logs, e.g. `docker logs krill`.
+- During the test query the deployed services directly via Docker port proxying, e.g.
+```
+Fetch from the Krill RRDP endpoint:
+$ curl --cacert ../lib/docker/relyingparties/base/rootCA.crt --resolve nginx.krill.test:443:127.0.0.1 https://nginx.krill.test/rrdp/notification.xml
+
+Fetch from the Rsync endpoint:
+$ rsync --list-only rsync://127.0.0.1/repo/
+
+Query Routinator metrics:
+$ curl http://127.0.0.1:9556/metric 
+```
+- You can see which ports are proxied with `sudo netstat -ntlp` which should show clearly the Docker proxy ports.
