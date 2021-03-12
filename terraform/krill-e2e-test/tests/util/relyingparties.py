@@ -28,7 +28,7 @@ class RelyingParty:
         return self.name
 
     def is_ready(self):
-        raise NotImplementedError("RP {self.name} does not have an is_ready() implementation")
+        raise NotImplementedError(f"RP {self.name} does not have an is_ready() implementation")
 
 
 class RPKIValidator3(RelyingParty):
