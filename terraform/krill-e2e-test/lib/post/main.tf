@@ -41,7 +41,7 @@ locals {
     }
     app_vars = {
         KRILL_FQDN          = var.krill_fqdn
-        KRILL_FQDN_FOR_TEST = var.docker_is_local ? "localhost" : var.krill_fqdn
+        KRILL_FQDN_FOR_TEST = var.docker_is_local ? "127.0.0.1" : var.krill_fqdn
         KRILL_USE_TA        = var.krill_use_ta
         KRILL_VERSION       = var.krill_version
         KRILL_AUTH_TOKEN    = var.krill_auth_token
