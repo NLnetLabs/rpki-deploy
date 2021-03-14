@@ -72,7 +72,7 @@ resource "null_resource" "setup" {
             set -eu
             python3 -m venv $VENVDIR
             . $VENVDIR/bin/activate
-            pip3 install "wheel==0.33.6"
+            pip3 install -U setuptools wheel setuptools-rust
             pip3 install -r ../../tests/requirements.txt
 
             cd $TMPDIR
