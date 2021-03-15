@@ -105,7 +105,7 @@ services:
       - rtrtr
 
   rtrtr:
-    image: ximoneighteen/rtrtr:v0.1.2-dev
+    image: nlnetlabs/rtrtr:v0.1.2
     container_name: rtrtr
     dns: 8.8.8.8
     networks:
