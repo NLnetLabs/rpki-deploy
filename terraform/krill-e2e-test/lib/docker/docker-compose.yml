@@ -23,6 +23,11 @@ services:
     container_name: krill
     environment:
       - KRILL_AUTH_TOKEN
+      - KRILL_FQDN
+      - KRILL_LOG_LEVEL
+      - KRILL_HTTPS_ROOT_CERTS=/krill_configs/rootCA.crt
+      - KRILL_TESTBED_RSYNC=rsync://rsyncd.krill.test/repo/
+      - KRILL_TESTBED_RRDP=https://$KRILL_FQDN/rrdp/
     volumes:
       - rsync_data:/var/krill/data/repo/rsync/
       - krill_configs:/krill_configs/
@@ -97,17 +102,23 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
-      - gortr-octorpki
+      - rtrtr
 
-  gortr-octorpki:
-    image: cloudflare/gortr
-    container_name: gortr-octorpki
+  rtrtr:
+    image: ximoneighteen/rtrtr:v0.1.2-dev
+    container_name: rtrtr
     dns: 8.8.8.8
     networks:
       - krill-net
     ports:
+      - "8081:8080"
       - "8083:8083"
-    command: ["-bind", ":8083", "-cache", "http://octorpki:8080/output.json", "-refresh", "5", "-verify=false"]
+      - "8084:8084"
+      - "8085:8085"
+      - "9001:9001"
+    volumes:
+      - krill_configs:/krill_configs/
+    command: ["-vvv", "-c", "/krill_configs/rtrtr.conf"]
     restart: on-failure
 
   fortvalidator:
@@ -158,18 +169,7 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
-      - gortr-rcynic
-
-  gortr-rcynic:
-    image: cloudflare/gortr
-    container_name: gortr-rcynic
-    dns: 8.8.8.8
-    networks:
-      - krill-net
-    ports:
-      - "8084:8084"
-    command: ["-bind", ":8084", "-cache", "http://rcynic/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
-    restart: on-failure
+      - rtrtr
 
   rpkiclient:
     build:
@@ -185,18 +185,7 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
-      - gortr-rpkiclient
-
-  gortr-rpkiclient:
-    image: cloudflare/gortr
-    container_name: gortr-rpkiclient
-    dns: 8.8.8.8
-    networks:
-      - krill-net
-    ports:
-      - "8085:8085"
-    command: ["-bind", ":8085", "-cache", "http://rpkiclient/output.json", "-refresh", "5", "-verify=false", "-checktime=false"]
-    restart: on-failure
+      - rtrtr
 
   relyingpartybase:
     image: relyingpartybase

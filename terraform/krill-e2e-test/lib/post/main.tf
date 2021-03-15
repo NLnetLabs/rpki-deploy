@@ -40,7 +40,8 @@ locals {
         DOCKER_MACHINE_NAME = var.docker_is_local ? null : var.hostname
     }
     app_vars = {
-        KRILL_FQDN          = var.docker_is_local ? "localhost" : var.krill_fqdn
+        KRILL_FQDN          = var.krill_fqdn
+        KRILL_FQDN_FOR_TEST = var.docker_is_local ? "127.0.0.1" : var.krill_fqdn
         KRILL_USE_TA        = var.krill_use_ta
         KRILL_VERSION       = var.krill_version
         KRILL_AUTH_TOKEN    = var.krill_auth_token
@@ -71,7 +72,7 @@ resource "null_resource" "setup" {
             set -eu
             python3 -m venv $VENVDIR
             . $VENVDIR/bin/activate
-            pip3 install "wheel==0.33.6"
+            pip3 install -U setuptools wheel setuptools-rust
             pip3 install -r ../../tests/requirements.txt
 
             cd $TMPDIR
@@ -96,22 +97,40 @@ resource "null_resource" "setup" {
             # cp /home/ximon/src/krill/krill-master/doc/openapi.yaml $GENDIR
             if [ "${var.krill_build_path}" != "" ]; then
                 cp ${var.krill_build_path}/doc/openapi.yaml $GENDIR/
+                cp ${var.krill_build_path}/doc/openapi-pubd.yaml $GENDIR/
             else
                 wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi.yaml
+                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi-pubd.yaml
             fi
+
+            # An alternate approach to generating two client libraries, one for the CA daemon and one for the publisher
+            # daemon, could be to use https://www.npmjs.com/package/openapi-merge-cli to merge the OpenAPI
+            # specifications into one. We don't do that here at the moment because it's preferable to work the same way
+            # that customers are expected to work, and as customers are advised to deploy the CA daemon and publisher
+            # daemon separately they would need to speak to them separately using separate client libraries. Currently
+            # in this test we still run a combined CA and publisher daemon, we might change that at some point.
 
             docker run --name openapi-generator --rm -v $GENDIR:/local \
                 openapitools/openapi-generator-cli:v4.2.2 generate \
                 -i /local/openapi.yaml \
                 -g python \
-                -o /local/out \
+                -o /local/outca \
                 --skip-validate-spec \
-                --additional-properties=packageName=krill_api
+                --additional-properties=packageName=krill_ca_api
+
+            docker run --name openapi-generator --rm -v $GENDIR:/local \
+                openapitools/openapi-generator-cli:v4.2.2 generate \
+                -i /local/openapi-pubd.yaml \
+                -g python \
+                -o /local/outpub \
+                --skip-validate-spec \
+                --additional-properties=packageName=krill_pub_api
 
             . $VENVDIR/bin/activate
 
             cd $GENDIR
-            pip3 install $GENDIR/out/
+            pip3 install $GENDIR/outca/
+            pip3 install $GENDIR/outpub/
         EOT
     }
 

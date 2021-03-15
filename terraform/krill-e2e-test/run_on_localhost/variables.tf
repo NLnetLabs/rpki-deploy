@@ -7,7 +7,7 @@ variable "krill_auth_token" {
 variable "krill_log_level" {
   type        = string
   default     = "debug"
-  description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: info."
+  description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: debug."
 }
 
 variable "krill_build_path" {
