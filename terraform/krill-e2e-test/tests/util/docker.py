@@ -67,6 +67,7 @@ class ServiceManager:
     def capture_service_version(self, service_name):
         if service_name in versions_by_service_name:
             # We've already captured the version of this service
+            logging.info(f"Version of service (captured in an earlier test) {service_name}: {versions_by_service_name[service_name]}")
             return
 
         if service_name not in version_cmds_by_service_name:
