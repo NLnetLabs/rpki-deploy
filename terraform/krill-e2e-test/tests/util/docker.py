@@ -17,12 +17,6 @@ version_cmds_by_service_name = {}
 versions_by_service_name = {}
 
 
-# Register some commands that we know about for querying service versions by running the command inside the service
-# container.
-register_version_cmd('krill', 'krill --version')
-register_version_cmd('rtrtr', 'rtrtr --version') 
-
-
 def register_version_cmd(service_name, cmd):
     version_cmds_by_service_name[service_name] = cmd
 
@@ -67,8 +61,8 @@ class ServiceManager:
 
         logging.info(f'Active containers: {[c.name for c in self.docker_project.containers()]}')
 
-        for service_name in self.service_names:
-            self.capture_service_version(service_name)
+        for service in self.docker_project.containers():
+            self.capture_service_version(service.name)
 
     def capture_service_version(self, service_name):
         if service_name in versions_by_service_name:
@@ -156,3 +150,10 @@ def function_service_manager(request, metadata):
     mgr = ServiceManager(request, metadata)
     yield mgr
     mgr.teardown()
+
+
+
+# Register some commands that we know about for querying service versions by running the command inside the service
+# container.
+register_version_cmd('krill', 'krill --version')
+register_version_cmd('rtrtr', 'rtrtr --version') 
