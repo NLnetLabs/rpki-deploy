@@ -18,4 +18,5 @@ routinator \
     --strict \
     --rrdp-root-cert=/opt/rootCA.crt \
     server \
-    --rtr 0.0.0.0:3323 --http 0.0.0.0:9556
+    --rtr 0.0.0.0:3323 --http 0.0.0.0:9556 \
+    --refresh 10
