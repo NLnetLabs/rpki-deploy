@@ -87,6 +87,24 @@ services:
     restart: on-failure
     depends_on:
       - relyingpartybase
+  
+  routinator_unstable:
+    build:
+      context: relyingparties/routinator_unstable
+      network: host
+    container_name: routinator_unstable
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    environment:
+      - KRILL_FQDN
+      - SRC_TAL
+    ports:
+      - "3323:3323"
+      - "9556:9556"
+    restart: on-failure
+    depends_on:
+      - relyingpartybase
 
   octorpki:
     build:

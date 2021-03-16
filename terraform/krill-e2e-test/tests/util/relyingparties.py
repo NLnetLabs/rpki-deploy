@@ -63,6 +63,7 @@ class RPKIValidator3(RelyingParty):
 # we use here but sometimes there's a lot of variability in the GitHub Actions runner performance so we
 # leave it higher than necessary to cope with any such slower than usual system performance.
 Routinator = RelyingParty('routinator', 3323, 20, "routinator --version")
+RoutinatorUnstable = RelyingParty('routinator_unstable', 3323, 20, "routinator --version")
 
 # Fort also serves RTR directly. In testing it typically responds in a few seconds but like for Routinator
 # we use a higher timeout just in case host or RP performance varies a bit.
