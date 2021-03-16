@@ -105,7 +105,7 @@ services:
       - rtrtr
 
   rtrtr:
-    image: nlnetlabs/rtrtr:v0.1.2
+    image: nlnetlabs/rtrtr
     container_name: rtrtr
     dns: 8.8.8.8
     networks:

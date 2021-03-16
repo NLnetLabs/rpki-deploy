@@ -17,6 +17,12 @@ version_cmds_by_service_name = {}
 versions_by_service_name = {}
 
 
+# Register some commands that we know about for querying service versions by running the command inside the service
+# container.
+register_version_cmd('krill', 'krill --version')
+register_version_cmd('rtrtr', 'rtrtr --version') 
+
+
 def register_version_cmd(service_name, cmd):
     version_cmds_by_service_name[service_name] = cmd
 
