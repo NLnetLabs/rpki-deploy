@@ -31,6 +31,8 @@ services:
     volumes:
       - rsync_data:/var/krill/data/repo/rsync/
       - krill_configs:/krill_configs/
+    ports:
+      - "3000:3000"
     networks:
       - krill-net
     restart: unless-stopped
