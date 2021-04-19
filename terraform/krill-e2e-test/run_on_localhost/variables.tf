@@ -1,4 +1,4 @@
-variable "krill_auth_token" {
+variable "krill_admin_token" {
   type        = string
   default     = "61d81ea4-8a89-42c1-bb23-3e7eb79eaa60"
   description = "The authentication token Krill should restrict access to. Default: Random."

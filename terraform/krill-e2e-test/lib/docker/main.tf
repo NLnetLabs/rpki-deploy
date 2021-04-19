@@ -1,7 +1,7 @@
 variable "domain" {}
 variable "hostname" {}
 variable "krill_version" {}
-variable "krill_auth_token" {}
+variable "krill_admin_token" {}
 variable "krill_build_path" {}
 variable "krill_log_level" {}
 variable "krill_use_ta" {}
@@ -28,7 +28,7 @@ locals {
   }
 
   krill_env_vars = {
-    KRILL_AUTH_TOKEN    = var.krill_auth_token
+    KRILL_ADMIN_TOKEN   = var.krill_admin_token
     KRILL_LOG_LEVEL     = var.krill_log_level
     KRILL_USE_TA        = var.krill_use_ta
     KRILL_FQDN          = var.krill_fqdn

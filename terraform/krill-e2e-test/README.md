@@ -440,10 +440,10 @@ Before you can use docker and docker-compose commands you must first tell docker
 ```bash
 $ eval $(terraform output docker_env_vars)
 $ pushd ../lib/docker/
-$ KRILL_AUTH_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
+$ KRILL_ADMIN_TOKEN=$(docker-compose logs krill 2>&1 | grep -Eo 'token [a-z0-9-]+' | cut -d ' ' -f 2)
 $ alias krillc="docker exec \
     -e KRILL_CLI_SERVER=https://localhost:3000/ \
-    -e KRILL_CLI_TOKEN=${KRILL_AUTH_TOKEN} \
+    -e KRILL_CLI_TOKEN=${KRILL_ADMIN_TOKEN} \
     krill krillc"
 ```
 

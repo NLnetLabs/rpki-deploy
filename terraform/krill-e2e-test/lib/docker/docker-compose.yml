@@ -22,7 +22,7 @@ services:
     image: nlnetlabs/krill:$KRILL_VERSION
     container_name: krill
     environment:
-      - KRILL_AUTH_TOKEN
+      - KRILL_ADMIN_TOKEN
       - KRILL_FQDN
       - KRILL_LOG_LEVEL
       - KRILL_HTTPS_ROOT_CERTS=/krill_configs/rootCA.crt
