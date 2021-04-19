@@ -26,7 +26,7 @@ module "docker_deploy" {
   docker_compose_dir = var.docker_compose_dir
   domain             = var.domain
   hostname           = module.pre.hostname
-  krill_admin_token  = var.krill_admin_token
+  krill_auth_token   = var.krill_auth_token
   krill_build_path   = var.krill_build_path
   krill_log_level    = var.krill_log_level
   krill_version      = var.krill_version
@@ -49,7 +49,7 @@ module "post" {
   krill_fqdn          = module.pre.fqdn
   krill_use_ta        = var.krill_use_ta
   krill_version       = module.docker_deploy.krill_version
-  krill_admin_token    = var.krill_admin_token
+  krill_auth_token    = var.krill_auth_token
   ssh_key_path        = module.pre.ssh_key_path
   ssh_user            = module.create_infra.ssh_user
   src_tal             = module.pre.src_tal

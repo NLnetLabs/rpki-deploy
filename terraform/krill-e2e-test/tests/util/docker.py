@@ -61,13 +61,12 @@ class ServiceManager:
 
         logging.info(f'Active containers: {[c.name for c in self.docker_project.containers()]}')
 
-        for service in self.docker_project.containers():
-            self.capture_service_version(service.name)
+        for service_name in self.service_names:
+            self.capture_service_version(service_name)
 
     def capture_service_version(self, service_name):
         if service_name in versions_by_service_name:
             # We've already captured the version of this service
-            logging.info(f"Version of service (captured in an earlier test) {service_name}: {versions_by_service_name[service_name]}")
             return
 
         if service_name not in version_cmds_by_service_name:
@@ -100,7 +99,9 @@ class ServiceManager:
                 container_logs = os.linesep.join(
                     get_container_logs(
                         self.docker_project,
-                        service_name))
+                        service_name,
+                        since=self.start_time,
+                        until=self.end_time))
                 logging.warn(f'Test failed, dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
 
         logging.info(f'Killing and removing services: {all_service_names}')
@@ -109,7 +110,7 @@ class ServiceManager:
 
 
 def get_docker_host_fqdn():
-    return os.getenv('KRILL_FQDN_FOR_TEST')
+    return os.getenv('KRILL_FQDN')
 
 
 @pytest.fixture()
@@ -151,10 +152,3 @@ def function_service_manager(request, metadata):
     mgr = ServiceManager(request, metadata)
     yield mgr
     mgr.teardown()
-
-
-
-# Register some commands that we know about for querying service versions by running the command inside the service
-# container.
-register_version_cmd('krill', 'krill --version')
-register_version_cmd('rtrtr', 'rtrtr --version') 
