@@ -85,7 +85,7 @@ else
     #     }
 
     roa_der_to_json() {
-        print_roa --brief $1 | sed -e 's|^\([0-9]\+\) \([^/]\+\)/\([0-9]\+\)-\([0-9]\+\)\?|{ "asn": "AS\1", "prefix": "\2/\3", "maxLength": \4 }|'
+        print_roa --brief $1 | sed -e 's|^\([0-9]\+\) \([^/]\+\)/\([0-9]\+\)-\([0-9]\+\)\?|{ "asn": "AS\1", "prefix": "\2/\3", "maxLength": \4, "ta": "ta" }|'
     }
 
     roa_ders_to_json() {

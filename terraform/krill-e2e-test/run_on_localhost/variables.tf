@@ -1,4 +1,4 @@
-variable "krill_auth_token" {
+variable "krill_admin_token" {
   type        = string
   default     = "61d81ea4-8a89-42c1-bb23-3e7eb79eaa60"
   description = "The authentication token Krill should restrict access to. Default: Random."
@@ -7,7 +7,7 @@ variable "krill_auth_token" {
 variable "krill_log_level" {
   type        = string
   default     = "debug"
-  description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: info."
+  description = "The level at which Krill should log. Can be: off, error, warn, info or debug. Default: debug."
 }
 
 variable "krill_build_path" {

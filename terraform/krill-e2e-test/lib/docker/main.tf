@@ -1,7 +1,7 @@
 variable "domain" {}
 variable "hostname" {}
 variable "krill_version" {}
-variable "krill_auth_token" {}
+variable "krill_admin_token" {}
 variable "krill_build_path" {}
 variable "krill_log_level" {}
 variable "krill_use_ta" {}
@@ -18,7 +18,7 @@ variable "docker_is_local" {
 
 locals {
   krill_version = var.krill_build_path != "" ? "dirty" : var.krill_version
-  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase' ." : "echo skipping Krill build"
+  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase-v0.8.1-bis' ." : "echo skipping Krill build"
 
   docker_env_vars = {
     DOCKER_TLS_VERIFY   = var.docker_is_local ? null : "1"
@@ -28,7 +28,7 @@ locals {
   }
 
   krill_env_vars = {
-    KRILL_AUTH_TOKEN    = var.krill_auth_token
+    KRILL_ADMIN_TOKEN   = var.krill_admin_token
     KRILL_LOG_LEVEL     = var.krill_log_level
     KRILL_USE_TA        = var.krill_use_ta
     KRILL_FQDN          = var.krill_fqdn

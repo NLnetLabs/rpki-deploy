@@ -28,7 +28,7 @@ class RelyingParty:
         return self.name
 
     def is_ready(self):
-        raise NotImplementedError("RP {self.name} does not have an is_ready() implementation")
+        raise NotImplementedError(f"RP {self.name} does not have an is_ready() implementation")
 
 
 class RPKIValidator3(RelyingParty):
@@ -58,19 +58,45 @@ class RPKIValidator3(RelyingParty):
 
 
 # Define helper objects for each Relying Party that we can use in the tests.
-Routinator = RelyingParty('routinator', 3323, 20, "routinator --version")
-FortValidator = RelyingParty('fortvalidator', 323, 20, "fort --version")
-OctoRPKI = RelyingParty('octorpki', 8083, 30, "/octorpki -version")
 
-# Some RPs cannot be interrogated for their version, so instead when building a
-# Docker image for them I included a version.txt file whose content was set to
-# the version of the RP software being built in the image.
-RPKIClient = RelyingParty('rpkiclient', 8085, 30, "cat /opt/version.txt")
+# Routinator responds very quickly to a direct RTR connection, we could lower the 20 second timeout that
+# we use here but sometimes there's a lot of variability in the GitHub Actions runner performance so we
+# leave it higher than necessary to cope with any such slower than usual system performance.
+Routinator = RelyingParty('routinator', 3323, 20, "routinator --version")
+RoutinatorUnstable = RelyingParty('routinator_unstable', 3323, 20, "routinator --version")
+
+# Fort also serves RTR directly. In testing it typically responds in a few seconds but like for Routinator
+# we use a higher timeout just in case host or RP performance varies a bit.
+FortValidator = RelyingParty('fortvalidator', 323, 20, "fort --version")
+
+# OctoRPKI doesn't serve RTR itself, instead it produces JSON output which we then serve to RTRTR via
+# Lighttpd. The test suite RTR client then connects to RTRTR. RTRTR exposes ROAs obtained from OctoRPKI
+# JSON-over-HTTP on RTRTR port 8083.
+OctoRPKI = RelyingParty('octorpki', 8083, 20, "/octorpki -version")
+
+# Some RPs cannot be interrogated for their version, so instead when building a Docker image for them I
+# included a version.txt file whose content was set to the version of the RP software being built in the
+# image. Hence the use of 'cat' here.
+#
+# The RIPE NCC RPKI Validator 3 serves RTR itself, but for rpki-client we use Lighttpd and RTRTR as a
+# bridge just as with OctoRPKI. RTRTR exposes VRPs obtained from rpki-client JSON-over-HTTP on RTRTR port
+# 8085.
 RPKIValidator3 = RPKIValidator3('rpkivalidator3', 8323, 240, "cat /opt/version.txt")
+RPKIClient = RelyingParty('rpkiclient', 8085, 20, "cat /opt/version.txt")
 
 # For Rcynic, we have no way of interrogating the service to determine what
 # version it is, and an attempt to add an /opt/version.txt file to the Docker
 # image failed as the image was unable to rebuild rcynic. So for now just quote
 # the GitHub release tag that I believe I used to create the rcynic Docker
 # image that we are currently using.
-Rcynic = RelyingParty('rcynic', 8084, 30, "echo 'Believed to be buildbot-1.0.1544679302'")
+#
+# Like OctoRPKI and rpki-client, rcynic doesn't serve RTR itself and so we use Lighttpd and RTRTR as a
+# bridge. RTRTR exposes VRPs obtained from rcynic JSON-over-HTTP on RTRTR port 8084.
+#
+# In the Rcynic case our librtr Python based client has trouble talking to RTRTR (and in fact rtrclient
+# from the librtr project has the same problem) when it fetches VRPs from Rcynic, via Lighthttpd. For
+# some reason the initial connection attempt fails, but librtr doesn't retry, it just hangs and in the
+# case of the Python client throws a SyncTimeout exception after the configured timeout period. As such
+# we use a low timeout and rely on the test suite retrying a couple of times to successfully fetch the
+# VRPs on a subsequent connection attempt.
+Rcynic = RelyingParty('rcynic', 8084, 5, "echo 'Believed to be buildbot-1.0.1544679302'")
