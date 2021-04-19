@@ -7,7 +7,7 @@ variable "docker_ready" {}
 variable "ssh_key_path" {}
 variable "ssh_user" {}
 variable "krill_version" {}
-variable "krill_auth_token" {}
+variable "krill_admin_token" {}
 variable "krill_build_path" {}
 variable "krill_fqdn" {}
 variable "krill_use_ta" {}
@@ -44,7 +44,7 @@ locals {
         KRILL_FQDN_FOR_TEST = var.docker_is_local ? "127.0.0.1" : var.krill_fqdn
         KRILL_USE_TA        = var.krill_use_ta
         KRILL_VERSION       = var.krill_version
-        KRILL_AUTH_TOKEN    = var.krill_auth_token
+        KRILL_ADMIN_TOKEN   = var.krill_admin_token
         SRC_TAL             = var.src_tal
     }
     tmp_dir = var.tmp_dir == null ? random_id.tmp_dir.hex : var.tmp_dir

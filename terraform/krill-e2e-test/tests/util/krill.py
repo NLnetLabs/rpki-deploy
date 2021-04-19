@@ -50,7 +50,7 @@ def enhanced_exceptions():
 @pytest.fixture(scope="module")
 def krill_api_config():
     configuration = krill_ca_api.Configuration()
-    configuration.access_token = os.getenv('KRILL_AUTH_TOKEN')
+    configuration.access_token = os.getenv('KRILL_ADMIN_TOKEN')
     configuration.host = "https://{}/api/v1".format(os.getenv('KRILL_FQDN_FOR_TEST'))
     configuration.verify_ssl = True
     configuration.ssl_ca_cert = 'relyingparties/base/rootCA.crt'

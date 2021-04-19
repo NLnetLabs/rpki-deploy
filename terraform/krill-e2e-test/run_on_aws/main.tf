@@ -25,7 +25,7 @@ module "docker_deploy" {
   docker_compose_dir = var.docker_compose_dir
   domain             = var.domain
   hostname           = module.pre.hostname
-  krill_auth_token   = var.krill_auth_token
+  krill_admin_token  = var.krill_admin_token
   krill_build_path   = var.krill_build_path
   krill_log_level    = var.krill_log_level
   krill_version      = var.krill_version
