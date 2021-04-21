@@ -1,14 +1,11 @@
 import json
-import krill_api
+import krill_ca_api
 import os
 import pytest
 
 from contextlib import contextmanager
-from krill_api.rest import ApiException
+from krill_ca_api.rest import ApiException
 from tests.util.docker import register_version_cmd
-
-
-register_version_cmd('krill', 'krill --version')
 
 
 class KrillUnknownPublisherException(Exception):
@@ -52,9 +49,9 @@ def enhanced_exceptions():
 
 @pytest.fixture(scope="module")
 def krill_api_config():
-    configuration = krill_api.Configuration()
-    configuration.access_token = os.getenv('KRILL_AUTH_TOKEN')
-    configuration.host = "https://{}/api/v1".format(os.getenv('KRILL_FQDN'))
+    configuration = krill_ca_api.Configuration()
+    configuration.access_token = os.getenv('KRILL_ADMIN_TOKEN')
+    configuration.host = "https://{}/api/v1".format(os.getenv('KRILL_FQDN_FOR_TEST'))
     configuration.verify_ssl = True
     configuration.ssl_ca_cert = 'relyingparties/base/rootCA.crt'
     configuration.assert_hostname = False
@@ -63,7 +60,7 @@ def krill_api_config():
 
 
 def get_tal_url_str():
-    return f'https://{os.getenv("KRILL_FQDN")}/ta/ta.tal'
+    return f'https://{os.getenv("KRILL_FQDN_FOR_TEST")}/ta/ta.tal'
 
 
 def select_krill_config_file(docker_project, cfg_file_name):

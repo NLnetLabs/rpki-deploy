@@ -45,7 +45,7 @@ variable "tags" {
   default     = {}
 }
 
-variable "krill_auth_token" {
+variable "krill_admin_token" {
   type        = string
   description = "The authentication token Krill should restrict access to. Default: Random."
   default     = "None"

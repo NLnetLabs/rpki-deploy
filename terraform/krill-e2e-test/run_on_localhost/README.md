@@ -4,6 +4,8 @@ _(assumes that you have the necessary [pre-requisites installed](https://github.
 
 ## One-time setup
 
+**Note:** Does not work with latest Terraform, last tested with Terraform 0.12.19.
+
 ```
 git clone https://github.com/NLnetLabs/rpki-deploy.git
 cd rpki-deploy/terraform/krill-e2e-test/run_on_localhost
