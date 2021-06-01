@@ -94,13 +94,14 @@ resource "null_resource" "setup" {
             [ -d $GENDIR ] && rm -R $GENDIR
             mkdir -p $GENDIR
 
-            # cp /home/ximon/src/krill/krill-master/doc/openapi.yaml $GENDIR
-            if [ "${var.krill_build_path}" != "" ]; then
+            if [ -f "${var.krill_build_path}/doc/openapi.yaml" ]; then
                 cp ${var.krill_build_path}/doc/openapi.yaml $GENDIR/
                 cp ${var.krill_build_path}/doc/openapi-pubd.yaml $GENDIR/
             else
-                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi.yaml
-                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/${var.krill_version}/doc/openapi-pubd.yaml
+                # Hard-code the OpenAPI spec link as it has been deprecated and removed from latest versions of the
+                # repository.
+                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/v0.9.0-rc3/doc/openapi.yaml
+                wget -O $GENDIR/openapi-pubd.yaml https://raw.githubusercontent.com/NLnetLabs/krill/v0.9.0-rc3/doc/openapi-pubd.yaml
             fi
 
             # An alternate approach to generating two client libraries, one for the CA daemon and one for the publisher
