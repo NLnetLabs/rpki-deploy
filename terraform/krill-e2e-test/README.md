@@ -426,7 +426,7 @@ Terraform executes the Python based end-to-end test suite.
 
 #### Prepare to use Docker and Docker Compose
 
-Before you can use docker and docker-compose commands you must first tell docker and   docker-compose to connect to the Docker daemon running on the Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:_
+Before you can use docker and docker-compose commands you must first tell docker and   docker-compose to connect to the Docker daemon running on the Digital Ocean droplet/AWS EC2 instance. This is done by setting environment variables. The terraform template has been designed to so that you can run the following `eval` commands at the shell prompt to manage these environment variables:
 
 | Action             | Shell command                                    |
 | ------------------ | ------------------------------------------------ |
