@@ -13,7 +13,7 @@ chown _rpki-client. ${DATA_DIR}
 export BANNER="rpki-client setup for Krill"
 source /opt/my_funcs.sh
 
-install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal --rewrite
+install_tal ${SRC_TAL} ${TAL_DIR}/ta.tal
 
 # Add a line break at the end ... at least with the embedded Krill TAL it
 # complains without this about "RFC 7730 section 2.1: failed to parse public key"

@@ -85,56 +85,18 @@ my_retry() {
     done
 }
 
-# Usage: <TAL URL> <INSTALL PATH>
-# See also:
-#   - docker-compose.yml
-#   - krill.conf
-#   - rsyncd.conf
-#   - tal_hack.sh
-install_tal_from_remote() {
-    TAL_URL="$1"
-    INSTALL_PATH="$2"
-    REWRITE="--no-rewrite"
-    [ $# -eq 3 ] && REWRITE="$3"
-
-    # Usage: <URL>
-    # Outputs the TAL to stdout
-    fetch() {
-        wget --no-check-certificate -qO- $@
-    }
-
-    # Usage:
-    #   stdin  - TAL content to rewrite
-    #   stdout - rewritten TAL content
-    # Where rsync://rsyncd/repo/ta/ta.cer will replace http(s)://... in the TAL
-    rewrite_https_tal_to_rsync() {
-        if [[ $# -eq 1 && "$1" == "--rewrite" ]]; then
-            sed -e 's|https\?://.\+.cer|rsync://rsyncd.krill.test/repo/ta/ta.cer|'
-        else
-            cat
-        fi
-    }
-
-    fetch_and_rewrite() {
-        fetch $1 | rewrite_https_tal_to_rsync $3 > $2
-    }
-
-    my_log "Installing remote TAL ${TAL_URL} to ${INSTALL_PATH}"
-    my_retry 12 5 fetch_and_rewrite ${TAL_URL} ${INSTALL_PATH} ${REWRITE}
-}
-
-# Usage: <SRC.TAL> </PATH/TO/DST.TAL> --rewrite
+# Usage: <SRC.TAL> </PATH/TO/DST.TAL>
 # Where: <SRC_TAL> is either a TAL filename or a remote URI
 install_tal() {
     if [[ "$1" == http* ]]; then
-        REWRITE=""
-        [ $# -eq 3 ] && REWRITE=$3
-        install_tal_from_remote $1 $2 $REWRITE
+        my_log "Installing remote TAL $1 to $2"
+        my_retry 12 5 wget --no-check-certificate -qO- $1 > $2
     else
         my_log "Installing local TAL /opt/$1 in $2"
         cp /opt/$1 $2
     fi
 
+    # Wait for the ta.cer file to be copied into place by the tal_hack container running in the background
     RSYNC_URI=$(grep -F 'rsync://' $2 || echo "")
     if [ "${RSYNC_URI}" != "" ]; then
         my_log "Waiting for TA certificate to appear at ${RSYNC_URI}.."
