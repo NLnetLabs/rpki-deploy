@@ -38,12 +38,12 @@ if [[ "${SRC_TAL}" == http* ]]; then
     #   ERR: rsync://rsyncd.krill.test/repo/ta/0/A1ED....A802.mft:
     #   Certificate's AIA ('rsync://rsyncd.krill.test/repo/ta/ta.cer') does not
     #   match parent's URI ('rsync://rsyncd.krill.test/tal_hack/ta.cer').
-    my_log "Monitoring if rewritten TA CER already exists in the RSYNC repo.."
+    my_log "Monitoring if rewritten TA CER already exists in the RSYNC repo at ${DST_PATH}.."
     while true
     do
         # if ! my_try_cmd rsync -4 rsync://${EXT_DOM}/repo/${CER_REL_PATH} >/dev/null; then
         if [ ! -f ${DST_PATH} ]; then
-            my_log "Cloning and rewriting Krill TA CER to the RSYNC repo.."
+            my_log "Cloning and rewriting Krill TA CER from ${CER_URI} to the RSYNC repo at ${DST_PATH}.."
 
             mkdir -p ${DST_DIR}
 
