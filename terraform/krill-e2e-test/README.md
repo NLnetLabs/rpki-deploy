@@ -254,7 +254,7 @@ Not all 3rd party RP tools offer Docker images. For those that don't I have pack
 ### Requirements
 
 This framework requires:
-- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.13)
+- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.19) **(NOTE: does NOT work with Terraform >= v0.13.x due to `Error: Invalid reference from destroy provisioner`)**
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
 - RTRLib (tested with 0.6.3 and 0.7.0), preferably built with NDEBUG defined to disable noisy log output.
@@ -336,7 +336,7 @@ $ git clone https://github.com/nlnetlabs/krill.git
 `apply` explains what will be created then, if you approve, executes the template.
 
 ```bash
-$ cd terraform/krill-e2e-test/deploy_on_XXX (e.g. aws, do or localhost)
+$ cd terraform/krill-e2e-test/run_on_XXX (e.g. aws, do or localhost)
 $ terraform init
 $ terraform apply -var test_suite_path=/tmp/krill/tests/e2e
 ```
