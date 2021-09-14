@@ -264,7 +264,7 @@ When running in the cloud you also need:
 - A [Digital Ocean API token](https://cloud.digitalocean.com/account/api/tokens) or AWS access key and secret access key.
 - A DNS domain managed by Digital Ocean or Amazon Web Services.
 
-### Prepare (optional)
+### Prepare
 
 To install RTRLib with noisy log output disabled:
 
