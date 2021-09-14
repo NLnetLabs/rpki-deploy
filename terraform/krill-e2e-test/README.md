@@ -254,7 +254,7 @@ Not all 3rd party RP tools offer Docker images. For those that don't I have pack
 ### Requirements
 
 This framework requires:
-- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with v0.12.19) **(NOTE: does NOT work with Terraform >= v0.13.x due to `Error: Invalid reference from destroy provisioner`)**
+- The [HashiCorp Terraform](https://www.terraform.io/downloads.html) command line tool (tested with [v0.12.19](https://releases.hashicorp.com/terraform/0.12.19/)) **(NOTE: does NOT work with Terraform >= v0.13.x due to `Error: Invalid reference from destroy provisioner`)**
 - The [Docker](https://docs.docker.com/install/#supported-platforms) command client (tested with v18.09.5).
 - The [Docker Compose](https://docs.docker.com/compose/install/) (tested with v1.24.1) command line tool.
 - RTRLib (tested with 0.6.3 and 0.7.0), preferably built with NDEBUG defined to disable noisy log output.
