@@ -335,13 +335,13 @@ $ git clone https://github.com/nlnetlabs/krill.git
 `init` installs any Terraform plugins required by the templates.
 `apply` explains what will be created then, if you approve, executes the template.
 
+Note: strictly speaking the plugin copy done below is not required when using `run_on_localhost`, but the Terraform fail without it.
+
 ```bash
 $ mkdir 
 $ cd terraform/krill-e2e-test/run_on_XXX (e.g. aws, do or localhost)
-$ mkdir -p terraform.d/plugins/linux_amd64
-$ cd terraform.d/plugins/linux_amd64
-$ ln -s ../../../../../plugins/terraform-provider-dockermachine
-$ cd -
+$ mkdir -p $HOME/.terraform.d/plugins
+$ cp terraform/plugins/terraform-provider-dockermachine $HOME/.terraform.d/plugins/
 $ terraform init
 $ terraform apply -var test_suite_path=/tmp/krill/tests/e2e
 ```
