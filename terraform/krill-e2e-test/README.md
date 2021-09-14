@@ -336,7 +336,12 @@ $ git clone https://github.com/nlnetlabs/krill.git
 `apply` explains what will be created then, if you approve, executes the template.
 
 ```bash
+$ mkdir 
 $ cd terraform/krill-e2e-test/run_on_XXX (e.g. aws, do or localhost)
+$ mkdir -p terraform.d/plugins/linux_amd64
+$ cd terraform.d/plugins/linux_amd64
+$ ln -s ../../../../../plugins/terraform-provider-dockermachine
+$ cd -
 $ terraform init
 $ terraform apply -var test_suite_path=/tmp/krill/tests/e2e
 ```
