@@ -13,15 +13,15 @@ $ SAN="DNS:nginx.krill.test"
 $ openssl req -new \
         -newkey rsa:4096 -keyout issuer.key \
         -x509 -out issuer.crt \
-        -days 365 -nodes -subj "$ISSUER"
+        -days 3650 -nodes -subj "$ISSUER"
 $ openssl req -new -out subject.csr \
         -newkey rsa:4096 -keyout subject.key \
-        -days 365 -nodes -subj "$SUBJECT"
+        -days 3650 -nodes -subj "$SUBJECT"
 $ echo "subjectAltName=$SAN" > subject.ext
 $ openssl x509 \
         -in subject.csr -req -out subject.crt -extfile subject.ext \
         -CA issuer.crt -CAkey issuer.key -CAcreateserial \
-        -days 365
+        -days 3650
 
 $ cp issuer.crt rootCA.crt
 $ cp subject.key krill.key
