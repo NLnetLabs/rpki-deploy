@@ -58,7 +58,7 @@ resource "null_resource" "setup_docker" {
     working_dir = var.krill_build_path
     command = <<-EOT
         set -eu
-        echo ${local.krill_build_cmd}
+        ${local.krill_build_cmd}
     EOT
   }
 
