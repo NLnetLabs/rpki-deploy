@@ -108,6 +108,7 @@ jobs:
         terraform output docker_env_vars
         eval $(terraform output docker_env_vars)
         pushd ../lib/docker
+        docker logs
         docker system info
         docker system events --since 60m --until 1s
 
