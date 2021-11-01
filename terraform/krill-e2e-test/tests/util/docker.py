@@ -102,7 +102,7 @@ class ServiceManager:
                     get_container_logs(
                         self.docker_project,
                         service_name))
-                logging.debug(f'Dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
+                logging.info(f'Dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
             except:
                 logging.warn(f'Failed to fetch logs for Docker service {service_name}')
 
