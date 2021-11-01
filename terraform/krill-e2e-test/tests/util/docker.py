@@ -95,13 +95,13 @@ class ServiceManager:
             s.name for s in self.docker_project.get_services(
                 service_names=self.service_names, include_deps=True)]
 
-        if isfailed(self.request):
-            for service_name in all_service_names:
-                container_logs = os.linesep.join(
-                    get_container_logs(
-                        self.docker_project,
-                        service_name))
-                logging.warn(f'Test failed, dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
+        # if isfailed(self.request):
+        for service_name in all_service_names:
+            container_logs = os.linesep.join(
+                get_container_logs(
+                    self.docker_project,
+                    service_name))
+            logging.warn(f'Dumping logs for Docker service {service_name}:{os.linesep}{container_logs}')
 
         logging.info(f'Killing and removing services: {all_service_names}')
         self.docker_project.kill(service_names=all_service_names)
