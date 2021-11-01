@@ -19,8 +19,12 @@ services:
     restart: unless-stopped
 
   krill:
-    image: nlnetlabs/krill:$KRILL_VERSION
     container_name: krill
+    build:
+      context: krill
+      network: host
+      args:
+        BASE_IMG: nlnetlabs/krill:$KRILL_VERSION
     environment:
       - KRILL_ADMIN_TOKEN
       - KRILL_FQDN

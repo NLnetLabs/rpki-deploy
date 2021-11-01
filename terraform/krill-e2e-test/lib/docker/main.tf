@@ -26,6 +26,7 @@ locals {
     DOCKER_HOST         = var.docker_is_local ? null : dockermachine_generic.docker_deploy[0].docker_url
     DOCKER_CERT_PATH    = var.docker_is_local ? null : dockermachine_generic.docker_deploy[0].storage_path_computed
     DOCKER_MACHINE_NAME = var.docker_is_local ? null : var.hostname
+    KRILL_VERSION       = local.krill_version
   }
 
   krill_env_vars = {
