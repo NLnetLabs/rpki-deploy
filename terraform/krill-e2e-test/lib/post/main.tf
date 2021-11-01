@@ -249,4 +249,16 @@ resource "null_resource" "run_tests" {
                 ../../tests
         EOT
     }
+
+    provisioner "local-exec" {
+        interpreter = ["/bin/bash", "-c"]
+        environment = merge(local.docker_env_vars, local.app_vars, local.tmp_dir_vars)
+        working_dir = var.docker_compose_dir
+
+        # Dump the contents of the SoftHSM token after the tests are finished
+        command = <<-EOT
+            set -eu
+            docker run --rm -v softhsm_data:/var/lib/softhsm/tokens/ docker_krill pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so --pin 1234 --list-objects
+        EOT
+    }
 }
