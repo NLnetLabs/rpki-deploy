@@ -19,8 +19,12 @@ services:
     restart: unless-stopped
 
   krill:
-    image: nlnetlabs/krill:$KRILL_VERSION
     container_name: krill
+    build:
+      context: krill
+      network: host
+      args:
+        BASE_IMG: nlnetlabs/krill:$KRILL_VERSION
     environment:
       - KRILL_ADMIN_TOKEN
       - KRILL_FQDN
@@ -31,6 +35,7 @@ services:
     volumes:
       - rsync_data:/var/krill/data/repo/rsync/
       - krill_configs:/krill_configs/
+      - softhsm_data:/var/lib/softhsm/tokens/
     ports:
       - "3000:3000"
     networks:
@@ -218,6 +223,9 @@ volumes:
   rsync_data:
 
   krill_configs:
+    external: true
+
+  softhsm_data:
     external: true
 
 networks:

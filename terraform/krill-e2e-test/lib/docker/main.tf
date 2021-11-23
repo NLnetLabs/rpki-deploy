@@ -18,13 +18,15 @@ variable "docker_is_local" {
 
 locals {
   krill_version = var.krill_build_path != "" ? "dirty" : var.krill_version
-  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase' ." : "echo skipping Krill build"
+  #krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase' --build-arg 'CARGO_ARGS=--no-default-features --features hsm,hsm-tests-pkcs11' ." : "echo skipping Krill build"
+  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'CARGO_ARGS=--no-default-features --features hsm,hsm-tests-pkcs11' ." : "echo skipping Krill build"
 
   docker_env_vars = {
     DOCKER_TLS_VERIFY   = var.docker_is_local ? null : "1"
     DOCKER_HOST         = var.docker_is_local ? null : dockermachine_generic.docker_deploy[0].docker_url
     DOCKER_CERT_PATH    = var.docker_is_local ? null : dockermachine_generic.docker_deploy[0].storage_path_computed
     DOCKER_MACHINE_NAME = var.docker_is_local ? null : var.hostname
+    KRILL_VERSION       = local.krill_version
   }
 
   krill_env_vars = {
@@ -79,6 +81,19 @@ resource "null_resource" "setup_docker" {
     EOT
   }
 
+  # Pre-create a Docker volume for storing SoftHSM token data. This will live longer than Krill itself allowing us to
+  # inspect the token after Krill has shutdown so that we don't cause concurrent access issues (as SoftHSM only allows
+  # access by one user at a time and only supports one user, i.e. concurrent access isn't possible and attempting to
+  # use it at the same time as Krill can cause Krill to encounter errors thus causing the test to fail)
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    environment = local.docker_env_vars
+    command     = <<-EOT
+        set -eu
+        docker volume create softhsm_data
+    EOT
+  }
+
   # pre-build any images that need building, otherwise they get built on first
   # use during the tests which is noisy and makes the tests appear to block for
   # a long time.
@@ -100,7 +115,7 @@ resource "null_resource" "setup_docker" {
     working_dir = var.docker_compose_dir
     command     = <<-EOT
         set -eu
-        docker volume rm --force krill_configs
+        docker volume rm --force krill_configs softhsm_data
     EOT
   }
 }
