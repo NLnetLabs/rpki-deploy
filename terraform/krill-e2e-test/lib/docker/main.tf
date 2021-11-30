@@ -19,7 +19,7 @@ variable "docker_is_local" {
 locals {
   krill_version = var.krill_build_path != "" ? "dirty" : var.krill_version
   #krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'BASE_IMG=ximoneighteen/krillbuildbase' --build-arg 'CARGO_ARGS=--no-default-features --features hsm,hsm-tests-pkcs11' ." : "echo skipping Krill build"
-  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'CARGO_ARGS=--no-default-features --features hsm,hsm-tests-pkcs11' ." : "echo skipping Krill build"
+  krill_build_cmd = var.krill_build_path != "" ? "docker build -t nlnetlabs/krill:dirty --build-arg 'CARGO_ARGS=--no-default-features --features hsm' ." : "echo skipping Krill build"
 
   docker_env_vars = {
     DOCKER_TLS_VERIFY   = var.docker_is_local ? null : "1"
