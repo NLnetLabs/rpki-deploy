@@ -62,6 +62,7 @@ output "ingress_tcp_ports" {
     8083, # OctoRPKI RTR
     8084, # RCynic RTR
     8085, # rpki-client RTR
+    8086, # rpki-prover RTR
     8323, # RIPE NCC RPKI Validator 3 RTR
     9556  # Routinator prometheus exportor (HTTP)
   ]
