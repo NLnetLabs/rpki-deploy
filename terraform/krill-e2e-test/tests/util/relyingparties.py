@@ -100,3 +100,5 @@ RPKIClient = RelyingParty('rpkiclient', 8085, 20, "cat /opt/version.txt")
 # we use a low timeout and rely on the test suite retrying a couple of times to successfully fetch the
 # VRPs on a subsequent connection attempt.
 Rcynic = RelyingParty('rcynic', 8084, 5, "echo 'Believed to be buildbot-1.0.1544679302'")
+
+RPKIProver = RelyingParty('rpki-prover', 8086, 20, "echo 'Unknown'")

@@ -212,6 +212,23 @@ services:
       - relyingpartybase
       - rtrtr
 
+  rpkiprover:
+    build:
+      context: relyingparties/rpki-prover
+      network: host
+    container_name: rpkiprover
+    dns: 8.8.8.8
+    networks:
+      - krill-net
+    environment:
+      - KRILL_FQDN
+      - SRC_TAL
+    ports:
+      - "3323:3323"
+    restart: on-failure
+    depends_on:
+      - relyingpartybase
+
   relyingpartybase:
     image: relyingpartybase
     build:
