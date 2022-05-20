@@ -264,8 +264,8 @@ paths:
                   handle: 'ca'
                   resources:
                     asn: 'AS1'
-                    v4: '10.0.0.0/8'
-                    v6: '::'
+                    ipv4: '10.0.0.0/8'
+                    ipv6: '::'
                   child_request:
                     tag: null
                     child_handle: 'ca'
@@ -338,8 +338,8 @@ paths:
                   id_cert: null
                   resources:
                     asn: ''
-                    v4: '10.0.0.0/8'
-                    v6: '::'
+                    ipv4: '10.0.0.0/8'
+                    ipv6: '::'
               update_id_cert:
                 summary: Update the ID certificate for a remote child.
                 value:
@@ -1171,10 +1171,10 @@ components:
     RepoInfo:
       type: object
       properties:
-        base_uri:
+        sia_base:
           type: string
           format: uri
-        rpki_notify:
+        rrdp_notification_uri:
           type: string
           format: uri
     
@@ -1183,14 +1183,14 @@ components:
       properties:
         asn:
           type: string
-        v4:
+        ipv4:
           type: string
-        v6:
+        ipv6:
           type: string
       example:
         asn: ""
-        v4: "10.0.0.0/0"
-        v6: "2001:db8::/32"
+        ipv4: "10.0.0.0/0"
+        ipv6: "2001:db8::/32"
     
     ROA:
       type: object
@@ -1296,8 +1296,8 @@ components:
         id_cert: 'MIID..6g=='
         service_uri: "https://repo.example.com/rfc8181/publisher/"
         repo_info:
-          base_uri: 'rsync://localhost/repo/ca/'
-          rpki_notify: 'https://localhost:3000/rrdp/notification.xml'
+          sia_base: 'rsync://localhost/repo/ca/'
+          rrdp_notification_uri: 'https://localhost:3000/rrdp/notification.xml'
       
     Rfc8183PublisherRequest:
       type: object
@@ -2728,15 +2728,15 @@ components:
           example:
             handle: 'ca'
             repo_info:
-              base_uri: 'rsync://localhost/repo/ca/'
-              rpki_notify: 'https://localhost:3000/rrdp/notification.xml'
+              sia_base: 'rsync://localhost/repo/ca/'
+              rrdp_notification_uri: 'https://localhost:3000/rrdp/notification.xml'
             parents:
               - handle: 'ta'
                 kind: 'ta'
             resources:
               asn: 'AS1-AS10'
-              v4: '10.0.0.0/8'
-              v6: '::/128'
+              ipv4: '10.0.0.0/8'
+              ipv6: '::/128'
             resource_classes:
               '0':
                 name_space: '0'
@@ -2750,8 +2750,8 @@ components:
                         uri: 'rsync://localhost/repo/ta/0/B738..8820.cer'
                         resources:
                           asn: 'AS0-AS10'
-                          v4: '10.0.0.0/8'
-                          v6: '::/128'
+                          ipv4: '10.0.0.0/8'
+                          ipv6: '::/128'
                       request: null
                 current_objects:
                   '2DCE..5337.crl':
@@ -2818,8 +2818,8 @@ components:
                     id_cert: 'MIID..Vg=='
                     service_uri: 'https://localhost:3000/rfc8181/ca'
                     repo_info:
-                      base_uri: 'rsync://localhost/repo/ca/'
-                      rpki_notify: 'https://localhost:3000/rrdp/notificati.xml'
+                      sia_base: 'rsync://localhost/repo/ca/'
+                      rrdp_notification_uri: 'https://localhost:3000/rrdp/notificati.xml'
 
     GetCAHistory:
       description: Success.

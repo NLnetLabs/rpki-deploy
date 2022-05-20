@@ -625,10 +625,10 @@ components:
     RepoInfoSchema:
       type: object
       properties:
-        base_uri:
+        sia_base:
           type: string
           format: uri
-        rpki_notify:
+        rrdp_notification_uri:
           type: string
           format: uri
 
