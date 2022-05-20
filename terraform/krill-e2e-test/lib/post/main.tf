@@ -94,15 +94,9 @@ resource "null_resource" "setup" {
             [ -d $GENDIR ] && rm -R $GENDIR
             mkdir -p $GENDIR
 
-            if [ -f "${var.krill_build_path}/doc/openapi.yaml" ]; then
-                cp ${var.krill_build_path}/doc/openapi.yaml $GENDIR/
-                cp ${var.krill_build_path}/doc/openapi-pubd.yaml $GENDIR/
-            else
-                # Hard-code the OpenAPI spec link as it has been deprecated and removed from latest versions of the
-                # repository.
-                wget -O $GENDIR/openapi.yaml https://raw.githubusercontent.com/NLnetLabs/krill/v0.9.0-rc3/doc/openapi.yaml
-                wget -O $GENDIR/openapi-pubd.yaml https://raw.githubusercontent.com/NLnetLabs/krill/v0.9.0-rc3/doc/openapi-pubd.yaml
-            fi
+            # Copy openapi specs maintained here (no longer used in the Krill project) so the clients can be generated.
+            cp ../../resources/openapi_specs/openapi.yaml $GENDIR/
+            cp ../../resources/openapi_specs/openapi-pubd.yaml $GENDIR/
 
             # An alternate approach to generating two client libraries, one for the CA daemon and one for the publisher
             # daemon, could be to use https://www.npmjs.com/package/openapi-merge-cli to merge the OpenAPI
