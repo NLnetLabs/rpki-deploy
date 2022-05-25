@@ -95,8 +95,8 @@ resource "null_resource" "setup" {
             mkdir -p $GENDIR
 
             # Copy openapi specs maintained here (no longer used in the Krill project) so the clients can be generated.
-            cp ../../resources/openapi_specs/openapi.yaml $GENDIR/
-            cp ../../resources/openapi_specs/openapi-pubd.yaml $GENDIR/
+            cp ${var.docker_compose_dir}/../../resources/openapi_specs/openapi.yaml $GENDIR/
+            cp ${var.docker_compose_dir}/../../resources/openapi_specs/openapi-pubd.yaml $GENDIR/
 
             # An alternate approach to generating two client libraries, one for the CA daemon and one for the publisher
             # daemon, could be to use https://www.npmjs.com/package/openapi-merge-cli to merge the OpenAPI
